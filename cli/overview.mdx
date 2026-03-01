@@ -124,19 +124,6 @@ On every command, the CLI checks the active profile's key expiry:
 - **Expired**: Displays an error
 - **No expiry data**: No warning
 
-## API endpoints
+## API communication
 
-The CLI communicates with these Cloud Function endpoints:
-
-| Operation | Endpoint |
-|-----------|----------|
-| Deploy use case | `POST /deployProcessUseCase` |
-| Deploy data ingestion | `POST /deployDataIngestion` |
-| Create project | `POST /createProjectViaApiKey` |
-| Get metadata documents | `GET /getMetadataDocumentsEndpoint` |
-| Get execution details | `GET /getExecutionDetailsPublic` |
-| Trigger workflow | `POST /triggerWebhookPublic` |
-| Get execution status | `GET /getExecutionStatusPublic` |
-| Verify API key | `POST /verifyApiKey` |
-
-All authenticated requests use the `X-Process-Manager-Key` header with the API key value.
+The CLI communicates with the Codika platform API for all remote operations (deployment, triggering, project creation, etc.). Authentication is handled automatically via your stored profile — no manual endpoint configuration is needed.

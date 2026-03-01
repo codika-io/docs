@@ -32,14 +32,13 @@ User request (form, schedule, webhook, service event)
       → Results returned to user (structured output, files, notifications)
 ```
 
-The system has four main components:
+The system has three layers:
 
-| Component | What it does |
-|-----------|-------------|
-| **codika-app-platform** | SvelteKit frontend + Firebase Cloud Functions backend. User-facing dashboard for managing organizations, projects, and processes. |
-| **codika-helper-sdk** | TypeScript CLI (`codika-helper`) for scaffolding, validating, and deploying use cases from the command line. |
-| **codika-processes-lib** | Repository of use case definitions — config files and n8n workflow JSON templates. |
-| **cova-gateway** | FastAPI service powering the conversational AI interface. Handles agent execution and streaming responses. |
+| Layer | What it does |
+|-------|-------------|
+| **Codika Dashboard** | Web application where users manage organizations, projects, integrations, and processes. |
+| **codika-helper CLI** | Command-line tool (`npm install -g @codika-io/helper-sdk`) for scaffolding, validating, and deploying use cases. |
+| **Codika Platform API** | Backend that handles deployment orchestration, credential resolution, version management, and workflow execution. |
 
 ## How deployment works
 
@@ -47,7 +46,7 @@ The system has four main components:
 Use case folder (config.ts + workflows/*.json)
   → codika-helper verify (validation)
   → codika-helper deploy (packaging + API call)
-    → Cloud Function (version calculation, Firestore records)
+    → Codika Platform (version management, deployment records)
       → n8n (placeholder replacement, credential injection, workflow creation)
         → Live automation (accessible via triggers)
 ```
@@ -55,14 +54,14 @@ Use case folder (config.ts + workflows/*.json)
 When you deploy a use case:
 
 1. The CLI validates the folder structure, config exports, and workflow patterns
-2. Workflows are base64-encoded and sent to the `deployProcessUseCase` Cloud Function
-3. The function creates Firestore records (Process, ProcessDeploymentTemplate, ProcessInstance, ProcessDeploymentInstance)
+2. Workflows are packaged and sent to the Codika platform API
+3. The platform creates versioned deployment records and a process instance for the user
 4. Workflows are deployed to n8n with all placeholders replaced with real values
 5. The automation is live and can be triggered via HTTP, schedule, or service events
 
 ## Multi-tenancy model
 
-Every deployment is isolated per user. When a user installs a process, they get their own **ProcessInstance** with:
+Every deployment is isolated per user. When a user installs a process, they get their own **process instance** with:
 
 - Isolated credentials (their own OAuth tokens, API keys)
 - Personal deployment parameters (configured at install time)
@@ -83,7 +82,7 @@ Organization
 |---------|-----------|
 | **Use case** | A folder containing `config.ts` and `workflows/` that defines a deployable automation |
 | **Process** | The public, discoverable representation of a deployed use case |
-| **ProcessInstance** | A user's personal installation of a process with isolated data |
+| **Process instance** | A user's personal installation of a process with isolated credentials and data |
 | **Placeholder** | A template token (e.g., `{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}`) replaced at deployment with real values |
 | **Codika nodes** | Custom n8n nodes (Init, Submit Result, Report Error) that integrate workflows with the platform |
 | **Trigger** | How a workflow starts: HTTP webhook, cron schedule, service event, or sub-workflow call |

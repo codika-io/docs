@@ -1,107 +1,96 @@
 ---
 title: "Processes"
-description: "The four Firestore entities that make up a deployed automation — Process, ProcessDeploymentTemplate, ProcessInstance, and ProcessDeploymentInstance"
+description: "The lifecycle of a deployed automation — from use case folder to live process with versioning, environments, and user isolation"
 ---
 
-## Entity model
+## What is a process?
 
-When a use case is deployed, the platform creates four linked entities in Firestore. Each serves a distinct purpose in the multi-tenant deployment model.
+When you deploy a use case, the platform creates a **process** — the public, discoverable representation of your automation. Users can find, install, and run processes with their own credentials.
+
+Each process has three layers:
 
 ```
 Process (public listing)
-  └── ProcessDeploymentTemplate (immutable version snapshot)
+  └── Deployment template (immutable version snapshot)
 
-ProcessInstance (user installation)
-  └── ProcessDeploymentInstance (deployed copy with real n8n IDs)
+Process instance (user installation)
+  └── Deployment instance (running copy with real workflow IDs)
 ```
 
 ## Process
 
-**Collection:** `processes/{processId}`
+The top-level entity. Represents your automation on the platform.
 
-The public, discoverable representation of a deployed use case. The `processId` equals the `projectId`.
-
-| Field | Description |
-|-------|-------------|
-| `title` | Display name |
-| `description` | What the automation does |
-| `visibility` | Access control: `private`, `userList`, `teamList`, `organizational`, `public` |
-| `icon` | Lucide icon name |
-| `tags` | Categorization array |
-| `processType` | `personal` (default, one per user) or `organizational` (one per org) |
+| Property | Description |
+|----------|-------------|
+| Title | Display name |
+| Description | What the automation does |
+| Visibility | Who can see and install it |
+| Tags | Categorization (e.g., `email`, `ai`, `crm`) |
+| Process type | `personal` (one per user) or `organizational` (one per org) |
 
 ### Visibility levels
 
 | Level | Who can see and install |
 |-------|------------------------|
 | `private` | Only the owner |
-| `userList` | Specific users by ID |
+| `userList` | Specific users |
 | `teamList` | Specific teams |
 | `organizational` | All members of the organization |
 | `public` | Anyone on the platform |
 
-## ProcessDeploymentTemplate
+## Deployment template
 
-**Collection:** `process_deployment_templates/{templateId}`
+An immutable snapshot of a specific version. When you deploy version 1.2, the platform stores a template containing all workflow data with placeholders still present (not yet replaced with real values).
 
-An immutable snapshot of a specific version. Contains the base64-encoded workflow data with placeholders still present (not yet replaced with real values).
+Templates are **never modified** after creation. A new deployment always creates a new template.
 
-| Field | Description |
-|-------|-------------|
-| `version` | API version (e.g., `1.0`, `1.1`, `2.0`) |
-| `status` | `inactive` → `published` → `deprecated` |
-| `workflows` | Workflow metadata (triggers, schemas, integrations) |
-| `workflow_data` | Subcollection storing base64 workflow content (batched in groups of 30) |
+| Property | Description |
+|----------|-------------|
+| Version | API version (e.g., `1.0`, `1.1`, `2.0`) |
+| Status | `inactive` → `published` → `deprecated` |
+| Workflows | Workflow metadata (triggers, schemas, integrations) |
 
-Templates are **never modified** after creation. A new deployment creates a new template.
+## Process instance
 
-## ProcessInstance
+A user's personal installation of a process. Each user gets their own instance with isolated state and credentials.
 
-**Collection:** `process_instances/{processInstanceId}`
-
-A user's personal installation of a process. Each user gets their own instance with isolated state.
-
-| Field | Description |
-|-------|-------------|
-| `environment` | `dev` or `prod` |
-| `version` | Which template version this instance runs |
-| `isActive` | Whether workflows are enabled |
-| `archived` | Soft-delete flag |
-| `inactiveReason` | Why deactivated: `user_paused`, `deployment_failed`, `integration_deleted` |
-| `sharedWith` | Sharing model: `owner_only`, `admins`, `everyone`, `users` |
-| `deploymentParameters` | User-configured values (from `INSTPARM` placeholders) |
-| `autoToggleDevProd` | When true, activating dev deactivates prod and vice versa |
+| Property | Description |
+|----------|-------------|
+| Environment | `dev` or `prod` |
+| Version | Which template version this instance runs |
+| Active | Whether workflows are enabled |
+| Sharing | Who in the org can use this instance |
+| Deployment parameters | User-configured values (from INSTPARM placeholders) |
 
 ### Instance states
 
-| State | archived | isActive | inactiveReason | Behavior |
-|-------|----------|----------|----------------|----------|
-| Active | false | true | — | Fully functional, workflows execute |
-| User paused | false | false | `user_paused` | Visible but workflows disabled |
-| Deploy failed | false | false | `deployment_failed` | Visible, needs retry |
-| Missing integration | false | false | `integration_deleted` | Visible, needs reconnection |
-| Archived | true | false | `user_paused` | Hidden and disabled |
+| State | Behavior |
+|-------|----------|
+| Active | Fully functional, workflows execute on triggers |
+| User paused | Visible but workflows disabled (user chose to pause) |
+| Deploy failed | Visible but needs retry (deployment error occurred) |
+| Missing integration | Visible but needs reconnection (OAuth token expired or deleted) |
+| Archived | Hidden and disabled (soft-deleted) |
 
 ### Dev/Prod environments
 
-For process owners, the `autoToggleDevProd` flag (default: true) ensures only one environment is active at a time:
+Process owners get automatic environment management. By default, only one environment is active at a time:
 
 - **First deploy:** Creates a `dev` instance, activates it
 - **Publish to prod:** Auto-creates `prod` instance, deactivates `dev`
 - **Redeploy to dev:** Deactivates `prod`, activates `dev`
 
-## ProcessDeploymentInstance
+This ensures you always test in dev before going live in prod.
 
-**Collection:** `process_deployment_instances/{id}`
+## Deployment instance
 
-The actual deployed copy with real n8n workflow IDs. This is what connects a ProcessInstance to running workflows in n8n.
+The running copy of a process instance with real n8n workflow IDs. This is what connects your process instance to live workflows in n8n.
 
-| Field | Description |
-|-------|-------------|
-| `status` | `pending` → `deploying` → `deployed` → `failed` or `updating` |
-| `workflowMappings` | Map of `workflowTemplateId` → n8n workflow ID |
-| `flexCredentialSources` | Which credential source for each AI provider (org or codika) |
-| `workflow_data` | Subcollection storing base64 workflows **after** placeholder replacement |
+| Property | Description |
+|----------|-------------|
+| Status | `pending` → `deploying` → `deployed` or `failed` |
+| Workflow mappings | Links between your workflow template IDs and live n8n workflow IDs |
 
 ### Deployment status flow
 
@@ -114,40 +103,28 @@ deployed → updating → deployed (version update success)
 
 ## Deployment pipeline
 
-The `deployProcessUseCase` Cloud Function orchestrates the full deployment:
+When you run `codika-helper deploy use-case`, the platform:
 
-1. **Validate** — Check authentication, request format, required fields
-2. **Collect context** — Load project, organization, and user data
-3. **Calculate version** — Apply version strategy (patch/minor/major/explicit)
-4. **Create template** — Store immutable ProcessDeploymentTemplate
-5. **Create/update entities** — Firestore transaction for Process, ProcessInstance, ProcessDeploymentInstance
-6. **Deploy to n8n** — For each workflow:
-   - Decode base64 JSON
-   - Replace all placeholders with real values
-   - Create or update workflow in n8n
-   - Apply organization tags
-7. **Return result** — IDs, version, status
+1. **Validates** the request (authentication, format, required fields)
+2. **Calculates version** based on your version strategy (patch/minor/major)
+3. **Creates a deployment template** — an immutable version snapshot
+4. **Creates or updates** the process, process instance, and deployment instance
+5. **Deploys to n8n** — for each workflow:
+   - Replaces all placeholders with real values (credentials, parameters, IDs)
+   - Creates or updates the workflow in n8n
+6. **Returns** the deployment result (IDs, version, status)
 
-## Version updates and auto-update
+## Version updates
 
-When a new template is published:
+When a new version is published:
 
-- **Pinned instances** (`isPinnedVersion: true`): Set `hasUpdate: true` for manual update
-- **Unpinned instances** (`isPinnedVersion: false`): Auto-update triggered via Cloud Function
-  - Creates new ProcessDeploymentInstance
-  - Deploys to n8n
-  - Updates ProcessInstance pointer
-  - Falls back to `hasUpdate: true` if auto-update fails
+- **Pinned instances**: Users are notified that an update is available and can choose when to apply it
+- **Unpinned instances**: Automatically updated to the new version — the platform creates a new deployment instance and updates the live workflows
+
+If an automatic update fails, the instance falls back to showing "update available" for manual retry.
 
 ## Public API access
 
-Process instances with HTTP triggers expose a public API:
+Process instances with HTTP triggers expose a public API for triggering workflows and checking execution status. Authentication uses a per-instance API key passed via the `X-API-Key` header.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/triggerWebhookPublic/{processInstanceId}/{workflowId}` | POST | Execute a workflow |
-| `/getExecutionStatusPublic/{processInstanceId}/{executionId}` | GET | Poll execution status |
-
-Authentication uses a per-instance API key (format: `ck_<base64-48-bytes>`), passed via `X-API-Key` header.
-
-The `codika-helper trigger` and `codika-helper get execution` commands wrap these endpoints.
+The `codika-helper trigger` and `codika-helper get execution` commands wrap these endpoints — you don't need to call them directly.

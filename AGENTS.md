@@ -27,7 +27,7 @@ For looking up specific CLI commands, flags, and options.
 
 | Page | CLI command | What it covers |
 |------|------------|---------------|
-| `cli/overview.mdx` | — | Installation, command hierarchy, resolution chains, API endpoints |
+| `cli/overview.mdx` | — | Installation, command hierarchy, resolution chains, configuration |
 | `cli/login.mdx` | `login`, `whoami`, `use`, `logout`, `config` | Authentication and profile management |
 | `cli/init.mdx` | `init <path>` | Scaffold a new use case folder |
 | `cli/verify.mdx` | `verify use-case`, `verify workflow` | Validation rules, --fix, --strict |
@@ -60,7 +60,7 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | Understand what Codika is | `index.mdx` |
 | Install the CLI and deploy something fast | `quickstart.mdx` |
 | Know how a use case folder is structured | `concepts/use-cases.mdx` |
-| Understand the 4 Firestore entities | `concepts/processes.mdx` |
+| Understand the process lifecycle | `concepts/processes.mdx` |
 | Learn the mandatory workflow pattern | `concepts/workflows.mdx` |
 | Look up a specific placeholder type | `concepts/placeholders.mdx` |
 | Know which trigger type to use | `concepts/triggers.mdx` |

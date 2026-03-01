@@ -48,8 +48,8 @@ codika-helper deploy use-case <path> [options]
 3. **Bump** version based on flags
 4. **Resolve** project ID: `--project-id` > `project.json` > `config.ts`
 5. **Resolve** API key: `--api-key` > env > org-matching profile > active profile
-6. **Encode** all workflow JSON files as base64
-7. **Send** to `deployProcessUseCase` Cloud Function
+6. **Package** all workflow files
+7. **Send** to the Codika platform API
 8. **On success:**
    - Update `version.json` with new local version
    - Save `devProcessInstanceId` to `project.json`

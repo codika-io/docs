@@ -23,7 +23,7 @@ codika-helper login [options]
 ### Behavior
 
 1. Prompts for API key (masked input) unless `--api-key` is provided
-2. Calls `/verifyApiKey` to validate the key (unless `--skip-verify`)
+2. Validates the key against the Codika platform API (unless `--skip-verify`)
 3. Stores profile metadata: org ID, org name, key name, scopes, creation date, expiry date
 4. Sets the new profile as active
 
@@ -59,7 +59,7 @@ codika-helper whoami [options]
 
 ### Behavior
 
-Calls `/verifyApiKey` for fresh data. Falls back to cached profile data if the network call fails.
+Validates against the platform API for fresh data. Falls back to cached profile data if the network call fails.
 
 ### Output
 

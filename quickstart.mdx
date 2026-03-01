@@ -102,8 +102,8 @@ The CLI:
 
 1. Reads `version.json` (1.0.0)
 2. Bumps to 1.0.1 (patch by default)
-3. Base64-encodes all workflow JSON files
-4. Sends to the `deployProcessUseCase` Cloud Function
+3. Packages all workflow files
+4. Sends to the Codika platform API
 5. On success: updates `version.json`, archives deployment locally, saves `devProcessInstanceId` to `project.json`
 
 Output:

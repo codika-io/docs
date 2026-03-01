@@ -26,7 +26,7 @@ When helping users build Codika use cases:
 ## Core Concepts
 
 - [Use Cases](https://docs.codika.io/concepts/use-cases): Folder structure (config.ts, workflows/, version.json, project.json), config exports, version management
-- [Processes](https://docs.codika.io/concepts/processes): Four Firestore entities — Process, ProcessDeploymentTemplate, ProcessInstance, ProcessDeploymentInstance — and their lifecycle
+- [Processes](https://docs.codika.io/concepts/processes): Process lifecycle — deployments, instances, versioning, dev/prod environments, and user isolation
 - [Workflows](https://docs.codika.io/concepts/workflows): Mandatory Codika node pattern, workflow JSON structure, required settings, common n8n node types
 - [Placeholders](https://docs.codika.io/concepts/placeholders): All 11 placeholder types (PROCDATA, USERDATA, MEMSECRT, FLEXCRED, USERCRED, ORGCRED, ORGSECRET, SYSCREDS, INSTPARM, INSTCRED, SUBWKFL) with suffix patterns and replacement timeline
 - [Triggers](https://docs.codika.io/concepts/triggers): HTTP webhooks, cron schedules, service events, sub-workflow calls — config definitions and n8n node configuration
@@ -35,7 +35,7 @@ When helping users build Codika use cases:
 
 ## CLI Reference
 
-- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), exit codes, API endpoints
+- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), exit codes, configuration
 - [login](https://docs.codika.io/cli/login): Login, whoami, use (switch profile), logout, config set/show/clear — multi-profile management
 - [init](https://docs.codika.io/cli/init): Scaffold new use case with config.ts, 3 template workflows, version.json, optional project creation
 - [verify](https://docs.codika.io/cli/verify): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering

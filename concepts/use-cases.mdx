@@ -35,7 +35,7 @@ my-use-case/
 |------|---------|
 | `config.ts` | Exports `WORKFLOW_FILES`, `getConfiguration()`, and optionally `getDeploymentInputSchema()` and `getDefaultDeploymentParameters()` |
 | `version.json` | Tracks the local semantic version (e.g., `{"version": "1.2.3"}`). Updated automatically on deploy. |
-| `workflows/*.json` | n8n workflow JSON files. Each file listed in `WORKFLOW_FILES` is base64-encoded and sent to the platform. |
+| `workflows/*.json` | n8n workflow JSON files. Each file listed in `WORKFLOW_FILES` is packaged and sent to the platform. |
 
 ### Optional files
 
@@ -139,14 +139,15 @@ On each deploy, the CLI:
 
 ## Relationship to platform entities
 
-When you deploy a use case, the platform creates four Firestore entities:
+When you deploy a use case, the platform creates linked records:
 
 ```
 Use case folder
   → Process (public listing, discoverable)
-    → ProcessDeploymentTemplate (immutable version snapshot)
-      → ProcessDeploymentInstance (user-specific deployment with n8n workflow IDs)
-        → ProcessInstance (user-facing installation with settings and activation state)
+    → Deployment template (immutable version snapshot)
+
+  → Process instance (user installation with settings and activation state)
+    → Deployment instance (running copy with live n8n workflow IDs)
 ```
 
-See [Processes](/concepts/processes) for full details on these entities.
+See [Processes](/concepts/processes) for full details on the deployment lifecycle.
