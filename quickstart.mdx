@@ -1,80 +1,152 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get started in 7 steps — install codika-helper, authenticate, scaffold a use case, validate, deploy, trigger, and debug"
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+- Node.js 22 or higher
+- npm
+- A Codika API key (obtain from the Codika dashboard under Organization Settings > API Keys)
 
-### Step 1: Set up your local environment
+## Step 1: Install the CLI
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash
+npm install -g @codika-io/helper-sdk
+```
 
-### Step 2: Deploy your changes
+Verify the installation:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+```bash
+codika-helper --version
+```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Step 2: Authenticate
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash
+codika-helper login
+```
 
-### Step 3: Go live
+This prompts for your API key (masked input), verifies it against the platform, and stores a named profile in `~/.config/codika-helper/config.json`.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+For non-interactive environments:
 
-## Next steps
+```bash
+codika-helper login --api-key cko_your_api_key_here
+```
 
-Now that you have your docs running, explore these key features:
+Verify your identity:
+
+```bash
+codika-helper whoami
+```
+
+Output:
+
+```
+Organization:  My Company
+Key name:      dev-key
+Key:           cko_abc...xyz
+Scopes:        deploy:use-case, workflows:trigger
+Expires:       2026-12-31
+Profile:       my-company
+```
+
+## Step 3: Scaffold a use case
+
+```bash
+codika-helper init my-first-automation --name "My First Automation"
+```
+
+This creates:
+
+```
+my-first-automation/
+  config.ts                    # Deployment configuration
+  version.json                 # Version tracking (starts at 1.0.0)
+  project.json                 # Platform project ID
+  workflows/
+    main-workflow.json         # HTTP-triggered parent workflow
+    scheduled-report.json      # Schedule-triggered workflow
+    text-processor.json        # Sub-workflow (called by parent)
+```
+
+The template includes three workflows demonstrating different trigger types (HTTP, schedule, sub-workflow), the mandatory Codika node pattern, and placeholder usage.
+
+## Step 4: Validate
+
+```bash
+codika-helper verify use-case ./my-first-automation
+```
+
+Expected output if valid:
+
+```
+✓ Use case validation passed
+  must: 0  should: 0  nit: 0
+```
+
+If there are issues, the CLI lists each finding with rule ID, severity, file, and message. Use `--fix` to auto-fix what it can:
+
+```bash
+codika-helper verify use-case ./my-first-automation --fix
+```
+
+## Step 5: Deploy
+
+```bash
+codika-helper deploy use-case ./my-first-automation
+```
+
+The CLI:
+
+1. Reads `version.json` (1.0.0)
+2. Bumps to 1.0.1 (patch by default)
+3. Base64-encodes all workflow JSON files
+4. Sends to the `deployProcessUseCase` Cloud Function
+5. On success: updates `version.json`, archives deployment locally, saves `devProcessInstanceId` to `project.json`
+
+Output:
+
+```
+✓ Deployed successfully
+  Version:     1.0.1 (API: 1.1)
+  Workflows:   3
+  Project:     abc123
+  Instance:    def456
+```
+
+## Step 6: Trigger a workflow
+
+```bash
+codika-helper trigger main-workflow --payload '{"message": "Hello world"}' --poll
+```
+
+The `--poll` flag waits for execution to complete (default timeout: 120 seconds) and prints the result.
+
+## Step 7: Check execution details
+
+If you need to debug:
+
+```bash
+codika-helper get execution <executionId> --deep --slim
+```
+
+The `--deep` flag fetches sub-workflow executions recursively. The `--slim` flag strips noise for readability.
+
+## What's next
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Core concepts" icon="lightbulb" href="/concepts/use-cases">
+    Learn how use cases, processes, and workflows relate.
+  </Card>
+  <Card title="Build your own" icon="hammer" href="/guides/first-use-case">
+    Step-by-step guide to building a custom use case from scratch.
+  </Card>
+  <Card title="CLI reference" icon="terminal" href="/cli/overview">
+    Complete reference for all CLI commands and options.
+  </Card>
+  <Card title="Validation rules" icon="check" href="/cli/verify">
+    Understand all validation rules enforced by the CLI.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

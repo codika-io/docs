@@ -1,0 +1,158 @@
+---
+title: "get"
+description: "Download deployed use cases with `get use-case` and debug executions with `get execution` — supports --deep recursive sub-workflow fetching and --slim clean output"
+---
+
+## get use-case
+
+Download a deployed use case with all its metadata documents.
+
+```bash
+codika-helper get use-case <projectId> [outputPath] [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<projectId>` | Project ID of the deployed use case |
+| `[outputPath]` | Output directory (defaults to `./<projectId>`) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--version <X.Y>` | Fetch specific version | Latest |
+| `--list` | List documents without downloading | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | — |
+
+### Behavior
+
+**Download mode** (default):
+1. Fetches metadata documents from the API
+2. Decodes base64 content
+3. Writes files to the output directory
+
+**List mode** (`--list`):
+1. Fetches document listing only
+2. Displays file paths, sizes, and content types
+3. Does not download any files
+
+### Examples
+
+```bash
+# Download latest version
+codika-helper get use-case abc123
+
+# Download to a specific directory
+codika-helper get use-case abc123 ./my-download
+
+# Download a specific version
+codika-helper get use-case abc123 --version 1.2
+
+# List documents without downloading
+codika-helper get use-case abc123 --list
+
+# JSON output
+codika-helper get use-case abc123 --list --json
+```
+
+### Output
+
+```
+✓ Downloaded use case
+  Project:   abc123
+  Version:   1.3
+  Files:     7
+    config.ts
+    version.json
+    workflows/main-workflow.json
+    workflows/helper.json
+    workflows/scheduler.json
+```
+
+---
+
+## get execution
+
+Fetch full n8n execution details for debugging.
+
+```bash
+codika-helper get execution <executionId> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<executionId>` | Codika execution ID (from trigger response) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--process-instance-id <id>` | Explicit process instance ID | Auto-resolved |
+| `--path <path>` | Path to use case folder with `project.json` | Current directory |
+| `--deep` | Recursively fetch sub-workflow executions | — |
+| `--slim` | Strip noise (`pairedItem`, `workflowData`) for readability | — |
+| `-o, --output <path>` | Save to file instead of stdout | stdout |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | — |
+
+### Process instance ID resolution
+
+1. `--process-instance-id` flag
+2. `devProcessInstanceId` in `project.json` at `--path`
+3. `devProcessInstanceId` in `project.json` in current directory
+
+### Deep mode
+
+When `--deep` is used, the CLI recursively fetches sub-workflow executions and attaches them as `_subExecutions` on the parent node that triggered them. This gives you the complete execution tree.
+
+### Slim mode
+
+Strips noisy fields for cleaner output:
+- Removes `pairedItem` from all nodes
+- Removes `workflowData` from execution metadata
+
+Best used with `--deep` for debugging: `--deep --slim`
+
+### Examples
+
+```bash
+# Basic execution details
+codika-helper get execution exec_abc123
+
+# Full recursive details, clean output
+codika-helper get execution exec_abc123 --deep --slim
+
+# Save to file for analysis
+codika-helper get execution exec_abc123 --deep --slim -o debug.json
+
+# Explicit process instance ID
+codika-helper get execution exec_abc123 --process-instance-id pi_def456
+
+# From a specific use case directory
+codika-helper get execution exec_abc123 --path ./my-use-case
+```
+
+### Output
+
+```
+Execution: exec_abc123
+Status:    success
+Duration:  12.3s
+n8n ID:    n8n_xyz789
+Nodes:     8
+
+  ✓ Webhook Trigger
+  ✓ Codika Init
+  ✓ Fetch Data
+  ✓ Process Results
+  ✓ Format Output
+  ✓ IF Success
+  ✓ Codika Submit Result
+```

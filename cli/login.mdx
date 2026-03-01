@@ -1,0 +1,180 @@
+---
+title: "login"
+description: "Login, manage profiles, switch organizations, and verify identity with the codika-helper CLI"
+---
+
+## login
+
+Save an API key and create a named profile. Alias for `config set`.
+
+```bash
+codika-helper login [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--api-key <key>` | API key (skips interactive prompt) |
+| `--base-url <url>` | Base URL override (defaults to production) |
+| `--name <name>` | Custom profile name (auto-derived from org name if omitted) |
+| `--skip-verify` | Save without verifying the key against the API |
+
+### Behavior
+
+1. Prompts for API key (masked input) unless `--api-key` is provided
+2. Calls `/verifyApiKey` to validate the key (unless `--skip-verify`)
+3. Stores profile metadata: org ID, org name, key name, scopes, creation date, expiry date
+4. Sets the new profile as active
+
+### Examples
+
+```bash
+# Interactive login
+codika-helper login
+
+# Non-interactive login
+codika-helper login --api-key cko_abc123def456
+
+# Login with custom profile name
+codika-helper login --api-key cko_abc123def456 --name staging
+
+# Login to a custom environment
+codika-helper login --api-key cko_abc123def456 --base-url https://custom.api.example.com
+```
+
+## whoami
+
+Show the current authenticated identity.
+
+```bash
+codika-helper whoami [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+
+### Behavior
+
+Calls `/verifyApiKey` for fresh data. Falls back to cached profile data if the network call fails.
+
+### Output
+
+```
+Organization:  Acme Corp
+Key name:      production-key
+Key:           cko_abc...xyz
+Scopes:        deploy:use-case, workflows:trigger
+Expires:       2026-12-31
+Profile:       acme-corp
+```
+
+## use
+
+Switch the active profile or list all profiles.
+
+```bash
+codika-helper use [name]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `[name]` | Profile name to switch to (optional — lists profiles if omitted) |
+
+### Behavior
+
+- **No argument**: Lists all profiles with an active marker (bullet)
+- **With argument**: Switches the active profile
+
+### Examples
+
+```bash
+# List all profiles
+codika-helper use
+
+# Switch to a specific profile
+codika-helper use staging
+```
+
+### Output (list mode)
+
+```
+  ● acme-corp      (Acme Corp)
+    staging         (Acme Corp - Staging)
+    other-org       (Other Organization)
+```
+
+## logout
+
+Remove a profile.
+
+```bash
+codika-helper logout [name]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `[name]` | Profile name to remove (defaults to active profile) |
+
+### Behavior
+
+Removes the specified profile. If it was the active profile, switches to the next available profile.
+
+## config set
+
+Save API key and base URL. Same as `login`.
+
+```bash
+codika-helper config set [options]
+```
+
+Options are identical to `login`.
+
+## config show
+
+Display all stored profiles.
+
+```bash
+codika-helper config show
+```
+
+### Output
+
+```
+Profiles:
+  ● acme-corp       cko_abc...xyz  (Acme Corp)
+    staging          cko_def...uvw  (Acme Corp - Staging)
+```
+
+Exit code 0 if profiles exist, 1 if none.
+
+## config clear
+
+Remove configuration.
+
+```bash
+codika-helper config clear [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--profile <name>` | Remove only this profile (clears all if omitted) |
+
+### Examples
+
+```bash
+# Clear a specific profile
+codika-helper config clear --profile staging
+
+# Clear all profiles and configuration
+codika-helper config clear
+```

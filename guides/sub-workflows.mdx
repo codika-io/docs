@@ -1,0 +1,184 @@
+---
+title: "Sub-Workflows"
+description: "Create helper workflows that are called by parent workflows — with proper parameter passing, SUBWKFL placeholders, and execution metadata forwarding"
+---
+
+## What are sub-workflows?
+
+Sub-workflows are helper workflows called by parent workflows via n8n's Execute Workflow node. They encapsulate reusable logic (PDF generation, data parsing, API calls) and are invisible to end users.
+
+## Key rules
+
+| Rule | Details |
+|------|---------|
+| No Codika Init | Sub-workflows do not register their own execution |
+| No Submit Result / Report Error | Data returns to parent via Execute Workflow |
+| At least 1 input parameter | n8n requires this |
+| Cost: 0 | Execution cost attributed to parent |
+| Output schema: [] | Always empty |
+| Start with Execute Workflow Trigger | Required entry point |
+| SUBWKFL placeholder | Parent references sub-workflow by placeholder, not hardcoded ID |
+
+## config.ts definition
+
+### Sub-workflow entry
+
+```typescript
+{
+  workflowTemplateId: 'text-processor',
+  workflowId: 'text-processor',
+  workflowName: 'Text Processor',
+  integrationUids: [],
+  triggers: [
+    {
+      triggerId: crypto.randomUUID(),
+      type: 'subworkflow' as const,
+      title: 'Process Text',
+      description: 'Called by parent to process text chunks',
+      inputSchema: [
+        { name: 'text', type: 'string' },
+        { name: 'maxLength', type: 'number' },
+        { name: 'executionId', type: 'string' },
+        { name: 'executionSecret', type: 'string' },
+      ],
+      calledBy: ['main-workflow'],
+    } satisfies SubworkflowTrigger,
+  ],
+  outputSchema: [],
+  n8nWorkflowJsonBase64: loadAndEncodeWorkflow(__dirname, 'workflows/text-processor.json'),
+  cost: 0,
+}
+```
+
+### Parent workflow entry
+
+The parent workflow lists the sub-workflow's `integrationUids` in its own `integrationUids` array (integration inheritance).
+
+## Sub-workflow JSON
+
+### Entry node (Execute Workflow Trigger)
+
+```json
+{
+  "type": "n8n-nodes-base.executeWorkflowTrigger",
+  "typeVersion": 1.1,
+  "position": [200, 300],
+  "id": "trigger-1",
+  "name": "When Called by Parent",
+  "parameters": {
+    "workflowInputs": {
+      "values": [
+        { "name": "text", "type": "string" },
+        { "name": "maxLength", "type": "number" },
+        { "name": "executionId", "type": "string" },
+        { "name": "executionSecret", "type": "string" }
+      ]
+    }
+  }
+}
+```
+
+### Accessing input data
+
+```javascript
+// In a Code node inside the sub-workflow
+const text = $('When Called by Parent').first().json.text;
+const maxLength = $('When Called by Parent').first().json.maxLength;
+```
+
+## Parent workflow: calling the sub-workflow
+
+### Execute Workflow node
+
+```json
+{
+  "type": "n8n-nodes-base.executeWorkflow",
+  "typeVersion": 1.3,
+  "position": [800, 300],
+  "id": "exec-1",
+  "name": "Call Text Processor",
+  "parameters": {
+    "workflowId": {
+      "__rl": true,
+      "mode": "id",
+      "value": "{{SUBWKFL_text-processor_LFKWBUS}}"
+    },
+    "workflowInputs": {
+      "mappingMode": "defineBelow",
+      "value": {
+        "text": "={{ $json.input_text }}",
+        "maxLength": 500,
+        "executionId": "={{ $('Codika Init').first().json.executionId }}",
+        "executionSecret": "={{ $('Codika Init').first().json.executionSecret }}"
+      }
+    },
+    "options": {
+      "waitForSubWorkflow": true
+    }
+  }
+}
+```
+
+Key points:
+- `workflowId` uses the `SUBWKFL` placeholder with the sub-workflow's `workflowTemplateId`
+- `waitForSubWorkflow: true` makes the parent wait for the sub-workflow to complete
+- `executionId` and `executionSecret` are forwarded from Codika Init for platform tracking
+
+## Passing execution metadata
+
+If the sub-workflow uses Codika Upload File, it needs the parent's execution metadata:
+
+### Parent sends metadata
+
+```json
+"workflowInputs": {
+  "value": {
+    "data": "={{ $json.data }}",
+    "executionId": "={{ $('Codika Init').first().json.executionId }}",
+    "executionSecret": "={{ $('Codika Init').first().json.executionSecret }}"
+  }
+}
+```
+
+### Sub-workflow uses metadata in Upload File
+
+```json
+{
+  "type": "n8n-nodes-codika.codika",
+  "parameters": {
+    "resource": "fileManagement",
+    "operation": "uploadFile",
+    "executionIdOverride": "={{ $('When Called by Parent').first().json.executionId }}",
+    "executionSecretOverride": "={{ $('When Called by Parent').first().json.executionSecret }}"
+  }
+}
+```
+
+## SUBWKFL placeholder format
+
+```
+{{SUBWKFL_<workflowTemplateId>_LFKWBUS}}
+```
+
+The `workflowTemplateId` in the placeholder must exactly match the `workflowTemplateId` in the config.
+
+Examples:
+- `{{SUBWKFL_text-processor_LFKWBUS}}`
+- `{{SUBWKFL_pdf-generator_LFKWBUS}}`
+- `{{SUBWKFL_email-parser_LFKWBUS}}`
+
+At deployment time, this is replaced with the actual n8n workflow ID.
+
+## Deployment order
+
+Sub-workflows are deployed before parent workflows automatically. The platform resolves the dependency graph and deploys in the correct order. No manual ordering is needed.
+
+## Validation
+
+The CLI checks sub-workflow patterns:
+
+| Rule | What it checks |
+|------|----------------|
+| `UC-SUBWORKFLOW-REFS` | SUBWKFL placeholders reference valid workflows |
+| `CK-SUBWORKFLOW-PARAMS` | Sub-workflows have at least 1 input parameter |
+| `UC-CALLEDBY` | calledBy arrays are consistent |

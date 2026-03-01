@@ -1,0 +1,147 @@
+---
+title: "Simple Web Search"
+description: "Minimal use case — a single HTTP-triggered workflow that searches the web via Tavily and returns formatted results"
+---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| Workflows | 1 |
+| Trigger | HTTP (webhook) |
+| Integrations | Tavily |
+| Credential type | FLEXCRED (Tavily) |
+| Cost | 1 credit |
+| Complexity | Minimal |
+
+This is the simplest possible Codika use case: one workflow, one trigger, one API call.
+
+## Folder structure
+
+```
+tavily-search/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    tavily-search.json
+```
+
+## config.ts
+
+```typescript
+import { loadAndEncodeWorkflow, type ProcessDeploymentConfigurationInput, type FormInputSchema, type FormOutputSchema } from '@codika-io/helper-sdk';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import crypto from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export const WORKFLOW_FILES = ['workflows/tavily-search.json'];
+
+export function getConfiguration(): ProcessDeploymentConfigurationInput {
+  const webhookId = crypto.randomUUID();
+  const webhookUrl = `{{ORGSECRET_N8N_BASE_URL_TERCESORG}}/webhook/{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/search`;
+
+  return {
+    title: 'Tavily Web Search',
+    subtitle: 'Quick web search results',
+    description: 'Search the web and get formatted results using the Tavily API.',
+    workflows: [
+      {
+        workflowTemplateId: 'tavily-search',
+        workflowId: 'tavily-search',
+        workflowName: 'Tavily Web Search',
+        integrationUids: ['tavily'],
+        triggers: [
+          {
+            triggerId: webhookId,
+            type: 'http' as const,
+            url: webhookUrl,
+            method: 'POST' as const,
+            title: 'Search the Web',
+            description: 'Enter a query to search the web',
+            inputSchema: getInputSchema(),
+          },
+        ],
+        outputSchema: getOutputSchema(),
+        n8nWorkflowJsonBase64: loadAndEncodeWorkflow(__dirname, 'workflows/tavily-search.json'),
+        cost: 1,
+      },
+    ],
+    tags: ['search', 'web', 'tavily'],
+  };
+}
+
+function getInputSchema(): FormInputSchema {
+  return [
+    {
+      type: 'section',
+      title: 'Search Query',
+      collapsible: false,
+      inputSchema: [
+        {
+          key: 'query',
+          type: 'text',
+          label: 'Search Query',
+          description: 'What do you want to search for?',
+          placeholder: 'Enter your search query...',
+          required: true,
+          maxLength: 1000,
+        },
+      ],
+    },
+  ];
+}
+
+function getOutputSchema(): FormOutputSchema {
+  return [
+    {
+      key: 'results',
+      type: 'text',
+      label: 'Search Results',
+      description: 'Formatted search results from the web',
+    },
+  ];
+}
+```
+
+## Workflow pattern
+
+```
+Webhook (POST) → Codika Init → Tavily API Call → Format Results → IF Success
+                                                                    ├── Yes → Submit Result
+                                                                    └── No  → Report Error
+```
+
+## Key details
+
+### Input
+Single text field for the search query. Accessed in the workflow via:
+```javascript
+$('Webhook Trigger').first().json.body.payload.query
+```
+
+### Credentials
+Uses FLEXCRED for Tavily — the platform automatically provides API credentials (org-owned or Codika-provided):
+```json
+"credentials": {
+  "tavilyApi": {
+    "id": "{{FLEXCRED_TAVILY_ID_DERCXELF}}",
+    "name": "{{FLEXCRED_TAVILY_NAME_DERCXELF}}"
+  }
+}
+```
+
+### Output
+Returns a single text field with formatted search results.
+
+## Deploy and test
+
+```bash
+cd tavily-search
+codika-helper verify use-case .
+codika-helper deploy use-case .
+codika-helper trigger tavily-search --payload '{"query": "latest AI news"}' --poll
+```

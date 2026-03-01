@@ -1,0 +1,75 @@
+---
+title: "Skills Overview"
+description: "Agent-friendly skills for the codika-helper CLI — install the Codika plugin to give AI agents the ability to build, validate, and deploy use cases"
+---
+
+## What are Codika skills?
+
+Codika skills are self-contained documentation files (SKILL.md) that teach AI coding agents (Claude Code, Cursor, Windsurf) how to use the `codika-helper` CLI. When an agent has the Codika plugin installed, it can autonomously:
+
+- Set up authentication and manage profiles
+- Create projects on the platform
+- Scaffold new use case folders
+- Validate workflows against Codika patterns
+- Deploy use cases to production
+- Trigger workflows and debug executions
+
+## Installation
+
+### Add the Codika marketplace
+
+```bash
+npx skills add https://github.com/codika-io/codika-plugins-public
+```
+
+### Install the Codika plugin
+
+Once the marketplace is added, the `codika` plugin is available with all 8 skills.
+
+## Available skills
+
+| Skill | Maps to CLI commands | What it teaches agents |
+|-------|---------------------|----------------------|
+| [setup-codika](/skills/setup-codika) | `login`, `whoami`, `use`, `logout`, `config` | Install CLI, authenticate, manage profiles |
+| [create-project](/skills/create-project) | `project create` | Create platform projects with org-aware metadata |
+| [init-use-case](/skills/init-use-case) | `init` | Scaffold use case folders with template workflows |
+| [verify-use-case](/skills/verify-use-case) | `verify use-case`, `verify workflow` | Validate workflows and auto-fix issues |
+| [deploy-use-case](/skills/deploy-use-case) | `deploy use-case` | Deploy with version management and archival |
+| [fetch-use-case](/skills/fetch-use-case) | `get use-case` | Download deployed use cases from the platform |
+| [trigger-workflow](/skills/trigger-workflow) | `trigger` | Execute workflows with payload and polling |
+| [get-execution](/skills/get-execution) | `get execution` | Debug executions with recursive sub-workflow details |
+
+## How skills work
+
+Each skill is a Markdown file that contains:
+
+1. **When to use** — trigger conditions for the agent
+2. **Prerequisites** — what must be in place before using the skill
+3. **Commands** — exact CLI commands with all flags and options
+4. **Examples** — real-world usage patterns
+5. **Error handling** — common failures and fixes
+6. **Output format** — what the command returns
+
+Skills are designed to be **read by agents**, not executed. The agent reads the skill, understands the context, and generates the appropriate CLI commands for the user's situation.
+
+## Typical agent workflow
+
+An agent orchestrating a full deployment would use skills in this order:
+
+```
+1. setup-codika     → Verify CLI installed and authenticated
+2. init-use-case    → Scaffold the use case folder
+3. (Agent builds config.ts and workflows)
+4. verify-use-case  → Validate before deploying
+5. deploy-use-case  → Deploy to platform
+6. trigger-workflow  → Test the deployment
+7. get-execution    → Debug if needed
+```
+
+## Design principles
+
+- **No secrets** — skills never contain API keys, internal URLs, or credentials
+- **CLI-first** — skills reference CLI commands and flags, not internal implementation
+- **Self-contained** — each skill has all context needed; no cross-skill dependencies
+- **Fail-safe** — skills guide agents to check prerequisites and handle errors
+- **Org-aware** — skills explain multi-profile, multi-org workflows

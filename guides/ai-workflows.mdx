@@ -1,0 +1,154 @@
+---
+title: "AI Workflows"
+description: "Build workflows that use Claude and other LLMs for classification, extraction, and generation using n8n LangChain nodes"
+---
+
+## Overview
+
+Codika workflows use n8n's LangChain integration nodes to run AI operations. The two main node types for LLM processing are:
+
+| Node | Use when | Why |
+|------|----------|-----|
+| `chainLlm` | Structured output (classification, extraction, JSON) | Direct response, no reasoning noise |
+| `agent` | Multi-step reasoning, tool usage | Planning and iteration capability |
+
+**Critical rule:** Use `chainLlm` when you need structured JSON output. The `agent` node adds verbose reasoning before the final answer, which breaks structured output parsers.
+
+## Architecture
+
+Both node types follow the same wiring pattern:
+
+```
+lmChatAnthropic (model + credentials) ──ai_languageModel──┐
+                                                           ├──→ chainLlm or agent
+outputParserStructured ────────────ai_outputParser─────────┘
+```
+
+**Credentials go on the model node**, not on the chain/agent node.
+
+## Basic chainLlm example
+
+This classifies an email as "newsletter", "action_item", or "spam":
+
+### LLM Model node
+
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+  "typeVersion": 1.3,
+  "position": [600, 500],
+  "id": "model-1",
+  "name": "Claude Model",
+  "parameters": {
+    "model": {
+      "__rl": true,
+      "value": "claude-haiku-4-5-20251001",
+      "mode": "list"
+    },
+    "options": {
+      "maxTokensToSample": 1024,
+      "temperature": 0.3
+    }
+  },
+  "credentials": {
+    "anthropicApi": {
+      "id": "{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}",
+      "name": "{{FLEXCRED_ANTHROPIC_NAME_DERCXELF}}"
+    }
+  }
+}
+```
+
+### Output Parser node
+
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+  "typeVersion": 1.3,
+  "position": [600, 600],
+  "id": "parser-1",
+  "name": "Classification Parser",
+  "parameters": {
+    "jsonSchemaExample": "{\"category\": \"newsletter\", \"confidence\": \"high\", \"reason\": \"Contains subscription links\"}"
+  }
+}
+```
+
+### Chain LLM node
+
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.chainLlm",
+  "typeVersion": 1.7,
+  "position": [800, 400],
+  "id": "chain-1",
+  "name": "Classify Email",
+  "parameters": {
+    "promptType": "define",
+    "text": "Classify the following email into one of these categories: newsletter, action_item, spam.\n\nEmail subject: {{ $json.subject }}\nEmail body: {{ $json.body }}\n\nRespond with the category, confidence (high/medium/low), and a brief reason.",
+    "hasOutputParser": true
+  }
+}
+```
+
+### Connections
+
+```json
+{
+  "Claude Model": {
+    "ai_languageModel": [[{ "node": "Classify Email", "type": "ai_languageModel", "index": 0 }]]
+  },
+  "Classification Parser": {
+    "ai_outputParser": [[{ "node": "Classify Email", "type": "ai_outputParser", "index": 0 }]]
+  }
+}
+```
+
+## Accessing LLM output
+
+After the chainLlm node executes, the parsed output is available at:
+
+```javascript
+// In a Code node after chainLlm
+const result = $('Classify Email').first().json;
+const category = result.output.category;
+const confidence = result.output.confidence;
+```
+
+For `outputParserStructured`, the parsed JSON is in the `output` field of the chain's result.
+
+## Available Claude models
+
+| Model | ID | Best for |
+|-------|-----|---------|
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Fast classification, simple extraction |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6-20250514` | Complex analysis, generation |
+| Claude Opus 4.6 | `claude-opus-4-6-20250527` | Most capable, multi-step reasoning |
+
+Use FLEXCRED placeholders for AI provider credentials — they automatically handle org-owned vs. Codika-provided API keys.
+
+## Multi-step processing pattern
+
+For workflows that need to process multiple items (e.g., classify each email in a batch):
+
+```
+Fetch Items → Loop Over Items → chainLlm (classify each) → Aggregate → Submit Result
+```
+
+Use n8n's `SplitInBatches` or `Loop Over Items` node to iterate, with the chainLlm inside the loop.
+
+## Temperature guidelines
+
+| Task | Temperature | Why |
+|------|-------------|-----|
+| Classification | 0.0 - 0.3 | Deterministic, consistent results |
+| Extraction | 0.0 - 0.2 | Accurate data extraction |
+| Summarization | 0.3 - 0.5 | Some creative flexibility |
+| Generation | 0.5 - 0.8 | Creative, varied output |
+
+## Common mistakes
+
+1. **Credentials on chainLlm instead of lmChatAnthropic** — credentials must be on the model node
+2. **Using `agent` for JSON output** — agent adds reasoning text that breaks structured parsers
+3. **Missing `hasOutputParser: true`** on chainLlm — required when using outputParserStructured
+4. **Accessing output incorrectly** — use `$('Node Name').first().json.output`, not `.json` directly

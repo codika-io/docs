@@ -1,0 +1,219 @@
+---
+title: "Triggers"
+description: "The four trigger types that start workflow execution — HTTP, schedule, service event, and sub-workflow"
+---
+
+## Overview
+
+Every workflow must have at least one trigger. The trigger type determines how the workflow starts, what data it receives, and how Codika Init registers the execution.
+
+| Trigger type | How it starts | Codika Init mode | User input? |
+|-------------|--------------|------------------|-------------|
+| **HTTP** | User clicks button / API call | Extracts metadata from webhook | Yes (`inputSchema`) |
+| **Schedule** | Cron expression fires | Creates execution via API | No |
+| **Service event** | External service sends data | Creates execution via API | No |
+| **Sub-workflow** | Called by parent workflow | Not present (sub-workflows skip Init) | Via parent |
+
+## HTTP triggers
+
+User-initiated execution via webhook. The user fills a form (defined by `inputSchema`), submits it, and waits for results.
+
+### config.ts definition
+
+```typescript
+import type { HttpTrigger } from '@codika-io/helper-sdk';
+
+const webhookId = crypto.randomUUID();
+const webhookUrl = `{{ORGSECRET_N8N_BASE_URL_TERCESORG}}/webhook/{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/analyze`;
+
+{
+  triggerId: webhookId,
+  type: 'http' as const,
+  url: webhookUrl,
+  method: 'POST' as const,
+  title: 'Analyze Document',
+  description: 'Upload a document for AI analysis',
+  inputSchema: getInputSchema(),
+} satisfies HttpTrigger
+```
+
+### Workflow pattern
+
+```
+Webhook (responseMode: lastNode)
+  → Codika Init (extracts execution metadata from webhook payload)
+    → [Business logic]
+      → Codika Submit Result
+```
+
+The webhook node must have `responseMode` set to `lastNode` so that Codika Submit Result returns data to the caller.
+
+### n8n node configuration
+
+```json
+{
+  "type": "n8n-nodes-base.webhook",
+  "typeVersion": 2,
+  "parameters": {
+    "httpMethod": "POST",
+    "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/analyze",
+    "responseMode": "lastNode",
+    "options": {}
+  },
+  "webhookId": "{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}"
+}
+```
+
+## Schedule triggers
+
+Automatic execution on a cron schedule. No user input — the workflow runs at the configured time.
+
+### config.ts definition
+
+```typescript
+import type { ScheduleTrigger } from '@codika-io/helper-sdk';
+
+{
+  triggerId: crypto.randomUUID(),
+  type: 'schedule' as const,
+  cronExpression: '0 8 * * 1-5',
+  timezone: 'Europe/Brussels',
+  humanReadable: 'Weekdays at 8:00 AM Brussels time',
+  title: 'Daily Report',
+  description: 'Generates and sends the daily summary report',
+} satisfies ScheduleTrigger
+```
+
+### Common cron expressions
+
+| Expression | Schedule |
+|-----------|---------|
+| `0 8 * * *` | Daily at 8:00 AM |
+| `0 9 * * 1` | Weekly on Monday at 9:00 AM |
+| `0 9 * * 1-5` | Weekdays at 9:00 AM |
+| `0 9 1,15 * *` | 1st and 15th of each month at 9:00 AM |
+| `*/5 * * * *` | Every 5 minutes |
+
+### Workflow pattern
+
+Schedule triggers often include a manual webhook as a secondary trigger for testing:
+
+```
+Schedule Trigger ──┐
+                   ├──→ Codika Init (creates execution via API)
+Manual Webhook ────┘       → [Business logic]
+                             → Codika Submit Result
+```
+
+### n8n Codika Init configuration (schedule mode)
+
+```json
+{
+  "type": "n8n-nodes-codika.codika",
+  "parameters": {
+    "resource": "processManagement",
+    "operation": "initWorkflow",
+    "memberSecret": "{{MEMSECRT_EXECUTION_AUTH_TRCESMEM}}",
+    "organizationId": "{{USERDATA_ORGANIZATION_ID_ATADRESU}}",
+    "userId": "{{USERDATA_USER_ID_ATADRESU}}",
+    "processInstanceId": "{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}",
+    "workflowId": "daily-report",
+    "triggerType": "schedule"
+  }
+}
+```
+
+**Key difference from HTTP triggers:** For schedule and service event triggers, Codika Init **creates** the execution record by calling the platform API. For HTTP triggers, it **extracts** the execution metadata from the incoming webhook payload.
+
+## Service event triggers
+
+External services (Gmail, Calendly, WhatsApp, etc.) trigger the workflow when an event occurs.
+
+### config.ts definition
+
+```typescript
+import type { ServiceEventTrigger } from '@codika-io/helper-sdk';
+
+{
+  triggerId: crypto.randomUUID(),
+  type: 'service_event' as const,
+  service: 'email' as const,
+  eventType: 'new_email_with_attachment',
+  title: 'New Email with Attachment',
+  description: 'Triggers when a new email with attachments arrives',
+} satisfies ServiceEventTrigger
+```
+
+### Service event types
+
+| Service | Event type | What triggers it |
+|---------|-----------|-----------------|
+| `email` | `new_email_with_attachment` | Email arrives with attachments |
+| `email` | `new_email_received` | Any new email arrives |
+| `calendly` | `invitee_created` | New booking on Calendly |
+| `whatsapp` | `message_received` | WhatsApp message received |
+
+### Workflow pattern
+
+```
+Service Trigger (e.g., Gmail polling)
+  → Codika Init (creates execution via API, same as schedule mode)
+    → [Business logic]
+      → Codika Submit Result
+```
+
+**Important:** Access trigger data via `$('Trigger Name').first().json`, **not** via Codika Init output. The Init node only provides execution metadata.
+
+### Webhook ID for service triggers
+
+Some service event triggers need a `webhookId` on the trigger node:
+
+```json
+{
+  "webhookId": "{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}"
+}
+```
+
+## Sub-workflow triggers
+
+Sub-workflows are helper workflows called by parent workflows. They are not visible to users and cannot be triggered directly.
+
+### config.ts definition
+
+```typescript
+import type { SubworkflowTrigger } from '@codika-io/helper-sdk';
+
+{
+  triggerId: crypto.randomUUID(),
+  type: 'subworkflow' as const,
+  title: 'Process Text',
+  description: 'Called by parent workflow to process text chunks',
+  inputSchema: [
+    { name: 'text', type: 'string' },
+    { name: 'maxLength', type: 'number' },
+    { name: 'executionId', type: 'string' },
+    { name: 'executionSecret', type: 'string' },
+  ],
+  calledBy: ['main-workflow'],
+} satisfies SubworkflowTrigger
+```
+
+### Key rules
+
+- **No Codika Init** — sub-workflows do not register their own execution
+- **At least 1 input parameter** — n8n requires this
+- **Cost: 0** — execution cost is attributed to the parent workflow
+- **Output schema: []** — always empty (data flows back to parent via Execute Workflow node)
+- **Pass execution metadata** if the sub-workflow uses Codika Upload File
+
+See [Sub-Workflows guide](/guides/sub-workflows) for complete patterns.
+
+## Multiple triggers per workflow
+
+A single workflow can have multiple triggers. Common patterns:
+
+- **Schedule + HTTP**: Automated daily run with a manual "run now" button
+- **Multiple HTTP**: Different entry points with different input schemas
+- **HTTP + Service event**: Manual run plus automatic triggering on events
+
+Each trigger gets its own `triggerId` in the config.

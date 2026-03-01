@@ -1,68 +1,128 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Codika Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#1E1432",
+    "light": "#A78BFA",
+    "dark": "#150E24"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Satoshi",
+      "weight": 700,
+      "source": "https://cdn.fontshare.com/wf/BNPRT3ODDLFBWCXYJT3DHQD5HQ6KXIUF/TQZKMSQ7LSXFQXBNSJKXWQR3KMBNHYXW/SATOSHI-BOLD.woff2",
+      "format": "woff2"
+    },
+    "body": {
+      "family": "Geist"
+    }
+  },
+  "background": {
+    "color": {
+      "light": "#FDFCFB",
+      "dark": "#0A0F1E"
+    }
   },
   "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://codika.io"
+  },
+  "appearance": {
+    "default": "system"
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/use-cases",
+              "concepts/processes",
+              "concepts/workflows",
+              "concepts/placeholders",
+              "concepts/triggers",
+              "concepts/credentials",
+              "concepts/schemas"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/first-use-case",
+              "guides/ai-workflows",
+              "guides/sub-workflows",
+              "guides/deployment-parameters",
+              "guides/file-uploads"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Examples",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "examples/overview",
+              "examples/simple-search",
+              "examples/email-automation",
+              "examples/scheduled-report",
+              "examples/complex-rag"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "CLI Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "cli/overview"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Commands",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "cli/login",
+              "cli/init",
+              "cli/verify",
+              "cli/deploy",
+              "cli/trigger",
+              "cli/get",
+              "cli/project",
+              "cli/status"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Skills",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "skills/overview"
+            ]
+          },
+          {
+            "group": "Skills",
+            "pages": [
+              "skills/setup-codika",
+              "skills/create-project",
+              "skills/init-use-case",
+              "skills/verify-use-case",
+              "skills/deploy-use-case",
+              "skills/fetch-use-case",
+              "skills/trigger-workflow",
+              "skills/get-execution"
             ]
           }
         ]
@@ -71,52 +131,49 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "GitHub",
+          "href": "https://github.com/codika-io",
+          "icon": "github"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Platform",
+          "href": "https://app.codika.io",
+          "icon": "rocket"
+        },
+        {
+          "anchor": "Website",
+          "href": "https://codika.io",
+          "icon": "globe"
         }
       ]
     }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:team@codika.io"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Get Started",
+      "href": "https://app.codika.io"
     }
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "claude",
+      "cursor",
+      "mcp"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/codika-io",
+      "linkedin": "https://linkedin.com/company/codika"
     }
   }
 }

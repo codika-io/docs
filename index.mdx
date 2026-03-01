@@ -1,97 +1,106 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "What is Codika?"
+description: "A multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations with AI-powered orchestration"
 ---
 
-## Setting up
+## Overview
 
-Get your documentation site up and running in minutes.
+Codika is a platform that turns natural language descriptions into production-ready n8n workflow automations. It handles the full lifecycle: building workflows, deploying them to n8n, managing credentials, tracking executions, and distributing automations across organizations.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+The platform solves a specific problem: **n8n workflows are powerful but hard to productize**. Codika wraps n8n with multi-tenant deployment, credential isolation, version management, and a deployment pipeline that makes workflows installable and shareable.
 
-## Make it yours
+## What you can build
 
-Design a docs site that looks great and empowers your users.
+A **use case** is Codika's fundamental deployment unit. It packages one or more n8n workflows with configuration, schemas, and metadata into a single deployable artifact.
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+Examples of what use cases do:
+
+| Use Case | Trigger | What it does |
+|----------|---------|--------------|
+| Email attachment organizer | New email arrives | Saves attachments to Google Drive, logs to Sheets |
+| Daily inbox intelligence | Cron schedule (8 AM) | Categorizes unread emails with Claude, marks newsletters as read |
+| CRM funnel reporter | Schedule + manual HTTP | Pulls Folk CRM pipeline data, posts summary to Slack |
+| Proposal generator | User submits form | Searches similar docs via RAG, generates PDF proposal with Claude |
+| Web search tool | HTTP webhook | Runs Tavily search, returns formatted results |
+
+## Architecture
+
+```
+User request (form, schedule, webhook, service event)
+  → Codika platform (credential resolution, execution tracking)
+    → n8n workflow (business logic, API calls, AI processing)
+      → Results returned to user (structured output, files, notifications)
+```
+
+The system has four main components:
+
+| Component | What it does |
+|-----------|-------------|
+| **codika-app-platform** | SvelteKit frontend + Firebase Cloud Functions backend. User-facing dashboard for managing organizations, projects, and processes. |
+| **codika-helper-sdk** | TypeScript CLI (`codika-helper`) for scaffolding, validating, and deploying use cases from the command line. |
+| **codika-processes-lib** | Repository of use case definitions — config files and n8n workflow JSON templates. |
+| **cova-gateway** | FastAPI service powering the conversational AI interface. Handles agent execution and streaming responses. |
+
+## How deployment works
+
+```
+Use case folder (config.ts + workflows/*.json)
+  → codika-helper verify (validation)
+  → codika-helper deploy (packaging + API call)
+    → Cloud Function (version calculation, Firestore records)
+      → n8n (placeholder replacement, credential injection, workflow creation)
+        → Live automation (accessible via triggers)
+```
+
+When you deploy a use case:
+
+1. The CLI validates the folder structure, config exports, and workflow patterns
+2. Workflows are base64-encoded and sent to the `deployProcessUseCase` Cloud Function
+3. The function creates Firestore records (Process, ProcessDeploymentTemplate, ProcessInstance, ProcessDeploymentInstance)
+4. Workflows are deployed to n8n with all placeholders replaced with real values
+5. The automation is live and can be triggered via HTTP, schedule, or service events
+
+## Multi-tenancy model
+
+Every deployment is isolated per user. When a user installs a process, they get their own **ProcessInstance** with:
+
+- Isolated credentials (their own OAuth tokens, API keys)
+- Personal deployment parameters (configured at install time)
+- Independent execution tracking
+- Separate activation controls (pause, archive, reactivate)
+
+```
+Organization
+  ├── Projects (scoped workspaces)
+  ├── Integrations (OAuth connections: Gmail, Slack, Drive, etc.)
+  ├── Members (roles: owner, member, viewer)
+  └── Process Instances (deployed automations, one per user)
+```
+
+## Key concepts
+
+| Concept | Definition |
+|---------|-----------|
+| **Use case** | A folder containing `config.ts` and `workflows/` that defines a deployable automation |
+| **Process** | The public, discoverable representation of a deployed use case |
+| **ProcessInstance** | A user's personal installation of a process with isolated data |
+| **Placeholder** | A template token (e.g., `{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}`) replaced at deployment with real values |
+| **Codika nodes** | Custom n8n nodes (Init, Submit Result, Report Error) that integrate workflows with the platform |
+| **Trigger** | How a workflow starts: HTTP webhook, cron schedule, service event, or sub-workflow call |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install the CLI and deploy your first use case in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Use case structure" icon="folder" href="/concepts/use-cases">
+    Understand how use cases are organized and configured.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="CLI reference" icon="terminal" href="/cli/overview">
+    Full reference for all codika-helper commands.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Examples" icon="code" href="/examples/overview">
+    Real-world use case examples with complete code.
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+</CardGroup>

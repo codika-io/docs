@@ -1,0 +1,129 @@
+---
+title: "get-execution"
+description: "Skill for fetching full n8n workflow execution details for debugging, with recursive sub-workflow support"
+---
+
+## When to use
+
+- Debug a workflow execution that failed or returned unexpected results
+- Inspect node-level input/output for a specific execution
+- Fetch sub-workflow execution details recursively
+- Analyze execution timing and identify bottlenecks
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- A deployed and triggered workflow
+- An execution ID (from the `trigger` command response)
+
+## Typical debugging flow
+
+```bash
+# 1. Deploy
+codika-helper deploy use-case .
+
+# 2. Trigger and get execution ID
+codika-helper trigger main-workflow --payload '{"text": "test"}' --poll
+
+# 3. Debug with full details
+codika-helper get execution <executionId> --deep --slim
+```
+
+## Command
+
+```bash
+codika-helper get execution <executionId> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<executionId>` | Codika execution ID from trigger response |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--process-instance-id <id>` | Explicit process instance ID | Auto from project.json |
+| `--path <path>` | Path to folder with project.json | Current directory |
+| `--deep` | Recursively fetch sub-workflow executions | Off |
+| `--slim` | Strip noise (pairedItem, workflowData) | Off |
+| `-o, --output <path>` | Save to file instead of stdout | stdout |
+| `--json` | JSON output | — |
+
+## Recommended flags
+
+For most debugging, use both flags together:
+
+```bash
+codika-helper get execution <id> --deep --slim
+```
+
+- `--deep` gives you the complete execution tree including sub-workflows
+- `--slim` removes noisy metadata for cleaner, more readable output
+
+## Examples
+
+```bash
+# Basic details
+codika-helper get execution exec_abc123
+
+# Full recursive + clean output
+codika-helper get execution exec_abc123 --deep --slim
+
+# Save to file for analysis
+codika-helper get execution exec_abc123 --deep --slim -o debug.json
+
+# From a specific use case directory
+codika-helper get execution exec_abc123 --path ./my-use-case
+
+# Explicit process instance
+codika-helper get execution exec_abc123 --process-instance-id pi_def456
+```
+
+## Process instance ID resolution
+
+1. `--process-instance-id` flag
+2. `devProcessInstanceId` in project.json at `--path`
+3. `devProcessInstanceId` in project.json in current directory
+
+## Output
+
+```
+Execution: exec_abc123
+Status:    success
+Duration:  12.3s
+n8n ID:    n8n_xyz789
+Nodes:     8
+
+  ✓ Webhook Trigger        (0.1s)
+  ✓ Codika Init            (0.3s)
+  ✓ Fetch Data             (2.1s)
+  ✓ Process Results         (0.5s)
+  ✓ Call Sub-Workflow       (8.2s)
+    └── Sub-workflow execution:
+        ✓ Execute Workflow Trigger  (0.0s)
+        ✓ Transform Data           (0.4s)
+        ✓ Generate PDF             (7.5s)
+        ✓ Upload File              (0.3s)
+  ✓ IF Success             (0.0s)
+  ✓ Codika Submit Result   (0.1s)
+```
+
+## Deep mode details
+
+When `--deep` is enabled, the CLI:
+1. Fetches the main execution
+2. Identifies nodes that called sub-workflows (Execute Workflow nodes)
+3. Recursively fetches each sub-workflow execution
+4. Attaches results as `_subExecutions` on the parent node
+
+This builds a complete execution tree for multi-workflow use cases.
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error or execution not found |

@@ -1,0 +1,294 @@
+---
+title: "Build Your First Use Case"
+description: "Step-by-step guide to creating a complete use case from scratch — from an empty folder to a deployed, triggerable automation"
+---
+
+## What you'll build
+
+A web search tool that takes a query via HTTP, searches the web using Tavily, and returns formatted results. This is a minimal but complete use case that demonstrates the full lifecycle.
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated (see [Quickstart](/quickstart))
+- A Codika API key with `deploy:use-case` and `workflows:trigger` scopes
+
+## Step 1: Create the project
+
+```bash
+mkdir web-search && cd web-search
+codika-helper project create --name "Web Search Tool" --path .
+```
+
+This creates `project.json` with your `projectId` and `organizationId`.
+
+## Step 2: Create version.json
+
+```json version.json
+{
+  "version": "1.0.0"
+}
+```
+
+## Step 3: Create config.ts
+
+```typescript config.ts
+import { loadAndEncodeWorkflow, type ProcessDeploymentConfigurationInput, type FormInputSchema, type FormOutputSchema } from '@codika-io/helper-sdk';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import crypto from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export const WORKFLOW_FILES = [
+  'workflows/web-search.json',
+];
+
+export function getConfiguration(): ProcessDeploymentConfigurationInput {
+  const webhookId = crypto.randomUUID();
+  const webhookUrl = `{{ORGSECRET_N8N_BASE_URL_TERCESORG}}/webhook/{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/search`;
+
+  return {
+    title: 'Web Search Tool',
+    subtitle: 'AI-powered web search',
+    description: 'Search the web and get formatted results using Tavily.',
+    workflows: [
+      {
+        workflowTemplateId: 'web-search',
+        workflowId: 'web-search',
+        workflowName: 'Web Search',
+        integrationUids: ['tavily'],
+        triggers: [
+          {
+            triggerId: webhookId,
+            type: 'http' as const,
+            url: webhookUrl,
+            method: 'POST' as const,
+            title: 'Search the Web',
+            description: 'Enter a query to search the web',
+            inputSchema: getInputSchema(),
+          },
+        ],
+        outputSchema: getOutputSchema(),
+        n8nWorkflowJsonBase64: loadAndEncodeWorkflow(__dirname, 'workflows/web-search.json'),
+        cost: 1,
+      },
+    ],
+    tags: ['search', 'web'],
+  };
+}
+
+function getInputSchema(): FormInputSchema {
+  return [
+    {
+      type: 'section',
+      title: 'Search',
+      collapsible: false,
+      inputSchema: [
+        {
+          key: 'query',
+          type: 'text',
+          label: 'Search Query',
+          description: 'What to search for on the web',
+          placeholder: 'Enter your search query...',
+          required: true,
+          maxLength: 1000,
+        },
+      ],
+    },
+  ];
+}
+
+function getOutputSchema(): FormOutputSchema {
+  return [
+    {
+      key: 'results',
+      type: 'text',
+      label: 'Search Results',
+      description: 'Formatted search results from the web',
+    },
+  ];
+}
+```
+
+## Step 4: Create the workflow
+
+Create the `workflows/` directory and the workflow JSON:
+
+```json workflows/web-search.json
+{
+  "name": "Web Search",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/search",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "id": "webhook-1",
+      "name": "Webhook Trigger",
+      "webhookId": "{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}"
+    },
+    {
+      "parameters": {
+        "resource": "processManagement",
+        "operation": "initWorkflow"
+      },
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "init-1",
+      "name": "Codika Init"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: $('Webhook Trigger').first().json.body.payload.query, max_results: 5 }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [600, 300],
+      "id": "search-1",
+      "name": "Tavily Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "{{FLEXCRED_TAVILY_ID_DERCXELF}}",
+          "name": "{{FLEXCRED_TAVILY_NAME_DERCXELF}}"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json.results || [];\nconst formatted = results.map((r, i) => `${i+1}. **${r.title}**\\n   ${r.url}\\n   ${r.content}`).join('\\n\\n');\nreturn [{ json: { results: formatted || 'No results found.' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300],
+      "id": "format-1",
+      "name": "Format Results"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.results }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "exists" }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "id": "if-1",
+      "name": "IF Success"
+    },
+    {
+      "parameters": {
+        "resource": "processManagement",
+        "operation": "submitResult",
+        "resultData": "={{ JSON.stringify({ results: $json.results }) }}"
+      },
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [1200, 200],
+      "id": "submit-1",
+      "name": "Codika Submit Result"
+    },
+    {
+      "parameters": {
+        "resource": "processManagement",
+        "operation": "reportError",
+        "errorMessage": "Search failed or returned no results",
+        "errorType": "external_api_error"
+      },
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [1200, 400],
+      "id": "error-1",
+      "name": "Codika Report Error"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]] },
+    "Codika Init": { "main": [[{ "node": "Tavily Search", "type": "main", "index": 0 }]] },
+    "Tavily Search": { "main": [[{ "node": "Format Results", "type": "main", "index": 0 }]] },
+    "Format Results": { "main": [[{ "node": "IF Success", "type": "main", "index": 0 }]] },
+    "IF Success": {
+      "main": [
+        [{ "node": "Codika Submit Result", "type": "main", "index": 0 }],
+        [{ "node": "Codika Report Error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}",
+    "timezone": "Europe/Brussels"
+  }
+}
+```
+
+## Step 5: Validate
+
+```bash
+codika-helper verify use-case .
+```
+
+Fix any issues:
+
+```bash
+codika-helper verify use-case . --fix
+```
+
+## Step 6: Deploy
+
+```bash
+codika-helper deploy use-case .
+```
+
+## Step 7: Test
+
+```bash
+codika-helper trigger web-search \
+  --payload '{"query": "best practices for n8n workflows"}' \
+  --poll
+```
+
+## Final folder structure
+
+```
+web-search/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    web-search.json
+  deployments/           # Created after deploy
+    {projectId}/
+      project-info.json
+      process/
+        1.1/
+          deployment-info.json
+          config-snapshot.json
+          workflows/
+            web-search.json
+```
+
+## Key takeaways
+
+1. Every use case needs `config.ts`, `version.json`, and `workflows/`
+2. The config exports `WORKFLOW_FILES` and `getConfiguration()`
+3. Workflows follow the mandatory pattern: Trigger → Init → Logic → Submit/Error
+4. Credentials use placeholders (`FLEXCRED`, `USERCRED`, etc.)
+5. The CLI handles versioning, encoding, and API communication

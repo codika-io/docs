@@ -1,0 +1,121 @@
+---
+title: "deploy-use-case"
+description: "Skill for deploying a validated use case to the Codika platform with automatic version tracking and deployment archiving"
+---
+
+## When to use
+
+- Deploy n8n workflows + config to the Codika platform
+- After creating or modifying workflow files
+- After a successful `verify-use-case` check
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- Use case folder with `config.ts` and `workflows/` directory
+- Platform project (via `project.json` or `PROJECT_ID` in config.ts)
+
+## Recommended flow
+
+```bash
+cd my-use-case
+codika-helper project create --name "My Project" --path .   # If no project.json
+codika-helper verify use-case .                              # Validate first
+codika-helper deploy use-case .                              # Deploy
+```
+
+## Command
+
+```bash
+codika-helper deploy use-case <path> [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--patch` | Patch version bump (1.0.0 → 1.0.1) | Default |
+| `--minor` | Minor version bump (1.0.1 → 1.1.0) | — |
+| `--major` | Major version bump (1.1.0 → 2.0.0) | — |
+| `--version <X.Y>` | Explicit API version | — |
+| `--project-id <id>` | Override project ID | project.json |
+| `--additional-file <abs:rel>` | Attach extra file (repeatable) | — |
+| `--dry-run` | Preview without deploying | — |
+| `--json` | JSON output | — |
+| `--api-key <key>` | Override API key | — |
+| `--api-url <url>` | Override API URL | — |
+
+## What happens on deploy
+
+1. Read `version.json` (defaults to 1.0.0)
+2. Bump local version based on flags
+3. Validate the use case
+4. Resolve project ID: `--project-id` > `project.json` > `config.ts`
+5. Resolve API key: `--api-key` > env > org-matching profile > active profile
+6. Base64-encode all workflows
+7. Send to platform
+8. On success:
+   - Update `version.json` with new version
+   - Archive deployment in `deployments/{projectId}/`
+   - Save `devProcessInstanceId` to `project.json`
+   - Update `project-info.json` with version mapping
+
+## API key resolution (org-aware)
+
+If `project.json` contains `organizationId`, the CLI automatically selects the profile matching that org:
+
+1. `--api-key` flag (always wins)
+2. `CODIKA_API_KEY` environment variable
+3. Profile matching `organizationId` from `project.json`
+4. Active profile
+
+## Examples
+
+```bash
+# Default patch bump
+codika-helper deploy use-case .
+
+# Minor version
+codika-helper deploy use-case . --minor
+
+# Major version
+codika-helper deploy use-case . --major
+
+# Explicit API version
+codika-helper deploy use-case . --version 2.0
+
+# Dry-run preview
+codika-helper deploy use-case . --dry-run
+
+# With extra documentation file
+codika-helper deploy use-case . \
+  --additional-file "/path/to/readme.md:docs/readme.md"
+
+# JSON output for automation
+codika-helper deploy use-case . --json
+```
+
+## Post-deploy files
+
+After a successful deployment, the folder contains:
+
+```
+my-use-case/
+  version.json              # Updated with new version
+  project.json              # Updated with devProcessInstanceId
+  deployments/
+    {projectId}/
+      project-info.json     # Version mapping history
+      process/
+        {apiVersion}/
+          deployment-info.json
+          config-snapshot.json
+          workflows/*.json
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Deployment successful |
+| `1` | API error or validation failure |

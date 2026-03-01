@@ -1,0 +1,168 @@
+---
+title: "Deployment Parameters"
+description: "Define user-configurable values that are set at process installation time and injected into workflows via INSTPARM placeholders"
+---
+
+## What are deployment parameters?
+
+Deployment parameters are values that users configure **once** when they install a process. Unlike trigger inputs (which change per execution), deployment parameters are baked into the workflow at deployment time.
+
+Examples:
+- Company name to include in reports
+- Slack channel ID to post notifications to
+- Maximum number of items to process
+- API endpoint URLs for external services
+
+## How it works
+
+```
+config.ts: getDeploymentInputSchema()
+  → User fills form at install time
+    → Values stored in ProcessInstance.deploymentParameters
+      → INSTPARM placeholders replaced in workflows
+```
+
+## Defining parameters in config.ts
+
+### getDeploymentInputSchema()
+
+```typescript
+export function getDeploymentInputSchema(): DeploymentInputSchema {
+  return [
+    {
+      key: 'COMPANY_NAME',
+      type: 'string',
+      label: 'Company Name',
+      description: 'Your company name, used in generated reports',
+      placeholder: 'Acme Corp',
+      required: true,
+    },
+    {
+      key: 'SLACK_CHANNEL_ID',
+      type: 'string',
+      label: 'Slack Channel',
+      description: 'Channel ID where notifications will be posted',
+      placeholder: 'C01234ABCDE',
+      required: true,
+    },
+    {
+      key: 'MAX_ITEMS',
+      type: 'number',
+      label: 'Maximum Items',
+      description: 'Maximum number of items to process per execution',
+      required: false,
+      defaultValue: 50,
+      min: 1,
+      max: 500,
+    },
+    {
+      key: 'REPORT_FREQUENCY',
+      type: 'select',
+      label: 'Report Frequency',
+      required: true,
+      defaultValue: 'daily',
+      options: [
+        { value: 'daily', label: 'Daily' },
+        { value: 'weekly', label: 'Weekly' },
+        { value: 'biweekly', label: 'Bi-weekly' },
+        { value: 'monthly', label: 'Monthly' },
+      ],
+    },
+    {
+      key: 'ENABLE_NOTIFICATIONS',
+      type: 'boolean',
+      label: 'Enable Notifications',
+      description: 'Send Slack notification after each execution',
+      defaultValue: true,
+    },
+  ];
+}
+```
+
+### getDefaultDeploymentParameters()
+
+Provides default values for automated installations (no user interaction):
+
+```typescript
+export function getDefaultDeploymentParameters(): DeploymentParameterValues {
+  return {
+    COMPANY_NAME: 'My Company',
+    SLACK_CHANNEL_ID: '',
+    MAX_ITEMS: 50,
+    REPORT_FREQUENCY: 'daily',
+    ENABLE_NOTIFICATIONS: true,
+  };
+}
+```
+
+## Using INSTPARM in workflows
+
+### In Code nodes
+
+INSTPARM placeholders are context-aware — they serialize correctly based on the value type. **Do not add extra quotes.**
+
+```javascript
+// In a Code node
+const companyName = {{INSTPARM_COMPANY_NAME_MRAPTSNI}};         // String → "Acme Corp"
+const maxItems = {{INSTPARM_MAX_ITEMS_MRAPTSNI}};               // Number → 50
+const enableNotifications = {{INSTPARM_ENABLE_NOTIFICATIONS_MRAPTSNI}}; // Boolean → true
+const frequency = {{INSTPARM_REPORT_FREQUENCY_MRAPTSNI}};       // String → "daily"
+```
+
+At deployment time, these become:
+
+```javascript
+const companyName = "Acme Corp";
+const maxItems = 50;
+const enableNotifications = true;
+const frequency = "daily";
+```
+
+### In node parameters (expressions)
+
+```json
+{
+  "parameters": {
+    "channel": "{{INSTPARM_SLACK_CHANNEL_ID_MRAPTSNI}}"
+  }
+}
+```
+
+### In HTTP request bodies
+
+```json
+{
+  "parameters": {
+    "jsonBody": "={{ JSON.stringify({ company: {{INSTPARM_COMPANY_NAME_MRAPTSNI}}, limit: {{INSTPARM_MAX_ITEMS_MRAPTSNI}} }) }}"
+  }
+}
+```
+
+## Field types
+
+All 11 field types from the [Input Schema reference](/concepts/schemas) are available:
+
+| Type | INSTPARM serialization |
+|------|----------------------|
+| `string` | `"value"` (quoted) |
+| `text` | `"value"` (quoted) |
+| `number` | `42` (unquoted) |
+| `boolean` | `true` or `false` (unquoted) |
+| `select` | `"selected_value"` (quoted) |
+| `multiselect` | `["val1", "val2"]` (JSON array) |
+| `array` | `["item1", "item2"]` (JSON array) |
+| `object` | `{"key": "value"}` (JSON object) |
+| `date` | `"2026-01-15"` (ISO string, quoted) |
+
+## Validation
+
+The CLI checks INSTPARM usage via:
+
+| Rule | What it checks |
+|------|----------------|
+| `WF-INSTPARM-QUOTING` | INSTPARM placeholders are not double-quoted (e.g., `"{{INSTPARM_...}}"` is wrong) |
+| `CK-PLACEHOLDERS` | Placeholder syntax is correct |
+
+## Version updates
+
+When a process is updated to a new version, existing deployment parameters are **preserved**. New parameters use their default values. Removed parameters are ignored.

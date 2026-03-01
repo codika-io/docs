@@ -1,0 +1,267 @@
+---
+title: "Proposal Generator (RAG)"
+description: "Complex multi-workflow use case with RAG retrieval, AI generation, sub-workflow PDF conversion, file uploads, and data ingestion"
+---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| Workflows | 3 (2 parent + 1 sub-workflow) |
+| Triggers | HTTP (2 parent workflows) + sub-workflow |
+| Integrations | Anthropic (Claude), Pinecone (vector DB) |
+| Credential types | FLEXCRED (Anthropic), INSTCRED (Pinecone) |
+| Features | RAG retrieval, file upload/download, sub-workflows, data ingestion, knowledge base |
+| Cost | 15 + 5 + 0 credits |
+| Complexity | Complex |
+
+This use case generates business proposals by searching a knowledge base of historical proposals (via RAG), then using Claude to draft a new proposal based on the requirements document and similar past work.
+
+## Folder structure
+
+```
+proposal-generation/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    proposal-generation-package.json    # Main: generates proposal
+    document-retrieval.json             # RAG: finds similar documents
+    markdown-to-pdf-subworkflow.json    # Sub-workflow: converts to PDF
+```
+
+## Workflow architecture
+
+```
+User uploads requirements document
+  → proposal-generation-package (HTTP trigger)
+    → Extract text from document
+    → Search knowledge base (Pinecone) for similar proposals
+    → Generate proposal with Claude (using similar docs as context)
+    → Call pdf-converter sub-workflow
+      → markdown-to-pdf-subworkflow
+        → Convert markdown to PDF
+        → Upload PDF via Codika Upload File (with execution metadata override)
+        → Return documentId to parent
+    → Codika Submit Result (with PDF documentId)
+
+User can also:
+  → document-retrieval (HTTP trigger)
+    → Search knowledge base without generating a proposal
+    → Return matching documents
+```
+
+## config.ts highlights
+
+### Three workflow definitions
+
+```typescript
+export const WORKFLOW_FILES = [
+  'workflows/proposal-generation-package.json',
+  'workflows/document-retrieval.json',
+  'workflows/markdown-to-pdf-subworkflow.json',
+];
+```
+
+### Main workflow (HTTP trigger with file upload input)
+
+```typescript
+{
+  workflowTemplateId: 'proposal-generation-package',
+  workflowId: 'proposal-generation-package',
+  workflowName: 'Generate Proposal',
+  integrationUids: ['anthropic'],
+  triggers: [{
+    triggerId: crypto.randomUUID(),
+    type: 'http' as const,
+    url: webhookUrl,
+    method: 'POST' as const,
+    title: 'Generate Proposal',
+    inputSchema: getProposalInputSchema(),
+  }],
+  outputSchema: getProposalOutputSchema(),
+  cost: 15,
+}
+```
+
+### File input schema
+
+```typescript
+function getProposalInputSchema(): FormInputSchema {
+  return [
+    {
+      type: 'section',
+      title: 'Proposal Configuration',
+      collapsible: false,
+      inputSchema: [
+        {
+          key: 'requirements_file',
+          type: 'file',
+          label: 'Requirements Document',
+          description: 'Upload the RFP or requirements document',
+          required: true,
+          maxSize: 50 * 1024 * 1024,
+          allowedMimeTypes: ['application/pdf', '.docx', '.doc'],
+        },
+        {
+          key: 'proposal_language',
+          type: 'select',
+          label: 'Proposal Language',
+          required: true,
+          defaultValue: 'french',
+          options: [
+            { value: 'french', label: 'French' },
+            { value: 'english', label: 'English' },
+            { value: 'dutch', label: 'Dutch' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'section',
+      title: 'Additional Context',
+      collapsible: true,
+      inputSchema: [
+        {
+          key: 'notes',
+          type: 'array',
+          label: 'Additional Notes',
+          description: 'Extra context to include in the proposal',
+          itemField: { type: 'text', maxLength: 10000, rows: 6 },
+          minItems: 0,
+          maxItems: 10,
+        },
+      ],
+    },
+  ];
+}
+```
+
+### File output schema
+
+```typescript
+function getProposalOutputSchema(): FormOutputSchema {
+  return [
+    {
+      key: 'proposal_pdf',
+      type: 'file',
+      label: 'Generated Proposal',
+      description: 'PDF proposal document',
+    },
+    {
+      key: 'executive_summary',
+      type: 'text',
+      label: 'Executive Summary',
+    },
+  ];
+}
+```
+
+### Sub-workflow definition
+
+```typescript
+{
+  workflowTemplateId: 'markdown-to-pdf-subworkflow',
+  workflowId: 'markdown-to-pdf-subworkflow',
+  workflowName: 'Markdown to PDF Converter',
+  integrationUids: [],
+  triggers: [{
+    triggerId: crypto.randomUUID(),
+    type: 'subworkflow' as const,
+    title: 'Convert Markdown to PDF',
+    inputSchema: [
+      { name: 'markdownContent', type: 'string' },
+      { name: 'fieldKey', type: 'string' },
+      { name: 'fileName', type: 'string' },
+      { name: 'executionId', type: 'string' },
+      { name: 'executionSecret', type: 'string' },
+      { name: 'docTitle', type: 'string' },
+      { name: 'docSubtitle', type: 'string' },
+    ],
+    calledBy: ['proposal-generation-package'],
+  }],
+  outputSchema: [],
+  cost: 0,
+}
+```
+
+### Knowledge base access
+
+```typescript
+knowledgeBaseAccess: {
+  processDocTags: ['proposal', 'rfp'],
+  processInstanceDocTags: ['proposal'],
+}
+```
+
+This enables the workflow to access tagged documents from both the process-level and instance-level knowledge bases.
+
+### Data ingestion configuration
+
+For embedding documents into the vector store:
+
+```typescript
+export function getDataIngestionConfig(): ProcessDataIngestionConfigInput {
+  return {
+    workflowTemplateId: 'proposal-embedding-ingestion',
+    workflowName: 'Embedding Ingestion',
+    n8nWorkflowJsonBase64: loadAndEncodeWorkflow(__dirname, 'workflows/embedding-workflow.json'),
+    webhooks: {
+      embed: '{{PROCDATA_PROCESS_ID_ATADCORP}}/embed',
+      delete: '{{PROCDATA_PROCESS_ID_ATADCORP}}/embed-delete',
+    },
+    purpose: 'Embed KB documents into Pinecone for RAG retrieval',
+    cost: 2,
+  };
+}
+```
+
+## Key patterns demonstrated
+
+### 1. Multi-workflow architecture
+Three workflows with clear separation of concerns — main generation, retrieval, and PDF conversion.
+
+### 2. Sub-workflow with file upload
+The PDF sub-workflow receives execution metadata from the parent and uses `executionIdOverride` / `executionSecretOverride` on the Codika Upload File node.
+
+### 3. SUBWKFL placeholder
+Parent calls sub-workflow via:
+```json
+"value": "{{SUBWKFL_markdown-to-pdf-subworkflow_LFKWBUS}}"
+```
+
+### 4. File input and output
+Users upload a document (requirements file), the workflow processes it, generates a PDF, uploads it via Codika Upload File, and returns the `documentId` as a `file` type output field.
+
+### 5. RAG data ingestion
+Separate data ingestion workflow embeds documents into Pinecone. Deployed independently via:
+```bash
+codika-helper deploy process-data-ingestion ./proposal-generation
+```
+
+### 6. Knowledge base tags
+Documents are filtered by tags, allowing fine-grained access control over which documents the workflow can read.
+
+### 7. Cost differentiation
+Main workflow costs 15 credits, retrieval costs 5, sub-workflow costs 0 (attributed to parent).
+
+## Deploy sequence
+
+```bash
+# 1. Validate
+codika-helper verify use-case ./proposal-generation
+
+# 2. Deploy use case (all 3 workflows)
+codika-helper deploy use-case ./proposal-generation
+
+# 3. Deploy data ingestion (separate)
+codika-helper deploy process-data-ingestion ./proposal-generation
+
+# 4. Test retrieval
+codika-helper trigger document-retrieval \
+  --payload '{"query": "software development proposal"}' \
+  --poll
+
+# 5. Test full generation (with file upload via platform UI)
+# File uploads require the platform UI — CLI trigger only supports JSON payloads
+```

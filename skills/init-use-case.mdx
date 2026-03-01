@@ -1,0 +1,96 @@
+---
+title: "init-use-case"
+description: "Skill for scaffolding a new Codika use case folder with config, template workflows, and optional project creation"
+---
+
+## When to use
+
+- Start a new use case from scratch
+- Create the initial folder structure for an n8n workflow project
+- Bootstrap a new automation with correct Codika patterns
+
+## Prerequisites
+
+- `codika-helper` CLI installed
+- For project creation: authenticated via `codika-helper login` (optional — scaffolding works without auth)
+
+## Command
+
+```bash
+codika-helper init <path> [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--name <name>` | Use case display name | Interactive prompt |
+| `--description <desc>` | Use case description | Auto-generated |
+| `--icon <icon>` | Lucide icon name | `Workflow` |
+| `--no-project` | Skip platform project creation | — |
+| `--project-id <id>` | Use existing project ID | — |
+| `--json` | JSON output | — |
+
+## Generated files
+
+```
+my-use-case/
+  config.ts                    # 3 template workflows, full configuration
+  version.json                 # Initialized to 1.0.0
+  project.json                 # Project ID and org ID (if project created)
+  workflows/
+    main-workflow.json         # HTTP trigger, Codika Init, sub-workflow call
+    scheduled-report.json      # Schedule trigger with manual webhook fallback
+    text-processor.json        # Sub-workflow with Execute Workflow Trigger
+```
+
+## Template demonstrates
+
+| Feature | Where |
+|---------|-------|
+| HTTP trigger with input validation | `main-workflow.json` |
+| Schedule trigger (Monday 9 AM) | `scheduled-report.json` |
+| Manual webhook fallback | `scheduled-report.json` |
+| Sub-workflow pattern | `text-processor.json` |
+| SUBWKFL placeholder | `main-workflow.json` calls `text-processor` |
+| Codika Init (HTTP mode) | `main-workflow.json` |
+| Codika Init (schedule mode) | `scheduled-report.json` |
+| Submit Result / Report Error | All parent workflows |
+| Placeholder usage | All workflows |
+
+## Examples
+
+```bash
+# Interactive (prompts for name)
+codika-helper init ./my-automation
+
+# Named with project creation
+codika-helper init ./email-tool --name "Email Tool"
+
+# Without project (offline scaffolding)
+codika-helper init ./local-test --name "Local Test" --no-project
+
+# With existing project
+codika-helper init ./my-tool --name "My Tool" --project-id abc123
+```
+
+## Next steps after init
+
+```bash
+# Validate the scaffold
+codika-helper verify use-case ./my-automation
+
+# If --no-project was used, create a project
+codika-helper project create --name "My Automation" --path ./my-automation
+
+# Customize config.ts and workflows, then deploy
+codika-helper deploy use-case ./my-automation
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime error |
+| `2` | Validation error (directory exists, invalid path) |

@@ -1,0 +1,80 @@
+# Codika
+
+> Codika is a multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations. Users define use cases (config + n8n workflows), deploy them via CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution. The CLI tool is `codika-helper` (npm package `@codika-io/helper-sdk`).
+
+Codika solves the problem of productizing n8n workflows. A use case is a folder containing `config.ts` and `workflows/*.json` that defines a deployable automation. When deployed, placeholders in workflows (11 types including FLEXCRED, USERCRED, ORGCRED, INSTPARM, SUBWKFL) are replaced with real values per user. Every user gets isolated credentials, deployment parameters, and execution tracking.
+
+The mandatory workflow pattern is: Trigger → Codika Init → Business Logic → IF Success → Codika Submit Result / Codika Report Error. Four trigger types are supported: HTTP webhooks, cron schedules, service events (Gmail, Calendly, etc.), and sub-workflow calls.
+
+## Instructions for AI Agents
+
+When helping users build Codika use cases:
+- Every parent workflow MUST have Codika Init as the first node after the trigger, and MUST end with Codika Submit Result (success) or Codika Report Error (failure)
+- Sub-workflows do NOT have Codika Init/Submit/Report nodes — they start with Execute Workflow Trigger
+- Credentials go on the MODEL node (e.g., lmChatAnthropic), never on chainLlm or agent nodes
+- Use `chainLlm` for structured JSON output, `agent` for multi-step reasoning with tools
+- Placeholder suffixes are the type name reversed: FLEXCRED → _DERCXELF, USERDATA → _ATADRESU, PROCDATA → _ATADCORP
+- Always validate before deploying: `codika-helper verify use-case <path>`
+- Use `codika-helper verify use-case <path> --fix` to auto-fix fixable violations
+- INSTPARM placeholders are context-aware — do NOT add extra quotes in Code nodes
+
+## Getting Started
+
+- [What is Codika?](https://docs.codika.io/): Platform overview, architecture, multi-tenancy model, and key concepts
+- [Quickstart](https://docs.codika.io/quickstart): Install CLI, authenticate, scaffold, validate, deploy, trigger, and debug in 7 steps
+
+## Core Concepts
+
+- [Use Cases](https://docs.codika.io/concepts/use-cases): Folder structure (config.ts, workflows/, version.json, project.json), config exports, version management
+- [Processes](https://docs.codika.io/concepts/processes): Four Firestore entities — Process, ProcessDeploymentTemplate, ProcessInstance, ProcessDeploymentInstance — and their lifecycle
+- [Workflows](https://docs.codika.io/concepts/workflows): Mandatory Codika node pattern, workflow JSON structure, required settings, common n8n node types
+- [Placeholders](https://docs.codika.io/concepts/placeholders): All 11 placeholder types (PROCDATA, USERDATA, MEMSECRT, FLEXCRED, USERCRED, ORGCRED, ORGSECRET, SYSCREDS, INSTPARM, INSTCRED, SUBWKFL) with suffix patterns and replacement timeline
+- [Triggers](https://docs.codika.io/concepts/triggers): HTTP webhooks, cron schedules, service events, sub-workflow calls — config definitions and n8n node configuration
+- [Credentials](https://docs.codika.io/concepts/credentials): FLEXCRED (AI providers with fallback), USERCRED (per-user OAuth), ORGCRED (org-wide), INSTCRED (per-instance), integration UIDs
+- [Input & Output Schemas](https://docs.codika.io/concepts/schemas): Form field types (string, text, number, boolean, date, select, file, array, object), section structure, output field types
+
+## CLI Reference
+
+- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), exit codes, API endpoints
+- [login](https://docs.codika.io/cli/login): Login, whoami, use (switch profile), logout, config set/show/clear — multi-profile management
+- [init](https://docs.codika.io/cli/init): Scaffold new use case with config.ts, 3 template workflows, version.json, optional project creation
+- [verify](https://docs.codika.io/cli/verify): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering
+- [deploy](https://docs.codika.io/cli/deploy): Deploy use cases (version bumping, encoding, API call, archival) and data ingestion configs — --patch/--minor/--major/--version, --dry-run
+- [trigger](https://docs.codika.io/cli/trigger): Execute HTTP-triggered workflows with --payload/--payload-file, --poll for results, --timeout, process instance ID resolution
+- [get](https://docs.codika.io/cli/get): Fetch deployed use cases (download or list) and execution details (--deep for sub-workflows, --slim for clean output)
+- [project](https://docs.codika.io/cli/project): Create platform projects with --path to write project.json for org-aware deployment
+- [status](https://docs.codika.io/cli/status): Identity check, use case context detection, profile match status, deployment readiness assessment
+
+## Guides
+
+- [Build Your First Use Case](https://docs.codika.io/guides/first-use-case): End-to-end tutorial building a web search tool from empty folder to deployed automation
+- [AI Workflows](https://docs.codika.io/guides/ai-workflows): chainLlm vs agent nodes, LangChain wiring (model → chain + parser), Claude model IDs, temperature guidelines
+- [Sub-Workflows](https://docs.codika.io/guides/sub-workflows): Execute Workflow pattern, SUBWKFL placeholders, execution metadata forwarding, calledBy arrays
+- [Deployment Parameters](https://docs.codika.io/guides/deployment-parameters): INSTPARM placeholders, getDeploymentInputSchema(), context-aware serialization, field types
+- [File Uploads](https://docs.codika.io/guides/file-uploads): Codika Upload File node, documentId in output schema, execution metadata override in sub-workflows
+
+## Examples
+
+- [Examples Overview](https://docs.codika.io/examples/overview): Gallery of 4 production use cases at different complexity levels
+- [Simple Web Search](https://docs.codika.io/examples/simple-search): Minimal use case — 1 HTTP workflow, Tavily API, FLEXCRED credentials, 1 credit
+- [Email Automation](https://docs.codika.io/examples/email-automation): Service event trigger, Gmail/Drive/Sheets USERCRED, INSTPARM deployment parameters
+- [Scheduled CRM Report](https://docs.codika.io/examples/scheduled-report): Dual triggers (schedule + HTTP), Folk/Slack ORGCRED, select deployment parameters
+- [Proposal Generator (RAG)](https://docs.codika.io/examples/complex-rag): 3 workflows, sub-workflow PDF conversion, file upload/download, Pinecone RAG, data ingestion
+
+## Agent Skills
+
+- [Skills Overview](https://docs.codika.io/skills/overview): What Codika skills are, plugin installation, available skills, typical agent workflow
+- [setup-codika](https://docs.codika.io/skills/setup-codika): CLI installation, authentication, profile management, org-aware selection
+- [create-project](https://docs.codika.io/skills/create-project): Platform project creation with --path for project.json linking
+- [init-use-case](https://docs.codika.io/skills/init-use-case): Scaffold use case folders with template workflows
+- [verify-use-case](https://docs.codika.io/skills/verify-use-case): Validation rules, --fix auto-repair, --strict mode
+- [deploy-use-case](https://docs.codika.io/skills/deploy-use-case): Version management, deployment archival, org-aware key resolution
+- [fetch-use-case](https://docs.codika.io/skills/fetch-use-case): Download deployed use cases and metadata documents
+- [trigger-workflow](https://docs.codika.io/skills/trigger-workflow): Execute workflows with payload, poll for results, error reference
+- [get-execution](https://docs.codika.io/skills/get-execution): Debug executions with --deep recursive sub-workflow fetching
+
+## Optional
+
+- [Placeholder Reference](https://docs.codika.io/concepts/placeholders): Detailed table of all 11 placeholder types with suffix patterns
+- [Validation Rules Reference](https://docs.codika.io/cli/verify): Complete list of all validation rules across 4 layers
+- [Schema Field Types](https://docs.codika.io/concepts/schemas): All input/output field types with properties

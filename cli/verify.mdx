@@ -1,0 +1,179 @@
+---
+title: "verify"
+description: "Validate use case folders and individual workflow files against structural and semantic rules"
+---
+
+## Usage
+
+```bash
+# Validate an entire use case folder
+codika-helper verify use-case <path> [options]
+
+# Validate a single workflow file
+codika-helper verify workflow <path> [options]
+```
+
+**No authentication required.** Validation runs entirely locally.
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Machine-readable JSON output |
+| `--strict` | Treat `should` severity findings as `must` (fail on warnings) |
+| `--fix` | Auto-fix fixable violations in place |
+| `--dry-run` | Show what `--fix` would change without modifying files |
+| `--rules <ids>` | Run only these rules (comma-separated) |
+| `--exclude-rules <ids>` | Skip these rules (comma-separated) |
+
+## Validation layers
+
+The validator runs four layers of checks, from low-level to high-level:
+
+### Layer 1: Flowlint core rules
+
+Static analysis rules from the `@replikanti/flowlint-core` engine. Check graph connectivity and basic workflow structure.
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| R1 | must | No disconnected nodes |
+| R5-R11 | varies | Various connectivity rules |
+| R13 | should | Error handling completeness |
+
+Rules R3 (idempotency guard) and R12 are excluded by default (replaced by custom Codika rules).
+
+### Layer 2: Custom Codika rules
+
+Graph-based checks specific to Codika patterns.
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `CK-INIT` | must | Every parent workflow has a Codika Init node |
+| `CK-SUBMIT` | must | Success paths end with Codika Submit Result |
+| `CK-ERROR` | must | Error paths end with Codika Report Error |
+| `CK-SCHEDULE-CONVERGENCE` | must | Schedule/webhook triggers converge at Codika Init |
+| `CK-SUBWORKFLOW-PARAMS` | should | Sub-workflows have at least 1 input parameter |
+
+### Layer 3: Workflow scripts
+
+Content-based checks that inspect workflow JSON values.
+
+| Rule | Severity | What it checks | Auto-fixable |
+|------|----------|----------------|-------------|
+| `CK-PLACEHOLDERS` | must | Placeholder syntax follows `{{TYPE_KEY_SUFFIX}}` pattern | No |
+| `CK-CREDENTIALS` | must | Credentials use Codika placeholder patterns | No |
+| `WF-WEBHOOK-ID` | should | Webhook IDs use correct placeholders | No |
+| `WF-LLM-OUTPUT` | should | LLM output node access patterns are correct | No |
+| `WF-LLM-MODEL` | should | LLM model IDs are valid | No |
+| `WF-INSTPARM-QUOTING` | should | INSTPARM placeholders not double-quoted | No |
+| `WF-SANITIZATION` | must | No transient IDs (versionId, meta, active, etc.) | Yes |
+| `WF-SETTINGS` | must | Required settings present (executionOrder, errorWorkflow, timezone) | Yes |
+
+### Layer 4: Use-case scripts (use-case command only)
+
+Folder-level checks that validate the use case as a whole.
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `UC-TRIGGERS` | must | At least one trigger defined |
+| `UC-CONFIG-EXPORTS` | must | config.ts exports required members (WORKFLOW_FILES, getConfiguration) |
+| `UC-WORKFLOW-IMPORTS` | must | All workflows referenced in config are present as files |
+| `UC-SUBWORKFLOW-REFS` | must | Sub-workflow SUBWKFL references are valid |
+| `UC-TRIGGER-CONSISTENCY` | should | Trigger types match workflow definitions |
+| `UC-WEBHOOK-PATHS` | should | Webhook paths are unique per workflow |
+| `UC-CALLEDBY` | should | calledBy arrays are consistent with actual usage |
+| `UC-SCHEMA-TYPES` | should | Input/output schema field types are valid |
+| `UC-INTEGRATIONS` | should | Integration UIDs are properly inherited |
+
+## Output
+
+### Text mode (default)
+
+```
+✓ Use case validation passed
+  must: 0  should: 0  nit: 0
+```
+
+Or with findings:
+
+```
+✗ Use case validation failed
+
+workflows/main-workflow.json:
+  ✗ [CK-INIT] must: Parent workflow must have Codika Init node
+  ⚠ [WF-SETTINGS] must: Missing required setting: errorWorkflow (fixable)
+
+config.ts:
+  ⚠ [UC-SCHEMA-TYPES] should: Unknown field type "textarea" in input schema
+
+  must: 1  should: 1  nit: 0
+```
+
+### JSON mode (`--json`)
+
+```json
+{
+  "valid": false,
+  "findings": [
+    {
+      "rule": "CK-INIT",
+      "severity": "must",
+      "message": "Parent workflow must have Codika Init node",
+      "path": "workflows/main-workflow.json",
+      "nodeId": null,
+      "fixable": false
+    }
+  ],
+  "summary": { "must": 1, "should": 0, "nit": 0 }
+}
+```
+
+## Recommended workflow
+
+```bash
+# 1. Run verification to see all issues
+codika-helper verify use-case ./my-use-case
+
+# 2. Auto-fix what you can
+codika-helper verify use-case ./my-use-case --fix
+
+# 3. Manually fix remaining "must" violations
+
+# 4. Verify again to confirm clean
+codika-helper verify use-case ./my-use-case
+
+# 5. Deploy
+codika-helper deploy use-case ./my-use-case
+```
+
+## Examples
+
+```bash
+# Validate and auto-fix
+codika-helper verify use-case ./email-automation --fix
+
+# Strict mode (warnings become errors)
+codika-helper verify use-case ./email-automation --strict
+
+# Run only specific rules
+codika-helper verify use-case ./email-automation --rules CK-INIT,CK-SUBMIT
+
+# Exclude rules
+codika-helper verify use-case ./email-automation --exclude-rules WF-LLM-MODEL
+
+# Preview fixes without applying
+codika-helper verify use-case ./email-automation --fix --dry-run
+
+# Validate a single workflow
+codika-helper verify workflow ./email-automation/workflows/main.json
+
+# JSON output for CI pipelines
+codika-helper verify use-case ./email-automation --json
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All validations passed |
+| `1` | Validation failures found |

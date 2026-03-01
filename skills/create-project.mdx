@@ -1,0 +1,87 @@
+---
+title: "create-project"
+description: "Skill for creating a new project on the Codika platform and linking it to a use case folder"
+---
+
+## When to use
+
+- User wants to create a new project for deploying use cases
+- Before deploying if no project exists for the use case folder
+- When `project.json` is missing and deployment requires a project ID
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- Valid API key with appropriate scopes
+
+## Command
+
+```bash
+codika-helper project create --name "Project Name" [options]
+```
+
+## Options
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--name <name>` | Yes | Project display name |
+| `--description <desc>` | No | Project description |
+| `--template-id <id>` | No | Template ID (uses platform default) |
+| `--organization-id <id>` | Admin keys only | Specify target organization |
+| `--path <dir>` | Recommended | Write `project.json` to this directory |
+| `--api-url <url>` | No | Override API URL |
+| `--api-key <key>` | No | Override API key |
+| `--json` | No | JSON output |
+
+## Recommended usage
+
+Always use `--path .` when creating a project for a use case folder:
+
+```bash
+cd my-use-case
+codika-helper project create --name "My Automation" --path .
+```
+
+This writes `project.json`:
+
+```json
+{
+  "projectId": "abc123",
+  "organizationId": "org_def456"
+}
+```
+
+Benefits of `project.json`:
+- Enables org-aware profile selection during `deploy use-case`
+- Auto-resolves `processInstanceId` for `trigger` and `get execution`
+- Stores `devProcessInstanceId` after first deploy
+
+## Examples
+
+```bash
+# Create and link to current directory
+codika-helper project create --name "Email Automation" --path .
+
+# Create with description
+codika-helper project create \
+  --name "CRM Reporter" \
+  --description "Weekly pipeline reports to Slack" \
+  --path ./crm-reporter
+
+# Create without saving locally
+codika-helper project create --name "Quick Test"
+
+# For admin keys targeting a specific org
+codika-helper project create \
+  --name "Team Tool" \
+  --organization-id org_abc123 \
+  --path .
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error (auth, network, server) |
+| `2` | CLI validation error (missing `--name`) |

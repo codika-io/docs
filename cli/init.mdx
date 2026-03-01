@@ -1,0 +1,116 @@
+---
+title: "init"
+description: "Scaffold a new use case folder with config, workflows, version tracking, and optional platform project creation"
+---
+
+## Usage
+
+```bash
+codika-helper init <path> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Directory to create the use case in |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--name <name>` | Use case display name | Interactive prompt |
+| `--description <desc>` | Use case description | Auto-generated |
+| `--icon <icon>` | Lucide icon name | `Workflow` |
+| `--no-project` | Skip project creation on the platform | — |
+| `--project-id <id>` | Use existing project ID (no API call) | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | Output result as JSON | — |
+
+## What it creates
+
+```
+my-use-case/
+  config.ts                    # Deployment configuration with 3 template workflows
+  version.json                 # Version tracking, initialized to 1.0.0
+  project.json                 # Platform project ID and org ID (if project created)
+  workflows/
+    main-workflow.json         # HTTP-triggered parent workflow
+    scheduled-report.json      # Schedule-triggered workflow (Monday 9 AM)
+    text-processor.json        # Sub-workflow called by main workflow
+```
+
+## Template workflows
+
+The scaffold generates three workflows that demonstrate different patterns:
+
+### main-workflow.json (HTTP trigger)
+- Webhook trigger with input validation
+- Codika Init (HTTP mode — extracts metadata)
+- Calls `text-processor` sub-workflow via `SUBWKFL` placeholder
+- Codika Submit Result / Report Error
+
+### scheduled-report.json (Schedule trigger)
+- Schedule Trigger (cron) + manual Webhook
+- Codika Init (schedule mode — creates execution via API)
+- Business logic placeholder
+- Codika Submit Result / Report Error
+
+### text-processor.json (Sub-workflow)
+- Execute Workflow Trigger (receives data from parent)
+- No Codika Init node
+- Processes data and returns result to parent
+
+## Behavior
+
+1. Creates the folder structure and generates all template files
+2. If authenticated and `--no-project` is not set:
+   - Creates a project on the Codika platform via API
+   - Writes `projectId` and `organizationId` to `project.json`
+3. If `--project-id` is provided:
+   - Uses that ID without making an API call
+   - Writes to `project.json`
+
+## Examples
+
+```bash
+# Interactive scaffold with auto project creation
+codika-helper init ./email-automation --name "Email Automation"
+
+# Scaffold without creating a platform project
+codika-helper init ./local-test --name "Local Test" --no-project
+
+# Scaffold with an existing project ID
+codika-helper init ./my-tool --name "My Tool" --project-id abc123
+
+# Non-interactive, full options
+codika-helper init ./crm-sync \
+  --name "CRM Sync" \
+  --description "Syncs contacts between CRM and email" \
+  --icon "RefreshCw"
+```
+
+## Next steps after init
+
+```bash
+# Verify the scaffold is valid
+codika-helper verify use-case ./my-use-case
+
+# Deploy to the platform
+codika-helper deploy use-case ./my-use-case
+```
+
+If you used `--no-project`, create a project before deploying:
+
+```bash
+codika-helper project create --name "My Automation" --path ./my-use-case
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime error |
+| `2` | CLI validation error (e.g., directory already exists) |

@@ -1,0 +1,75 @@
+---
+title: "Examples Overview"
+description: "Gallery of 4 production use cases at different complexity levels — from a minimal web search tool to a multi-workflow RAG proposal generator"
+---
+
+## Example gallery
+
+These examples are based on production use cases deployed on the Codika platform. They demonstrate different trigger types, integration patterns, AI capabilities, and complexity levels.
+
+| Example | Complexity | Triggers | Key features |
+|---------|-----------|----------|-------------|
+| [Simple Web Search](/examples/simple-search) | Minimal | HTTP | Single workflow, one API call, FLEXCRED credentials |
+| [Email Automation](/examples/email-automation) | Medium | Service event | Gmail integration, Google Drive/Sheets, INSTPARM parameters |
+| [Scheduled CRM Report](/examples/scheduled-report) | Medium | Schedule + HTTP | Dual triggers, Slack integration, deployment parameters |
+| [Proposal Generator (RAG)](/examples/complex-rag) | Complex | HTTP | Multi-workflow, sub-workflows, RAG, file uploads, data ingestion |
+
+## Patterns demonstrated
+
+### Trigger types
+- **HTTP webhook** — user-initiated via form (Simple Search, Proposal Generator)
+- **Schedule (cron)** — time-based automation (CRM Report)
+- **Service event** — external service triggers (Email Automation)
+- **Sub-workflow** — helper called by parent (Proposal Generator)
+
+### Credential types
+- **FLEXCRED** — AI providers with org/Codika fallback (all AI examples)
+- **USERCRED** — User's OAuth tokens (Email Automation)
+- **ORGCRED** — Organization-level shared credentials (CRM Report)
+- **INSTPARM** — User-configured deployment parameters (Email Automation, CRM Report)
+
+### AI patterns
+- **chainLlm** — Structured classification with output parser (Email Intelligence)
+- **RAG retrieval** — Pinecone vector search for similar documents (Proposal Generator)
+- **Text generation** — Claude-powered content creation (Proposal Generator)
+
+### Advanced patterns
+- **Multiple triggers** — Schedule + manual HTTP on same workflow (CRM Report)
+- **Sub-workflows** — PDF generation as a reusable helper (Proposal Generator)
+- **File uploads** — Generate and return files to users (Proposal Generator)
+- **Data ingestion** — Document embedding pipeline for RAG (Proposal Generator)
+- **Deployment parameters** — User-configurable installation settings (Email, CRM)
+
+## Folder structure patterns
+
+### Minimal (1 workflow)
+```
+simple-search/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    web-search.json
+```
+
+### Standard (1-2 workflows)
+```
+email-automation/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    email-processor.json
+```
+
+### Complex (multiple workflows + sub-workflows)
+```
+proposal-generator/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    proposal-generation.json
+    document-retrieval.json
+    pdf-converter.json          # Sub-workflow
+```

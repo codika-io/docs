@@ -1,0 +1,152 @@
+---
+title: "Use Cases"
+description: "The fundamental deployment unit — a folder containing config, workflows, and metadata that defines a complete automation"
+---
+
+## What is a use case?
+
+A use case is Codika's deployment unit. It is a folder on disk that contains everything needed to deploy one or more n8n workflows as a single automation to the Codika platform.
+
+When deployed, a use case becomes a **Process** that users can discover, install, and run with their own credentials.
+
+## Folder structure
+
+```
+my-use-case/
+  config.ts                    # Required: deployment configuration
+  version.json                 # Required: semantic version (auto-managed)
+  project.json                 # Optional: platform project ID and org ID
+  workflows/
+    main-workflow.json         # Required: at least one workflow
+    helper-workflow.json       # Optional: sub-workflows
+  deployments/                 # Auto-created: deployment archives
+    {projectId}/
+      project-info.json
+      process/
+        {apiVersion}/
+          deployment-info.json
+          config-snapshot.json
+          workflows/*.json
+```
+
+### Required files
+
+| File | Purpose |
+|------|---------|
+| `config.ts` | Exports `WORKFLOW_FILES`, `getConfiguration()`, and optionally `getDeploymentInputSchema()` and `getDefaultDeploymentParameters()` |
+| `version.json` | Tracks the local semantic version (e.g., `{"version": "1.2.3"}`). Updated automatically on deploy. |
+| `workflows/*.json` | n8n workflow JSON files. Each file listed in `WORKFLOW_FILES` is base64-encoded and sent to the platform. |
+
+### Optional files
+
+| File | Purpose |
+|------|---------|
+| `project.json` | Contains `projectId` and `organizationId`. Created by `codika-helper init` or `codika-helper project create --path .`. Enables org-aware profile selection. |
+| `deployments/` | Local archive of past deployments. Created automatically by `codika-helper deploy`. |
+
+## config.ts structure
+
+The config file must export these members:
+
+```typescript
+import { loadAndEncodeWorkflow } from '@codika-io/helper-sdk';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import crypto from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Required: array of workflow file paths (relative to config.ts)
+export const WORKFLOW_FILES = [
+  'workflows/main-workflow.json',
+  'workflows/helper-workflow.json',
+];
+
+// Required: returns the full deployment configuration
+export function getConfiguration(): ProcessDeploymentConfigurationInput {
+  return {
+    title: 'My Automation',
+    subtitle: 'One-line description of what it does',
+    description: 'Longer description of capabilities and benefits.',
+    workflows: [
+      {
+        workflowTemplateId: 'main-workflow',
+        workflowId: 'main-workflow',
+        workflowName: 'Main Workflow',
+        integrationUids: ['anthropic', 'google_gmail'],
+        triggers: [/* trigger definitions */],
+        outputSchema: [/* output field definitions */],
+        n8nWorkflowJsonBase64: loadAndEncodeWorkflow(
+          __dirname, 'workflows/main-workflow.json'
+        ),
+        cost: 10,
+      },
+    ],
+    tags: ['email', 'ai'],
+  };
+}
+```
+
+### Configuration fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Display name (2-5 words) |
+| `subtitle` | string | No | One-line tagline |
+| `description` | string | Yes | 1-2 sentences describing the automation |
+| `workflows` | array | Yes | Array of workflow configurations |
+| `tags` | string[] | No | Categorization tags |
+| `processDeploymentMarkdown` | string | No | Markdown documentation for the process |
+
+### Workflow configuration fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `workflowTemplateId` | string | Yes | Unique identifier for the workflow |
+| `workflowId` | string | Yes | Must match the `workflowId` parameter in Codika Init node |
+| `workflowName` | string | Yes | Display name |
+| `integrationUids` | string[] | Yes | Required integrations (e.g., `['google_gmail', 'anthropic']`) |
+| `triggers` | array | Yes | At least one trigger definition |
+| `outputSchema` | array | Yes | Output field definitions (empty array `[]` for sub-workflows) |
+| `n8nWorkflowJsonBase64` | string | Yes | Base64-encoded workflow JSON |
+| `cost` | number | No | Execution cost in credits (0 for sub-workflows) |
+| `markdownInfo` | string | No | Workflow-specific documentation |
+
+## Version management
+
+The `version.json` file tracks a semantic version:
+
+```json
+{
+  "version": "1.2.3"
+}
+```
+
+On each deploy, the CLI:
+
+1. Reads the current version
+2. Bumps it based on the flag: `--patch` (default), `--minor`, or `--major`
+3. Sends the API version to the platform (X.Y format)
+4. Writes the new version back to `version.json`
+
+| Local bump | Example | API version strategy |
+|-----------|---------|---------------------|
+| `--patch` (default) | 1.0.0 → 1.0.1 | `minor_bump` |
+| `--minor` | 1.0.1 → 1.1.0 | `minor_bump` |
+| `--major` | 1.1.0 → 2.0.0 | `major_bump` |
+| `--version 3.0` | Any → explicit | `explicit` (version 3.0) |
+
+## Relationship to platform entities
+
+When you deploy a use case, the platform creates four Firestore entities:
+
+```
+Use case folder
+  → Process (public listing, discoverable)
+    → ProcessDeploymentTemplate (immutable version snapshot)
+      → ProcessDeploymentInstance (user-specific deployment with n8n workflow IDs)
+        → ProcessInstance (user-facing installation with settings and activation state)
+```
+
+See [Processes](/concepts/processes) for full details on these entities.

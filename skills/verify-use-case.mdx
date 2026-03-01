@@ -1,0 +1,94 @@
+---
+title: "verify-use-case"
+description: "Skill for validating use case folders and individual workflow files against Codika's structural and semantic rules"
+---
+
+## When to use
+
+- Before deploying to catch issues early
+- After modifying workflow JSON files
+- When the user asks to lint, validate, or check a use case
+- As part of a CI pipeline
+
+## Prerequisites
+
+- `codika-helper` CLI installed (no authentication needed)
+
+## Commands
+
+```bash
+# Validate entire use case folder
+codika-helper verify use-case <path> [options]
+
+# Validate single workflow file
+codika-helper verify workflow <path> [options]
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Machine-readable output |
+| `--fix` | Auto-fix fixable violations in place |
+| `--dry-run` | Show what `--fix` would change without modifying |
+| `--strict` | Treat `should` severity as `must` |
+| `--rules <ids>` | Run only these rules (comma-separated) |
+| `--exclude-rules <ids>` | Skip these rules (comma-separated) |
+
+## Key validation rules
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `UC-CONFIG-EXPORTS` | must | config.ts exports WORKFLOW_FILES and getConfiguration |
+| `CK-INIT` | must | Parent workflows have Codika Init node |
+| `CK-SUBMIT` | must | Success paths end with Submit Result |
+| `CK-ERROR` | must | Error paths end with Report Error |
+| `WF-SETTINGS` | must | Required workflow settings present |
+| `CK-PLACEHOLDERS` | must | Placeholder syntax is valid |
+| `CK-CREDENTIALS` | must | Credentials use Codika patterns |
+| `CK-SUBWORKFLOW-PARAMS` | should | Sub-workflows have min 1 input param |
+| `WF-SANITIZATION` | must | No transient n8n IDs (fixable) |
+
+## Recommended workflow
+
+```bash
+# 1. See all issues
+codika-helper verify use-case <path>
+
+# 2. Auto-fix fixable violations
+codika-helper verify use-case <path> --fix
+
+# 3. Manually fix remaining must violations
+
+# 4. Verify clean
+codika-helper verify use-case <path>
+
+# 5. Deploy
+codika-helper deploy use-case <path>
+```
+
+## Examples
+
+```bash
+# Basic validation
+codika-helper verify use-case ./my-use-case
+
+# Auto-fix + validate
+codika-helper verify use-case ./my-use-case --fix
+
+# Strict mode
+codika-helper verify use-case ./my-use-case --strict
+
+# Single workflow
+codika-helper verify workflow ./my-use-case/workflows/main.json
+
+# JSON for CI
+codika-helper verify use-case ./my-use-case --json
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All validations passed |
+| `1` | Validation failures found |

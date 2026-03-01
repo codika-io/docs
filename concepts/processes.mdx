@@ -1,0 +1,153 @@
+---
+title: "Processes"
+description: "The four Firestore entities that make up a deployed automation — Process, ProcessDeploymentTemplate, ProcessInstance, and ProcessDeploymentInstance"
+---
+
+## Entity model
+
+When a use case is deployed, the platform creates four linked entities in Firestore. Each serves a distinct purpose in the multi-tenant deployment model.
+
+```
+Process (public listing)
+  └── ProcessDeploymentTemplate (immutable version snapshot)
+
+ProcessInstance (user installation)
+  └── ProcessDeploymentInstance (deployed copy with real n8n IDs)
+```
+
+## Process
+
+**Collection:** `processes/{processId}`
+
+The public, discoverable representation of a deployed use case. The `processId` equals the `projectId`.
+
+| Field | Description |
+|-------|-------------|
+| `title` | Display name |
+| `description` | What the automation does |
+| `visibility` | Access control: `private`, `userList`, `teamList`, `organizational`, `public` |
+| `icon` | Lucide icon name |
+| `tags` | Categorization array |
+| `processType` | `personal` (default, one per user) or `organizational` (one per org) |
+
+### Visibility levels
+
+| Level | Who can see and install |
+|-------|------------------------|
+| `private` | Only the owner |
+| `userList` | Specific users by ID |
+| `teamList` | Specific teams |
+| `organizational` | All members of the organization |
+| `public` | Anyone on the platform |
+
+## ProcessDeploymentTemplate
+
+**Collection:** `process_deployment_templates/{templateId}`
+
+An immutable snapshot of a specific version. Contains the base64-encoded workflow data with placeholders still present (not yet replaced with real values).
+
+| Field | Description |
+|-------|-------------|
+| `version` | API version (e.g., `1.0`, `1.1`, `2.0`) |
+| `status` | `inactive` → `published` → `deprecated` |
+| `workflows` | Workflow metadata (triggers, schemas, integrations) |
+| `workflow_data` | Subcollection storing base64 workflow content (batched in groups of 30) |
+
+Templates are **never modified** after creation. A new deployment creates a new template.
+
+## ProcessInstance
+
+**Collection:** `process_instances/{processInstanceId}`
+
+A user's personal installation of a process. Each user gets their own instance with isolated state.
+
+| Field | Description |
+|-------|-------------|
+| `environment` | `dev` or `prod` |
+| `version` | Which template version this instance runs |
+| `isActive` | Whether workflows are enabled |
+| `archived` | Soft-delete flag |
+| `inactiveReason` | Why deactivated: `user_paused`, `deployment_failed`, `integration_deleted` |
+| `sharedWith` | Sharing model: `owner_only`, `admins`, `everyone`, `users` |
+| `deploymentParameters` | User-configured values (from `INSTPARM` placeholders) |
+| `autoToggleDevProd` | When true, activating dev deactivates prod and vice versa |
+
+### Instance states
+
+| State | archived | isActive | inactiveReason | Behavior |
+|-------|----------|----------|----------------|----------|
+| Active | false | true | — | Fully functional, workflows execute |
+| User paused | false | false | `user_paused` | Visible but workflows disabled |
+| Deploy failed | false | false | `deployment_failed` | Visible, needs retry |
+| Missing integration | false | false | `integration_deleted` | Visible, needs reconnection |
+| Archived | true | false | `user_paused` | Hidden and disabled |
+
+### Dev/Prod environments
+
+For process owners, the `autoToggleDevProd` flag (default: true) ensures only one environment is active at a time:
+
+- **First deploy:** Creates a `dev` instance, activates it
+- **Publish to prod:** Auto-creates `prod` instance, deactivates `dev`
+- **Redeploy to dev:** Deactivates `prod`, activates `dev`
+
+## ProcessDeploymentInstance
+
+**Collection:** `process_deployment_instances/{id}`
+
+The actual deployed copy with real n8n workflow IDs. This is what connects a ProcessInstance to running workflows in n8n.
+
+| Field | Description |
+|-------|-------------|
+| `status` | `pending` → `deploying` → `deployed` → `failed` or `updating` |
+| `workflowMappings` | Map of `workflowTemplateId` → n8n workflow ID |
+| `flexCredentialSources` | Which credential source for each AI provider (org or codika) |
+| `workflow_data` | Subcollection storing base64 workflows **after** placeholder replacement |
+
+### Deployment status flow
+
+```
+pending → deploying → deployed (success)
+                   → failed (error)
+deployed → updating → deployed (version update success)
+                   → failed (version update error)
+```
+
+## Deployment pipeline
+
+The `deployProcessUseCase` Cloud Function orchestrates the full deployment:
+
+1. **Validate** — Check authentication, request format, required fields
+2. **Collect context** — Load project, organization, and user data
+3. **Calculate version** — Apply version strategy (patch/minor/major/explicit)
+4. **Create template** — Store immutable ProcessDeploymentTemplate
+5. **Create/update entities** — Firestore transaction for Process, ProcessInstance, ProcessDeploymentInstance
+6. **Deploy to n8n** — For each workflow:
+   - Decode base64 JSON
+   - Replace all placeholders with real values
+   - Create or update workflow in n8n
+   - Apply organization tags
+7. **Return result** — IDs, version, status
+
+## Version updates and auto-update
+
+When a new template is published:
+
+- **Pinned instances** (`isPinnedVersion: true`): Set `hasUpdate: true` for manual update
+- **Unpinned instances** (`isPinnedVersion: false`): Auto-update triggered via Cloud Function
+  - Creates new ProcessDeploymentInstance
+  - Deploys to n8n
+  - Updates ProcessInstance pointer
+  - Falls back to `hasUpdate: true` if auto-update fails
+
+## Public API access
+
+Process instances with HTTP triggers expose a public API:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/triggerWebhookPublic/{processInstanceId}/{workflowId}` | POST | Execute a workflow |
+| `/getExecutionStatusPublic/{processInstanceId}/{executionId}` | GET | Poll execution status |
+
+Authentication uses a per-instance API key (format: `ck_<base64-48-bytes>`), passed via `X-API-Key` header.
+
+The `codika-helper trigger` and `codika-helper get execution` commands wrap these endpoints.

@@ -1,0 +1,161 @@
+---
+title: "deploy"
+description: "Deploy use cases and data ingestion configurations with version management (--patch/--minor/--major), encoding, API deployment, and archival"
+---
+
+## deploy use-case
+
+Deploy a use case folder to the Codika platform.
+
+```bash
+codika-helper deploy use-case <path> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Path to use case folder (must contain `config.ts` and `workflows/`) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--api-url <url>` | Codika API URL | `CODIKA_API_URL` env or profile |
+| `--api-key <key>` | Codika API key | `CODIKA_API_KEY` env or profile |
+| `--project-id <id>` | Override project ID | `project.json` or `config.ts` |
+| `--patch` | Patch version bump | Default |
+| `--minor` | Minor version bump | — |
+| `--major` | Major version bump | — |
+| `--version <X.Y>` | Explicit API version | — |
+| `--additional-file <abs:rel>` | Add extra file (repeatable) | — |
+| `--json` | JSON output | — |
+| `--dry-run` | Preview without calling API | — |
+
+### Version strategy
+
+| Flag | Local version change | API version strategy |
+|------|---------------------|---------------------|
+| `--patch` (default) | 1.0.0 → 1.0.1 | `minor_bump` |
+| `--minor` | 1.0.1 → 1.1.0 | `minor_bump` |
+| `--major` | 1.1.0 → 2.0.0 | `major_bump` |
+| `--version 3.0` | Unchanged | `explicit` (version 3.0) |
+
+### What happens on deploy
+
+1. **Read** `version.json` for current version
+2. **Validate** the use case (same as `verify use-case`)
+3. **Bump** version based on flags
+4. **Resolve** project ID: `--project-id` > `project.json` > `config.ts`
+5. **Resolve** API key: `--api-key` > env > org-matching profile > active profile
+6. **Encode** all workflow JSON files as base64
+7. **Send** to `deployProcessUseCase` Cloud Function
+8. **On success:**
+   - Update `version.json` with new local version
+   - Save `devProcessInstanceId` to `project.json`
+   - Archive deployment in `deployments/{projectId}/process/{apiVersion}/`
+   - Update `project-info.json` with version mapping
+
+### Dry-run mode
+
+Preview the deployment without calling the API:
+
+```bash
+codika-helper deploy use-case ./my-use-case --dry-run
+```
+
+This validates the configuration, displays the deployment plan (versions, workflows, project ID, integrations), and exits with the validation status.
+
+### Additional files
+
+Attach extra files to the deployment (e.g., documentation, data files):
+
+```bash
+codika-helper deploy use-case ./my-use-case \
+  --additional-file "/absolute/path/to/readme.md:docs/readme.md" \
+  --additional-file "/absolute/path/to/data.json:data/seed.json"
+```
+
+Format: `absolutePath:relativePath` — the relative path determines where the file is stored in the deployment archive.
+
+### Examples
+
+```bash
+# Default deployment (patch bump)
+codika-helper deploy use-case ./email-automation
+
+# Minor version bump
+codika-helper deploy use-case ./email-automation --minor
+
+# Major version bump
+codika-helper deploy use-case ./email-automation --major
+
+# Explicit API version
+codika-helper deploy use-case ./email-automation --version 2.0
+
+# Dry-run preview
+codika-helper deploy use-case ./email-automation --dry-run
+
+# Deploy with specific project ID
+codika-helper deploy use-case ./email-automation --project-id abc123
+
+# JSON output for CI
+codika-helper deploy use-case ./email-automation --json
+```
+
+### Output
+
+```
+✓ Deployed successfully
+  Version:     1.2.4 (API: 1.3)
+  Workflows:   3
+  Project:     abc123
+  Instance:    def456
+```
+
+---
+
+## deploy process-data-ingestion
+
+Deploy a data ingestion configuration for RAG (document embedding) workflows.
+
+```bash
+codika-helper deploy process-data-ingestion <path> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Path to use case folder (config.ts must export `getDataIngestionConfig()`) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--api-url <url>` | Data Ingestion API URL | `CODIKA_DATA_INGESTION_API_URL` env |
+| `--api-key <key>` | Codika API key | `CODIKA_API_KEY` env or profile |
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--version-strategy <strategy>` | `major_bump`, `minor_bump`, or `explicit` | `minor_bump` |
+| `--explicit-version <version>` | Required if strategy is `explicit` | — |
+| `--json` | JSON output | — |
+
+### Output
+
+```
+✓ Data ingestion deployed
+  ID:          di_abc123
+  Version:     1.2
+  Webhook URLs:
+    embed:     https://.../{processId}/embed
+    delete:    https://.../{processId}/embed-delete
+```
+
+Data ingestion deployments are independent from use case deployments — they do not trigger "update available" notifications.
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Deployment successful |
+| `1` | API error or validation failure |

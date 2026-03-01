@@ -1,0 +1,220 @@
+---
+title: "Scheduled CRM Report"
+description: "Dual-trigger workflow (schedule + manual HTTP) that pulls Folk CRM pipeline data and posts a summary to Slack"
+---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| Workflows | 1 |
+| Triggers | Schedule (cron) + HTTP (manual) |
+| Integrations | Folk CRM, Slack |
+| Credential types | ORGCRED (Folk, Slack), INSTPARM (deployment params) |
+| Cost | 30 credits |
+| Complexity | Medium |
+
+This use case runs daily at 9 AM (configurable) to pull pipeline data from Folk CRM and post a formatted report to a Slack channel. It also has a manual trigger for on-demand reports.
+
+## Folder structure
+
+```
+folk-funnel-slack-reporter/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    folk-stats-to-slack.json
+```
+
+## config.ts highlights
+
+### Dual triggers
+
+```typescript
+const workflows = [
+  {
+    workflowTemplateId: 'folk-stats-to-slack',
+    triggers: [
+      {
+        triggerId: manualTriggerId,
+        type: 'http' as const,
+        url: webhookUrl,
+        method: 'POST' as const,
+        title: 'Generate Report Now',
+        description: 'Manually trigger a pipeline report',
+        inputSchema: getManualTriggerInputSchema(),
+      } satisfies HttpTrigger,
+      {
+        triggerId: scheduleTriggerId,
+        type: 'schedule' as const,
+        cronExpression: '0 9 * * *',
+        timezone: 'Europe/Brussels',
+        humanReadable: 'Daily at 9:00 AM Brussels time',
+        title: 'Scheduled Report',
+        description: 'Automatic daily pipeline report',
+      } satisfies ScheduleTrigger,
+    ],
+    outputSchema: getOutputSchema(),
+    // ...
+  },
+];
+```
+
+### Manual trigger input
+
+The HTTP trigger accepts optional parameters:
+
+```typescript
+function getManualTriggerInputSchema(): FormInputSchema {
+  return [
+    {
+      type: 'section',
+      title: 'Report Options',
+      collapsible: true,
+      inputSchema: [
+        {
+          key: 'include_lead_names',
+          type: 'boolean',
+          label: 'Include Lead Names',
+          description: 'Show individual lead names in the report',
+          defaultValue: false,
+        },
+        {
+          key: 'custom_message',
+          type: 'text',
+          label: 'Custom Note',
+          description: 'Optional message to include in the Slack post',
+          maxLength: 500,
+        },
+      ],
+    },
+  ];
+}
+```
+
+### Rich deployment parameters
+
+```typescript
+export function getDeploymentInputSchema(): DeploymentInputSchema {
+  return [
+    {
+      key: 'FOLK_GROUP_ID',
+      type: 'string',
+      label: 'Folk Group ID',
+      description: 'The ID of the Folk CRM group (pipeline) to analyze',
+      required: true,
+    },
+    {
+      key: 'FOLK_GROUP_NAME',
+      type: 'string',
+      label: 'Group Display Name',
+      description: 'Name shown in the Slack report header',
+      required: true,
+      defaultValue: 'Sales Pipeline',
+    },
+    {
+      key: 'SLACK_CHANNEL_ID',
+      type: 'string',
+      label: 'Slack Channel',
+      description: 'Channel ID where the report is posted',
+      required: true,
+      placeholder: 'C01234ABCDE',
+    },
+    {
+      key: 'SCHEDULE_FREQUENCY',
+      type: 'select',
+      label: 'Report Frequency',
+      description: 'How often to generate the automated report',
+      required: true,
+      defaultValue: 'daily',
+      options: [
+        { value: 'daily', label: 'Daily' },
+        { value: 'weekly', label: 'Weekly (Monday)' },
+        { value: 'biweekly', label: 'Bi-weekly' },
+        { value: 'monthly', label: 'Monthly' },
+      ],
+    },
+    {
+      key: 'STATUS_FIELD_NAME',
+      type: 'string',
+      label: 'Status Field Name',
+      description: 'Custom field name for pipeline status (if renamed in Folk)',
+      required: false,
+      defaultValue: 'Status',
+    },
+  ];
+}
+```
+
+### Organization-level credentials
+
+Folk CRM and Slack are shared across the organization:
+
+```typescript
+integrationUids: ['folk', 'slack'],
+```
+
+```json
+"credentials": {
+  "folkApi": {
+    "id": "{{ORGCRED_FOLK_ID_DERCGRO}}",
+    "name": "{{ORGCRED_FOLK_NAME_DERCGRO}}"
+  }
+}
+```
+
+## Workflow pattern
+
+```
+Schedule Trigger ──┐
+                   ├──→ Codika Init → Process Input → Get Folk Data → Calculate Stats
+Manual Webhook ────┘                                                        ↓
+                                                                   Post to Slack
+                                                                        ↓
+                                                                   IF Success
+                                                                    ├── Submit Result
+                                                                    └── Report Error
+```
+
+### Dual trigger convergence
+
+Both triggers feed into the same Codika Init node. The CLI validates this via the `CK-SCHEDULE-CONVERGENCE` rule.
+
+### Codika Init handles both modes:
+- **HTTP trigger**: Extracts execution metadata from webhook
+- **Schedule trigger**: Creates execution via API call
+
+A Code node after Init detects which trigger fired and normalizes the input:
+
+```javascript
+const webhookData = $('Webhook Trigger').first();
+const scheduleData = $('Schedule Trigger').first();
+
+// Determine trigger source
+const isManual = webhookData?.json?.body?.payload !== undefined;
+const includeNames = isManual ? webhookData.json.body.payload.include_lead_names : false;
+```
+
+## Output schema
+
+```typescript
+function getOutputSchema(): FormOutputSchema {
+  return [
+    { key: 'total_leads', type: 'number', label: 'Total Leads', numberType: 'integer' },
+    { key: 'columns_analyzed', type: 'number', label: 'Columns Analyzed', numberType: 'integer' },
+    { key: 'new_leads_count', type: 'number', label: 'New Leads', numberType: 'integer' },
+    { key: 'followup_count', type: 'number', label: 'Follow-ups Needed', numberType: 'integer' },
+    { key: 'slack_message_ts', type: 'string', label: 'Slack Message ID' },
+  ];
+}
+```
+
+## Key patterns demonstrated
+
+1. **Dual triggers** — schedule for automation + HTTP for manual override
+2. **ORGCRED** — organization-level credentials (shared Folk CRM and Slack)
+3. **Select deployment parameter** — dropdown for report frequency
+4. **Trigger detection** — Code node determines which trigger fired
+5. **External API calls** — HTTP requests to Folk CRM API
+6. **Slack posting** — Send formatted messages with Block Kit

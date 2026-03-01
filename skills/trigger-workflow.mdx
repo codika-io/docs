@@ -1,0 +1,107 @@
+---
+title: "trigger-workflow"
+description: "Skill for triggering a deployed Codika workflow and optionally polling for execution results"
+---
+
+## When to use
+
+- Test a deployed workflow
+- Execute a workflow via the CLI instead of the platform UI
+- Automate workflow execution in scripts or CI
+
+## Prerequisites
+
+- Use case deployed (`project.json` contains `devProcessInstanceId`)
+- Authenticated via `codika-helper login` or `CODIKA_API_KEY` env var
+- API key with `workflows:trigger` scope
+
+## Command
+
+```bash
+codika-helper trigger <workflowId> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<workflowId>` | The `workflowTemplateId` from config.ts |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--payload <json>` | Inline JSON payload | `{}` |
+| `--payload-file <path>` | Read payload from JSON file | — |
+| `--process-instance-id <id>` | Explicit process instance ID | Auto from project.json |
+| `--path <path>` | Path to folder with project.json | Current directory |
+| `--poll` | Wait for execution to complete | Fire-and-forget |
+| `--timeout <seconds>` | Max poll time | 120 |
+| `-o, --output <path>` | Save result to file (with --poll) | stdout |
+| `--json` | JSON output | — |
+
+## Examples
+
+### Fire-and-forget
+
+```bash
+codika-helper trigger search --payload '{"query": "test"}'
+```
+
+Returns immediately with execution ID.
+
+### Poll for results
+
+```bash
+codika-helper trigger search --payload '{"query": "test"}' --poll
+```
+
+Waits up to 120 seconds for completion.
+
+### Payload from file
+
+```bash
+codika-helper trigger analyze --payload-file ./test-input.json --poll
+```
+
+### Save result
+
+```bash
+codika-helper trigger search --payload '{"query": "test"}' --poll -o result.json
+```
+
+### Custom timeout
+
+```bash
+codika-helper trigger generate --poll --timeout 300
+```
+
+## Process instance ID resolution
+
+1. `--process-instance-id` flag
+2. `devProcessInstanceId` in project.json at `--path`
+3. `devProcessInstanceId` in project.json in current directory
+
+## Result statuses
+
+| Status | Meaning |
+|--------|---------|
+| `success` | Workflow completed, `resultData` contains output |
+| `failed` | Error occurred, `errorDetails.message` describes failure |
+| `pending` | Still running (during polling) |
+
+## Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika-helper login` |
+| 403 | Missing scope | Create key with `workflows:trigger` scope |
+| 404 | Workflow not found | Check `workflowTemplateId` in config.ts |
+| 412 | Instance inactive | Re-deploy or activate in platform |
+
+## Important notes
+
+- Only HTTP-triggered workflows can be triggered via CLI
+- The `workflowId` is the `workflowTemplateId`, not the n8n ID
+- Payload is wrapped in `{"payload": {...}}` automatically
+- File uploads are not supported via CLI — use the platform UI

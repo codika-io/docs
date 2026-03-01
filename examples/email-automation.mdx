@@ -1,0 +1,175 @@
+---
+title: "Email Automation"
+description: "Service event triggered workflow that automatically organizes Gmail attachments into Google Drive and logs them to Sheets"
+---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| Workflows | 1 |
+| Trigger | Service event (`new_email_with_attachment`) |
+| Integrations | Google Gmail, Google Drive, Google Sheets |
+| Credential types | USERCRED (Gmail, Drive, Sheets), INSTPARM (deployment params) |
+| Cost | 10 credits |
+| Complexity | Medium |
+
+This use case monitors a user's Gmail inbox for emails with attachments, saves them to Google Drive, and logs metadata to a Google Sheet. It runs automatically whenever a matching email arrives.
+
+## Folder structure
+
+```
+gmail-attachment-organizer/
+  config.ts
+  version.json
+  project.json
+  workflows/
+    gmail-attachment-processor.json
+```
+
+## config.ts highlights
+
+### Trigger definition (service event)
+
+```typescript
+{
+  triggerId: crypto.randomUUID(),
+  type: 'service_event' as const,
+  service: 'email' as const,
+  eventType: 'new_email_with_attachment',
+  title: 'New Email with Attachment',
+  description: 'Triggers when a new email with one or more attachments arrives',
+}
+```
+
+No `inputSchema` — service events do not accept user input per execution.
+
+### Deployment parameters
+
+Users configure these at install time:
+
+```typescript
+export function getDeploymentInputSchema(): DeploymentInputSchema {
+  return [
+    {
+      key: 'DRIVE_FOLDER_NAME',
+      type: 'string',
+      label: 'Drive Folder Name',
+      description: 'Name of the Google Drive folder to save attachments to',
+      placeholder: 'Email Attachments',
+      required: true,
+      defaultValue: 'Email Attachments',
+    },
+    {
+      key: 'GMAIL_LABEL_NAME',
+      type: 'string',
+      label: 'Gmail Label',
+      description: 'Label to apply to processed emails',
+      placeholder: 'Processed',
+      required: true,
+      defaultValue: 'Processed',
+    },
+    {
+      key: 'SHEET_NAME',
+      type: 'string',
+      label: 'Spreadsheet Name',
+      description: 'Name of the Google Sheet to log attachment metadata',
+      placeholder: 'Attachment Log',
+      required: true,
+      defaultValue: 'Attachment Log',
+    },
+  ];
+}
+```
+
+### Integration requirements
+
+```typescript
+integrationUids: ['google_gmail', 'google_drive', 'google_sheets'],
+```
+
+Each user must connect their own Google accounts. Credentials are per-user via USERCRED placeholders.
+
+### Output schema
+
+```typescript
+function getOutputSchema(): FormOutputSchema {
+  return [
+    {
+      key: 'files_saved',
+      type: 'number',
+      label: 'Files Saved',
+      numberType: 'integer',
+    },
+    {
+      key: 'sender',
+      type: 'string',
+      label: 'Sender Email',
+    },
+    {
+      key: 'drive_folder_id',
+      type: 'string',
+      label: 'Drive Folder ID',
+    },
+    {
+      key: 'spreadsheet_id',
+      type: 'string',
+      label: 'Spreadsheet ID',
+    },
+  ];
+}
+```
+
+## Workflow pattern
+
+```
+Gmail Trigger (polling) → Codika Init (API mode) → Get Attachments → Save to Drive → Log to Sheet
+                                                    → IF Success → Submit Result
+                                                    → IF Error   → Report Error
+```
+
+### Codika Init (service event mode)
+
+Because this is a service event trigger (not HTTP), Codika Init creates the execution by calling the platform API:
+
+```json
+{
+  "parameters": {
+    "resource": "processManagement",
+    "operation": "initWorkflow",
+    "memberSecret": "{{MEMSECRT_EXECUTION_AUTH_TRCESMEM}}",
+    "organizationId": "{{USERDATA_ORGANIZATION_ID_ATADRESU}}",
+    "userId": "{{USERDATA_USER_ID_ATADRESU}}",
+    "processInstanceId": "{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}",
+    "workflowId": "gmail-attachment-processor",
+    "triggerType": "gmail"
+  }
+}
+```
+
+### INSTPARM usage in Code nodes
+
+```javascript
+const folderName = {{INSTPARM_DRIVE_FOLDER_NAME_MRAPTSNI}};
+const labelName = {{INSTPARM_GMAIL_LABEL_NAME_MRAPTSNI}};
+const sheetName = {{INSTPARM_SHEET_NAME_MRAPTSNI}};
+```
+
+### USERCRED credentials
+
+```json
+"credentials": {
+  "gmailOAuth2": {
+    "id": "{{USERCRED_GOOGLE_GMAIL_ID_DERCRESU}}",
+    "name": "{{USERCRED_GOOGLE_GMAIL_NAME_DERCRESU}}"
+  }
+}
+```
+
+## Key patterns demonstrated
+
+1. **Service event trigger** — automatic execution on external events
+2. **USERCRED** — per-user OAuth credentials (each user's own Gmail/Drive/Sheets)
+3. **INSTPARM** — deployment parameters configured at install time
+4. **Codika Init API mode** — creates execution record for non-HTTP triggers
+5. **Multiple Google integrations** — coordinating Gmail, Drive, and Sheets

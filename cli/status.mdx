@@ -1,0 +1,107 @@
+---
+title: "status"
+description: "Check identity, use case context detection, profile match status, and deployment readiness with `codika-helper status`"
+---
+
+## Usage
+
+```bash
+codika-helper status [path] [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `[path]` | Path to check (defaults to current directory) |
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+| `--verify` | Run quick validation on the detected use case |
+
+## Output sections
+
+### Identity
+
+Shows the current authenticated state:
+
+```
+Identity:
+  Status:       Logged in
+  Organization: Acme Corp
+  Profile:      acme-corp
+  Key:          cko_abc...xyz
+```
+
+### Use case context
+
+If a use case folder is detected at the path:
+
+```
+Use Case:
+  Detected:     ✓
+  Title:        Email Automation
+  Version:      1.2.3
+  Workflows:    3
+  Project ID:   abc123
+  Profile:      ✓ match (acme-corp)
+```
+
+### Profile match status
+
+| Status | Meaning |
+|--------|---------|
+| `match` | Active profile's org matches `project.json` org — ready to deploy |
+| `mismatch` | Different org — shows suggested profile to switch to |
+| `no-org-in-project` | No `organizationId` in `project.json` |
+| `no-profile` | Not logged in |
+
+### Readiness
+
+Shows whether the use case is ready to deploy:
+
+```
+Readiness:
+  ✓ Ready to deploy
+```
+
+Or with issues:
+
+```
+Readiness:
+  ✗ Not ready to deploy
+    - No project.json found
+    - Profile org does not match project org (try: codika-helper use staging)
+```
+
+### Warnings
+
+- **Profile mismatch**: "Active profile 'acme-corp' does not match project org. Suggested: 'staging'"
+- **Key expiry < 7 days**: "API key expires in 3 days"
+- **Key expired**: "API key has expired"
+
+## Examples
+
+```bash
+# Check status in current directory
+codika-helper status
+
+# Check a specific directory
+codika-helper status ./email-automation
+
+# Check with validation
+codika-helper status ./email-automation --verify
+
+# Machine-readable output
+codika-helper status --json
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Ready to deploy |
+| `1` | Not ready (issues found) |

@@ -1,0 +1,142 @@
+---
+title: "CLI Overview"
+description: "Install and configure the codika-helper CLI — the command-line tool for scaffolding, validating, and deploying Codika use cases"
+---
+
+## Installation
+
+```bash
+npm install -g @codika-io/helper-sdk
+```
+
+Verify:
+
+```bash
+codika-helper --version
+```
+
+The package name is `@codika-io/helper-sdk`. The binary is `codika-helper`.
+
+**Requirements:** Node.js 22 or higher (uses experimental strip-types).
+
+## Command hierarchy
+
+```
+codika-helper
+  ├── login                      # Save API key (alias for config set)
+  ├── logout [name]              # Remove a profile
+  ├── whoami                     # Show current identity
+  ├── use [name]                 # Switch active profile or list profiles
+  ├── status [path]              # Show identity and use case context
+  ├── init <path>                # Scaffold a new use case
+  ├── config
+  │   ├── set                    # Save API key and base URL
+  │   ├── show                   # Display all profiles
+  │   └── clear                  # Remove configuration
+  ├── verify
+  │   ├── use-case <path>        # Validate entire use case folder
+  │   └── workflow <path>        # Validate single workflow file
+  ├── deploy
+  │   ├── use-case <path>        # Deploy use case to platform
+  │   └── process-data-ingestion <path>  # Deploy data ingestion config
+  ├── trigger <workflowId>       # Trigger a deployed workflow
+  ├── get
+  │   ├── use-case <projectId>   # Fetch deployed use case
+  │   └── execution <executionId> # Fetch execution details
+  ├── project
+  │   └── create                 # Create a new project
+  └── completion [shell]         # Generate shell completions
+```
+
+## Configuration
+
+Configuration is stored at `~/.config/codika-helper/config.json` (XDG-compliant) with permissions `0o600`.
+
+The CLI supports **multiple named profiles**, each containing:
+
+| Field | Description |
+|-------|-------------|
+| `apiKey` | The Codika API key (prefix `cko_`) |
+| `baseUrl` | Platform API URL |
+| `orgId` | Organization ID |
+| `orgName` | Organization display name |
+| `keyName` | API key display name |
+| `scopes` | Permission scopes (e.g., `deploy:use-case`, `workflows:trigger`) |
+| `createdAt` | When the key was created |
+| `expiresAt` | When the key expires |
+
+## Resolution chains
+
+The CLI resolves values in a predictable priority order. Higher-priority sources override lower ones.
+
+### API key resolution
+
+1. `--api-key` flag (highest priority)
+2. `CODIKA_API_KEY` environment variable
+3. Active profile in config file
+4. Error if none found
+
+### Base URL resolution
+
+1. `--api-url` flag
+2. `CODIKA_API_URL` environment variable (or per-endpoint vars like `CODIKA_DEPLOY_API_URL`)
+3. Active profile base URL
+4. Production default
+
+### Project ID resolution
+
+1. `--project-id` flag
+2. `project.json` in use case folder
+3. `PROJECT_ID` export in `config.ts`
+
+### Organization-aware profile selection
+
+When `project.json` contains an `organizationId`, the CLI automatically selects the profile that matches that organization — even if a different profile is currently active. This is especially important for deployment commands.
+
+The selection order:
+1. `--api-key` flag (always wins)
+2. `CODIKA_API_KEY` environment variable
+3. Profile matching `organizationId` from `project.json`
+4. Active profile
+
+## Global options
+
+These options work across most commands:
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as machine-readable JSON |
+| `--api-key <key>` | Override API key |
+| `--api-url <url>` | Override API base URL |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime error (API failure, missing files, etc.) |
+| `2` | CLI validation error (invalid arguments, missing required options) |
+
+## Profile expiry warnings
+
+On every command, the CLI checks the active profile's key expiry:
+- **< 7 days until expiry**: Displays a warning
+- **Expired**: Displays an error
+- **No expiry data**: No warning
+
+## API endpoints
+
+The CLI communicates with these Cloud Function endpoints:
+
+| Operation | Endpoint |
+|-----------|----------|
+| Deploy use case | `POST /deployProcessUseCase` |
+| Deploy data ingestion | `POST /deployDataIngestion` |
+| Create project | `POST /createProjectViaApiKey` |
+| Get metadata documents | `GET /getMetadataDocumentsEndpoint` |
+| Get execution details | `GET /getExecutionDetailsPublic` |
+| Trigger workflow | `POST /triggerWebhookPublic` |
+| Get execution status | `GET /getExecutionStatusPublic` |
+| Verify API key | `POST /verifyApiKey` |
+
+All authenticated requests use the `X-Process-Manager-Key` header with the API key value.

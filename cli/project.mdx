@@ -1,0 +1,90 @@
+---
+title: "project"
+description: "Create platform projects with `project create` and link them to use case folders via project.json for org-aware deployment"
+---
+
+## project create
+
+Create a new project on the Codika platform.
+
+```bash
+codika-helper project create [options]
+```
+
+### Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `--name <name>` | Project name | Yes |
+| `--description <description>` | Project description | No |
+| `--template-id <id>` | Template ID for project setup | No (platform default) |
+| `--organization-id <id>` | Organization ID | For admin keys only |
+| `--path <dir>` | Write `project.json` to this directory | No |
+| `--api-url <url>` | Codika API URL | No |
+| `--api-key <key>` | Codika API key | No |
+| `--json` | JSON output | No |
+
+### Behavior
+
+1. Calls the `createProjectViaApiKey` Cloud Function
+2. Creates a project in the specified (or inferred) organization
+3. If `--path` is provided, writes `project.json` containing `projectId` and `organizationId`
+
+### The --path flag
+
+Using `--path .` is recommended when creating a project for an existing use case folder. It writes `project.json` which enables:
+- **Org-aware profile selection** during deployment
+- **Automatic process instance ID resolution** for trigger and get commands
+
+```bash
+cd my-use-case
+codika-helper project create --name "My Automation" --path .
+```
+
+This creates `./project.json`:
+
+```json
+{
+  "projectId": "abc123",
+  "organizationId": "org_def456"
+}
+```
+
+### Examples
+
+```bash
+# Create a project and save project.json locally
+codika-helper project create --name "Email Automation" --path ./email-automation
+
+# Create a project without saving locally
+codika-helper project create --name "Test Project"
+
+# With description
+codika-helper project create \
+  --name "CRM Reporter" \
+  --description "Generates weekly CRM pipeline reports"
+
+# For a specific organization (admin keys)
+codika-helper project create \
+  --name "Team Tool" \
+  --organization-id org_abc123
+
+# JSON output
+codika-helper project create --name "My Project" --json
+```
+
+### Output
+
+```
+✓ Project created
+  Project ID: abc123
+  Written:    ./email-automation/project.json
+```
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error |
+| `2` | CLI validation error (e.g., missing `--name`) |

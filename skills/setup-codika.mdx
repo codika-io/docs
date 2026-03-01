@@ -1,0 +1,112 @@
+---
+title: "setup-codika"
+description: "Skill for installing the codika-helper CLI and managing authentication profiles"
+---
+
+## When to use
+
+- First-time environment setup
+- When deploy or project commands fail with "API key is required"
+- To check current identity or switch between organizations
+- When the user needs to authenticate with a different org
+
+## Prerequisites
+
+- Node.js 22+ installed
+- npm available
+
+## Commands
+
+### Install CLI
+
+```bash
+# Check if installed
+codika-helper --version
+
+# Install globally
+npm install -g @codika-io/helper-sdk
+```
+
+### Login (interactive)
+
+```bash
+codika-helper login
+```
+
+Prompts for API key with masked input. Verifies the key, stores a named profile.
+
+### Login (non-interactive)
+
+```bash
+codika-helper login --api-key cko_your_key_here
+```
+
+### Check identity
+
+```bash
+codika-helper whoami
+```
+
+Returns: organization name, key name, masked key, scopes, expiry, profile name.
+
+### List profiles
+
+```bash
+codika-helper use
+```
+
+Shows all stored profiles with an active marker.
+
+### Switch profile
+
+```bash
+codika-helper use <profile-name>
+```
+
+### Remove profile
+
+```bash
+codika-helper logout
+codika-helper logout <profile-name>
+```
+
+### View all configuration
+
+```bash
+codika-helper config show
+```
+
+### Clear configuration
+
+```bash
+codika-helper config clear
+codika-helper config clear --profile <name>
+```
+
+## Configuration storage
+
+| Item | Location |
+|------|----------|
+| Config file | `~/.config/codika-helper/config.json` |
+| Permissions | `0o600` (owner read/write only) |
+| Format | Multi-profile JSON with active profile pointer |
+
+## API key resolution priority
+
+1. `--api-key` / `--api-url` flag on any command
+2. `CODIKA_API_KEY` / `CODIKA_BASE_URL` environment variable
+3. Active profile in config file
+4. Production default (base URL only)
+
+## Organization-aware profile selection
+
+When `project.json` in a use case folder contains an `organizationId`, the CLI automatically selects the matching profile for deployment commands — even if a different profile is currently active.
+
+## Common errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "API key is required" | No key provided or found | Run `codika-helper login` |
+| "Invalid API key" | Key is wrong or expired | Check with `codika-helper whoami`, re-login |
+| "EACCES" on npm install | Permission denied | Use `sudo npm install -g` or fix npm permissions |
+| Wrong org on deploy | Active profile doesn't match project | Use `codika-helper use <correct-profile>` |
