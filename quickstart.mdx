@@ -119,7 +119,9 @@ Output:
 ## Step 6: Trigger a workflow
 
 ```bash
-codika-helper trigger main-workflow --payload '{"message": "Hello world"}' --poll
+codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+{"message": "Hello world"}
+EOF
 ```
 
 The `--poll` flag waits for execution to complete (default timeout: 120 seconds) and prints the result.

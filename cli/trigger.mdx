@@ -21,8 +21,7 @@ codika-helper trigger <workflowId> [options]
 |--------|-------------|---------|
 | `--process-instance-id <id>` | Explicit process instance ID | Auto-resolved from `project.json` |
 | `--path <path>` | Path to use case folder with `project.json` | Current directory |
-| `--payload <json>` | Inline JSON payload | `{}` |
-| `--payload-file <path>` | Read payload from a JSON file | — |
+| `--payload-file <path>` | Read payload from a JSON file, or `-` for stdin | — |
 | `--poll` | Wait for execution to complete | Fire-and-forget |
 | `--timeout <seconds>` | Max poll time | `120` |
 | `-o, --output <path>` | Save result to file (with `--poll`) | stdout |
@@ -43,12 +42,18 @@ codika-helper trigger <workflowId> [options]
 Returns immediately with the execution ID:
 
 ```bash
-codika-helper trigger main-workflow --payload '{"query": "test"}'
+codika-helper trigger main-workflow
 ```
 
 ```
-Triggered: main-workflow
-Execution ID: exec_abc123
+✓ Workflow triggered
+
+  Execution ID:      exec_abc123
+  Process Instance:  pi_def456
+  Workflow:          main-workflow
+
+  Poll for status:
+    codika-helper get execution exec_abc123
 ```
 
 ### Poll for results (`--poll`)
@@ -56,18 +61,36 @@ Execution ID: exec_abc123
 Waits for the execution to complete, polling every 3-5 seconds:
 
 ```bash
-codika-helper trigger main-workflow --payload '{"query": "test"}' --poll
+codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+{"query": "test"}
+EOF
 ```
 
 ```
-Triggered: main-workflow
-Execution ID: exec_abc123
-Polling... (timeout: 120s)
+✓ Workflow triggered (execution: exec_abc123)
 
-✓ Execution completed (12.3s)
-Status:   success
-Result:   {"summary": "Analysis complete", "confidence": 95}
+✓ Execution success (2.3s)
+
+  Result:
+  {
+    "summary": "Analysis complete",
+    "confidence": 95
+  }
+
+  Execution ID: exec_abc123
 ```
+
+### Payload via stdin (recommended)
+
+Use `--payload-file -` with a heredoc to pass JSON without shell escaping issues:
+
+```bash
+codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+{"query": "machine learning", "maxResults": 10}
+EOF
+```
+
+This is the recommended approach when calling from scripts or AI agents, as it avoids shell quoting problems with nested JSON.
 
 ### Payload from file
 
@@ -80,17 +103,18 @@ The file must contain a JSON object.
 ### Save result to file
 
 ```bash
-codika-helper trigger main-workflow \
-  --payload '{"query": "test"}' \
-  --poll \
-  --output ./result.json
+codika-helper trigger main-workflow --poll -o ./result.json --payload-file - <<'EOF'
+{"query": "test"}
+EOF
 ```
 
 ## Examples
 
 ```bash
-# Simple trigger with inline payload
-codika-helper trigger search --payload '{"query": "machine learning"}'
+# Trigger with heredoc payload and poll
+codika-helper trigger search --poll --payload-file - <<'EOF'
+{"query": "machine learning"}
+EOF
 
 # Trigger with payload file and poll
 codika-helper trigger analyze \
@@ -101,18 +125,24 @@ codika-helper trigger analyze \
 # Trigger from a different directory
 codika-helper trigger main-workflow \
   --path ./my-use-case \
-  --payload '{"text": "hello"}'
+  --poll --payload-file - <<'EOF'
+{"text": "hello"}
+EOF
 
 # Explicit process instance ID
 codika-helper trigger main-workflow \
   --process-instance-id pi_abc123 \
-  --payload '{"text": "hello"}'
+  --poll --payload-file - <<'EOF'
+{"text": "hello"}
+EOF
 
-# Save result as JSON
+# JSON output for scripting
 codika-helper trigger main-workflow \
   --poll \
   --json \
-  --output result.json
+  --payload-file - <<'EOF'
+{"text": "test"}
+EOF
 ```
 
 ## Result interpretation

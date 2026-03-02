@@ -143,5 +143,7 @@ Returns a single text field with formatted search results.
 cd tavily-search
 codika-helper verify use-case .
 codika-helper deploy use-case .
-codika-helper trigger tavily-search --payload '{"query": "latest AI news"}' --poll
+codika-helper trigger tavily-search --poll --payload-file - <<'EOF'
+{"query": "latest AI news"}
+EOF
 ```

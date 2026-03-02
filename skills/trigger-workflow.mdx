@@ -15,6 +15,10 @@ description: "Skill for triggering a deployed Codika workflow and optionally pol
 - Authenticated via `codika-helper login` or `CODIKA_API_KEY` env var
 - API key with `workflows:trigger` scope
 
+## Resolving the workflow ID
+
+The `workflowId` is the `workflowTemplateId` from `config.ts`. If the user provides a use case folder path, read `config.ts` to find the available workflow IDs and their trigger types. Only workflows with `trigger.type === 'http'` can be triggered with this command.
+
 ## Command
 
 ```bash
@@ -31,8 +35,7 @@ codika-helper trigger <workflowId> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--payload <json>` | Inline JSON payload | `{}` |
-| `--payload-file <path>` | Read payload from JSON file | — |
+| `--payload-file <path>` | Read payload from JSON file, or `-` for stdin | — |
 | `--process-instance-id <id>` | Explicit process instance ID | Auto from project.json |
 | `--path <path>` | Path to folder with project.json | Current directory |
 | `--poll` | Wait for execution to complete | Fire-and-forget |
@@ -42,21 +45,23 @@ codika-helper trigger <workflowId> [options]
 
 ## Examples
 
+### With payload (recommended: heredoc via stdin)
+
+```bash
+codika-helper trigger search --poll --payload-file - <<'EOF'
+{"query": "test"}
+EOF
+```
+
+Using `--payload-file -` with a heredoc avoids shell escaping issues with inline JSON.
+
 ### Fire-and-forget
 
 ```bash
-codika-helper trigger search --payload '{"query": "test"}'
+codika-helper trigger search
 ```
 
 Returns immediately with execution ID.
-
-### Poll for results
-
-```bash
-codika-helper trigger search --payload '{"query": "test"}' --poll
-```
-
-Waits up to 120 seconds for completion.
 
 ### Payload from file
 
@@ -67,7 +72,9 @@ codika-helper trigger analyze --payload-file ./test-input.json --poll
 ### Save result
 
 ```bash
-codika-helper trigger search --payload '{"query": "test"}' --poll -o result.json
+codika-helper trigger search --poll -o result.json --payload-file - <<'EOF'
+{"query": "test"}
+EOF
 ```
 
 ### Custom timeout

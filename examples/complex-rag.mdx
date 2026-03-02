@@ -258,9 +258,9 @@ codika-helper deploy use-case ./proposal-generation
 codika-helper deploy process-data-ingestion ./proposal-generation
 
 # 4. Test retrieval
-codika-helper trigger document-retrieval \
-  --payload '{"query": "software development proposal"}' \
-  --poll
+codika-helper trigger document-retrieval --poll --payload-file - <<'EOF'
+{"query": "software development proposal"}
+EOF
 
 # 5. Test full generation (with file upload via platform UI)
 # File uploads require the platform UI — CLI trigger only supports JSON payloads

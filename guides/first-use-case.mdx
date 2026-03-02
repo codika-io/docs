@@ -260,9 +260,9 @@ codika-helper deploy use-case .
 ## Step 7: Test
 
 ```bash
-codika-helper trigger web-search \
-  --payload '{"query": "best practices for n8n workflows"}' \
-  --poll
+codika-helper trigger web-search --poll --payload-file - <<'EOF'
+{"query": "best practices for n8n workflows"}
+EOF
 ```
 
 ## Final folder structure

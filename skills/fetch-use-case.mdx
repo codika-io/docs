@@ -15,6 +15,15 @@ description: "Skill for downloading a deployed use case and its metadata documen
 - `codika-helper` CLI installed and authenticated
 - Project ID of the deployed use case
 
+## Resolving the project ID
+
+The CLI requires a **project ID**, not a folder path. If the user provides a use case folder path instead, read `project.json` from that folder to get the `projectId`:
+
+```bash
+cat <use-case-path>/project.json
+# Use the "projectId" value in the command below
+```
+
 ## Command
 
 ```bash
@@ -25,7 +34,7 @@ codika-helper get use-case <projectId> [outputPath] [options]
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `<projectId>` | Yes | Project ID of the deployed use case |
+| `<projectId>` | Yes | Project ID of the deployed use case (from `project.json`) |
 | `[outputPath]` | No | Output directory (defaults to `./<projectId>`) |
 
 ## Options
@@ -38,6 +47,10 @@ codika-helper get use-case <projectId> [outputPath] [options]
 | `--api-key <key>` | Override API key |
 | `--json` | JSON output |
 
+<Note>
+The global CLI version flag is `-V` / `--cli-version`. The `--version` flag on this subcommand specifies the **use case version** to fetch.
+</Note>
+
 ## Examples
 
 ```bash
@@ -48,10 +61,16 @@ codika-helper get use-case abc123
 codika-helper get use-case abc123 ./my-local-copy
 
 # Download specific version
-codika-helper get use-case abc123 --version 1.2
+codika-helper get use-case abc123 ./restored --version 1.0
 
 # List files without downloading
 codika-helper get use-case abc123 --list
+
+# List with JSON output
+codika-helper get use-case abc123 --list --json
+
+# Check CLI version (not use case version)
+codika-helper -V
 ```
 
 ## Output
@@ -59,26 +78,34 @@ codika-helper get use-case abc123 --list
 ### Download mode
 
 ```
-✓ Downloaded use case
-  Project:   abc123
-  Version:   1.3
-  Files:     7
-    config.ts
-    version.json
-    workflows/main-workflow.json
-    workflows/helper.json
+Fetching use case abc123...
+  Output:  ./restored
+
+  ✓ config.ts
+  ✓ workflows/main-workflow.json
+  ✓ workflows/sub-workflow.json
+
+✓ Use Case Downloaded Successfully
+
+  Project:  abc123
+  Version:  1.0
+  Output:   ./restored
+  Files:    3 file(s) downloaded
 ```
 
 ### List mode
 
 ```
-Documents for abc123 (version 1.3):
-  config.ts                    (2.3 KB, text/typescript)
-  version.json                 (32 B, application/json)
-  workflows/main-workflow.json (15.2 KB, application/json)
-  workflows/helper.json        (8.1 KB, application/json)
+✓ Found 3 document(s)
 
-Total: 4 documents
+  Project:      abc123
+  Version:      1.0
+  Organization: org_456
+
+  Documents:
+    config.ts  (8.1 KB, text/typescript)
+    workflows/main-workflow.json  (5.8 KB, application/json)
+    workflows/sub-workflow.json  (2.0 KB, application/json)
 ```
 
 ## Exit codes

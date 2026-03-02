@@ -23,7 +23,9 @@ description: "Skill for fetching full n8n workflow execution details for debuggi
 codika-helper deploy use-case .
 
 # 2. Trigger and get execution ID
-codika-helper trigger main-workflow --payload '{"text": "test"}' --poll
+codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+{"text": "test"}
+EOF
 
 # 3. Debug with full details
 codika-helper get execution <executionId> --deep --slim
