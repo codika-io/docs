@@ -65,13 +65,17 @@ my-first-automation/
   config.ts                    # Deployment configuration
   version.json                 # Version tracking (starts at 1.0.0)
   project.json                 # Platform project ID
+  package.json                 # Dependencies (@codika-io/helper-sdk)
+  tsconfig.json                # TypeScript config for IDE support
+  .gitignore                   # Ignores node_modules/
+  node_modules/                # Dependencies installed automatically
   workflows/
     main-workflow.json         # HTTP-triggered parent workflow
     scheduled-report.json      # Schedule-triggered workflow
     text-processor.json        # Sub-workflow (called by parent)
 ```
 
-The template includes three workflows demonstrating different trigger types (HTTP, schedule, sub-workflow), the mandatory Codika node pattern, and placeholder usage.
+The template includes three workflows demonstrating different trigger types (HTTP, schedule, sub-workflow), the mandatory Codika node pattern, and placeholder usage. Dependencies are installed automatically so the use case is immediately deployable.
 
 ## Step 4: Validate
 

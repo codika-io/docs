@@ -24,6 +24,7 @@ codika-helper init <path> [options]
 | `--icon <icon>` | Lucide icon name | `Workflow` |
 | `--no-project` | Skip project creation on the platform | — |
 | `--project-id <id>` | Use existing project ID (no API call) | — |
+| `--no-install` | Skip npm install after scaffolding | Runs npm install |
 | `--api-url <url>` | Override API URL | — |
 | `--api-key <key>` | Override API key | — |
 | `--json` | Output result as JSON | — |
@@ -35,6 +36,10 @@ my-use-case/
   config.ts                    # Deployment configuration with 3 template workflows
   version.json                 # Version tracking, initialized to 1.0.0
   project.json                 # Platform project ID and org ID (if project created)
+  package.json                 # Dependencies (@codika-io/helper-sdk)
+  tsconfig.json                # TypeScript config for IDE type-checking
+  .gitignore                   # Ignores node_modules/
+  node_modules/                # Installed automatically (unless --no-install)
   workflows/
     main-workflow.json         # HTTP-triggered parent workflow
     scheduled-report.json      # Schedule-triggered workflow (Monday 9 AM)
@@ -71,6 +76,74 @@ The scaffold generates three workflows that demonstrate different patterns:
 3. If `--project-id` is provided:
    - Uses that ID without making an API call
    - Writes to `project.json`
+4. Checks if a parent directory already has `@codika-io/helper-sdk` in its `package.json`:
+   - If found (e.g., inside a monorepo): reuses the existing workspace, skips dependency setup
+   - If not found: creates `package.json`, `tsconfig.json`, `.gitignore`, and runs `npm install`
+5. If `--no-install` is set: creates the dependency files but skips `npm install`
+
+## Project organization
+
+### Single use case (default)
+
+When you scaffold a use case in a standalone directory, the CLI creates a self-contained project with its own `package.json` and dependencies:
+
+```bash
+codika-helper init ./email-automation --name "Email Automation"
+```
+
+```
+email-automation/
+  config.ts
+  version.json
+  project.json
+  package.json        # Own dependencies
+  tsconfig.json
+  .gitignore
+  node_modules/       # Own copy of @codika-io/helper-sdk
+  workflows/
+    ...
+```
+
+This is the simplest approach — each use case is a self-contained, portable project.
+
+### Multiple use cases (shared workspace)
+
+If you plan to manage multiple use cases in a single repository, create a shared workspace with one `package.json` at the root. All use cases share the same dependencies:
+
+```bash
+# 1. Set up the workspace
+mkdir my-automations && cd my-automations
+npm init -y
+npm install @codika-io/helper-sdk
+echo 'node_modules/' > .gitignore
+
+# 2. Scaffold use cases inside it
+codika-helper init ./email-automation --name "Email Automation"
+codika-helper init ./report-generator --name "Report Generator"
+codika-helper init ./crm-sync --name "CRM Sync"
+```
+
+```
+my-automations/
+  package.json            # Shared dependencies
+  node_modules/           # Single copy of @codika-io/helper-sdk
+  email-automation/
+    config.ts
+    version.json
+    workflows/
+  report-generator/
+    config.ts
+    version.json
+    workflows/
+  crm-sync/
+    config.ts
+    version.json
+    workflows/
+```
+
+The CLI automatically detects the shared `package.json` and skips creating per-use-case dependency files. Each use case is still independently deployable — `codika-helper deploy use-case ./email-automation` works regardless of the project structure.
+
+This is the recommended approach when you have multiple use cases, since it avoids duplicating `node_modules` and keeps everything in one place.
 
 ## Examples
 
