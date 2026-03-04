@@ -40,10 +40,7 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "index",
-              "quickstart"
-            ]
+            "pages": ["index", "quickstart"]
           },
           {
             "group": "Core Concepts",
@@ -84,9 +81,7 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "cli/overview"
-            ]
+            "pages": ["cli/overview"]
           },
           {
             "group": "Commands",
@@ -104,13 +99,11 @@
         ]
       },
       {
-        "tab": "Skills",
+        "tab": "Agent Skills",
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "skills/overview"
-            ]
+            "pages": ["skills/overview"]
           },
           {
             "group": "Skills",
@@ -162,13 +155,7 @@
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "claude",
-      "cursor",
-      "mcp"
-    ]
+    "options": ["copy", "view", "claude", "cursor", "mcp"]
   },
   "footer": {
     "socials": {
