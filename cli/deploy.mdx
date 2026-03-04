@@ -24,6 +24,7 @@ codika-helper deploy use-case <path> [options]
 | `--api-url <url>` | Codika API URL | `CODIKA_API_URL` env or profile |
 | `--api-key <key>` | Codika API key | `CODIKA_API_KEY` env or profile |
 | `--project-id <id>` | Override project ID | `project.json` or `config.ts` |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--patch` | Patch version bump | Default |
 | `--minor` | Minor version bump | — |
 | `--major` | Major version bump | — |
@@ -46,7 +47,7 @@ codika-helper deploy use-case <path> [options]
 1. **Read** `version.json` for current version
 2. **Validate** the use case (same as `verify use-case`)
 3. **Bump** version based on flags
-4. **Resolve** project ID: `--project-id` > `project.json` > `config.ts`
+4. **Resolve** project ID: `--project-id` > `--project-file` > `project.json` > `config.ts`
 5. **Resolve** API key: `--api-key` > env > org-matching profile > active profile
 6. **Package** all workflow files
 7. **Send** to the Codika platform API
@@ -136,6 +137,7 @@ codika-helper deploy process-data-ingestion <path> [options]
 | `--api-url <url>` | Data Ingestion API URL | `CODIKA_DATA_INGESTION_API_URL` env |
 | `--api-key <key>` | Codika API key | `CODIKA_API_KEY` env or profile |
 | `--project-id <id>` | Override project ID | `project.json` |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--version-strategy <strategy>` | `major_bump`, `minor_bump`, or `explicit` | `minor_bump` |
 | `--explicit-version <version>` | Required if strategy is `explicit` | — |
 | `--json` | JSON output | — |

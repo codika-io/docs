@@ -86,8 +86,9 @@ The CLI resolves values in a predictable priority order. Higher-priority sources
 ### Project ID resolution
 
 1. `--project-id` flag
-2. `project.json` in use case folder
-3. `PROJECT_ID` export in `config.ts`
+2. `project.json` at `--project-file` path (if provided)
+3. `project.json` in use case folder
+4. `PROJECT_ID` export in `config.ts`
 
 ### Organization-aware profile selection
 
@@ -108,6 +109,7 @@ These options work across most commands:
 | `--json` | Output as machine-readable JSON |
 | `--api-key <key>` | Override API key |
 | `--api-url <url>` | Override API base URL |
+| `--project-file <path>` | Path to custom project file (default: `project.json`) |
 
 ## Exit codes
 

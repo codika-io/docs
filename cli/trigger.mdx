@@ -20,6 +20,7 @@ codika-helper trigger <workflowId> [options]
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--process-instance-id <id>` | Explicit process instance ID | Auto-resolved from `project.json` |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--path <path>` | Path to use case folder with `project.json` | Current directory |
 | `--payload-file <path>` | Read payload from a JSON file, or `-` for stdin | — |
 | `--poll` | Wait for execution to complete | Fire-and-forget |
@@ -32,8 +33,9 @@ codika-helper trigger <workflowId> [options]
 ## Process instance ID resolution
 
 1. `--process-instance-id` flag (highest priority)
-2. `devProcessInstanceId` in `project.json` at `--path`
-3. `devProcessInstanceId` in `project.json` in current directory
+2. `devProcessInstanceId` in `--project-file` (if provided)
+3. `devProcessInstanceId` in `project.json` at `--path`
+4. `devProcessInstanceId` in `project.json` in current directory
 
 ## Behavior
 
