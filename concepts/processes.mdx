@@ -75,13 +75,15 @@ A user's personal installation of a process. Each user gets their own instance w
 
 ### Dev/Prod environments
 
-Process owners get automatic environment management. By default, only one environment is active at a time:
+Process owners get automatic environment management:
 
 - **First deploy:** Creates a `dev` instance, activates it
-- **Publish to prod:** Auto-creates `prod` instance, deactivates `dev`
-- **Redeploy to dev:** Deactivates `prod`, activates `dev`
+- **Publish to prod:** Use `codika-helper publish <templateId>` to promote a deployment. Auto-creates a `prod` instance.
+- **Redeploy to dev:** Updates the `dev` instance with new workflows
 
-This ensures you always test in dev before going live in prod.
+By default, both dev and prod instances run simultaneously after publishing. Use `--auto-toggle-dev-prod` with the publish command to pause dev when prod is active.
+
+Use `codika-helper list executions <instanceId>` to view recent executions for either environment — pass the dev or prod instance ID.
 
 ## Deployment instance
 

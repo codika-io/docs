@@ -41,7 +41,7 @@ my-use-case/
 
 | File | Purpose |
 |------|---------|
-| `project.json` | Contains `projectId` and `organizationId`. Created by `codika-helper init` or `codika-helper project create --path .`. Enables org-aware profile selection. |
+| `project.json` | Contains `projectId`, `organizationId`, `devProcessInstanceId`, `prodProcessInstanceId`, and `deployments` map. Created by `codika-helper init` or `codika-helper project create --path .`. Updated on deploy and publish. |
 | `deployments/` | Local archive of past deployments. Created automatically by `codika-helper deploy`. |
 
 ## config.ts structure

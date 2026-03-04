@@ -1,0 +1,107 @@
+---
+title: "list-executions"
+description: "Skill for listing recent executions for a process instance, with filtering by workflow, status, and result count"
+---
+
+## When to use
+
+- Check the status of recent workflow runs at a glance
+- Find failed executions to investigate further
+- Monitor how often a workflow is triggered
+- Get an execution ID to pass to `get-execution` for node-level debugging
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- A deployed process instance (`devProcessInstanceId` or `prodProcessInstanceId` in `project.json`)
+- API key with `executions:read` scope
+
+## Command
+
+```bash
+codika-helper list executions <processInstanceId> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<processInstanceId>` | Process instance ID (dev or prod) from `project.json` |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--workflow-id <id>` | Filter results to a specific workflow | All workflows |
+| `--failed-only` | Return only failed executions | Off |
+| `--limit <n>` | Number of executions to return (1–100) | `20` |
+| `--json` | JSON output | — |
+| `--api-key <key>` | Override API key | — |
+| `--api-url <url>` | Override API URL | — |
+
+## Dev vs Prod
+
+After deploying and publishing, `project.json` contains both instance IDs:
+
+```json
+{
+  "devProcessInstanceId": "pi-dev-789",
+  "prodProcessInstanceId": "pi-prod-999"
+}
+```
+
+Use `devProcessInstanceId` to list dev executions and `prodProcessInstanceId` to list prod executions.
+
+## Examples
+
+```bash
+# List recent executions for a dev instance
+codika-helper list executions pi-dev-789
+
+# Filter by workflow
+codika-helper list executions pi-dev-789 --workflow-id wf-abc123
+
+# Failed executions only
+codika-helper list executions pi-dev-789 --failed-only
+
+# Increase result count and output JSON
+codika-helper list executions pi-dev-789 --limit 50 --json
+```
+
+## Output
+
+```
+● Recent Executions (pi-dev-789...)
+
+  ID             Workflow             Status     Duration   Created
+  ────────────── ──────────────────── ────────── ────────── ───────────────────
+  exec_abc123    main-workflow        ✓ success  2.3s       2026-03-04 14:30:01
+  exec_def456    main-workflow        ✓ success  1.8s       2026-03-04 13:15:42
+  exec_ghi789    sub-workflow         ✗ failed   0.4s       2026-03-04 12:05:10
+    └─ [HTTP Request] 403 Forbidden
+  exec_jkl012    main-workflow        ✓ success  3.1s       2026-03-03 18:44:33
+
+  Showing 4 executions
+```
+
+Failed executions show the error message and failed node name on the next line.
+
+Pass any execution ID to `codika-helper get execution <id>` for full node-level details.
+
+## Error reference
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "API key is required" | Not authenticated | Run `codika-helper login` |
+| "Process instance not found" | Invalid process instance ID | Check `devProcessInstanceId` or `prodProcessInstanceId` in `project.json` |
+| 401 / Unauthorized | Invalid or expired API key | Run `codika-helper whoami`, then `codika-helper login` |
+
+Note: Zero executions is not an error — the CLI prints "No executions found." and exits with code 0.
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error or instance not found |
+| `2` | CLI validation error (invalid flags or arguments) |

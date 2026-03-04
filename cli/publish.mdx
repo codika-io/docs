@@ -1,0 +1,138 @@
+---
+title: "publish"
+description: "Promote a deployed use case from dev to production, set visibility, configure sharing, and manage dev/prod instance toggling"
+---
+
+## publish
+
+Promote a deployed use case to production.
+
+```bash
+codika-helper publish <templateId> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<templateId>` | Deployment template ID (from `project.json` deployments map) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--path <path>` | Path to use case folder with project.json | Current directory |
+| `--project-file <path>` | Custom project file path | `project.json` |
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--visibility <scope>` | `private`, `organizational`, or `public` (first publish only) | — |
+| `--shared-with <scope>` | `owner_only`, `admins`, or `everyone` (org processes only) | — |
+| `--auto-toggle-dev-prod` | Pause dev instance when prod is active | Off (both run simultaneously) |
+| `--skip-prod-instance` | Don't auto-create/update prod instance | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | — |
+
+### Finding the template ID
+
+After each deploy, `project.json` stores a `deployments` map keyed by version:
+
+```json
+{
+  "projectId": "abc123",
+  "devProcessInstanceId": "pi_dev_456",
+  "deployments": {
+    "1.0": { "templateId": "tmpl_abc", "createdAt": "2026-03-04T14:30:00Z" },
+    "1.1": { "templateId": "tmpl_def", "createdAt": "2026-03-04T15:00:00Z" }
+  }
+}
+```
+
+Use the `templateId` from the version you want to publish.
+
+### What happens on publish
+
+1. **Resolve** project ID: `--project-id` > `--project-file` > `project.json`
+2. **Resolve** API key: `--api-key` > env > active profile
+3. **Send** publish request to platform with templateId, projectId, and options
+4. **Platform** publishes the deployment template (status: inactive → published)
+5. **Platform** deprecates any previously published templates for this project
+6. **Platform** auto-creates or updates the owner's prod process instance
+7. If `--auto-toggle-dev-prod`, deactivates dev instance
+8. **On success:** saves `prodProcessInstanceId` to `project.json`
+
+### Visibility
+
+Set on first publish only. Subsequent publishes inherit the existing visibility.
+
+| Level | Who can see and install |
+|-------|------------------------|
+| `private` | Only the owner |
+| `organizational` | All org members |
+| `public` | Anyone on the platform |
+
+### Shared with
+
+Controls who can use the prod instance. Applies to organizational processes only.
+
+| Scope | Who can use the prod instance |
+|-------|-------------------------------|
+| `owner_only` | Only the process owner |
+| `admins` | Organization admins (default for org processes) |
+| `everyone` | All organization members |
+
+### Dev/Prod toggle
+
+By default, both dev and prod instances run simultaneously. Use `--auto-toggle-dev-prod` to pause the dev instance when production becomes active:
+
+```bash
+codika-helper publish tmpl_abc123 --auto-toggle-dev-prod
+```
+
+This keeps production as the single active instance, avoiding duplicate executions from scheduled or webhook triggers.
+
+### Examples
+
+```bash
+# Publish the latest deployment
+codika-helper publish tmpl_abc123
+
+# Publish with visibility (first publish)
+codika-helper publish tmpl_abc123 --visibility organizational --shared-with admins
+
+# Publish from a specific directory
+codika-helper publish tmpl_abc123 --path ./my-use-case
+
+# JSON output
+codika-helper publish tmpl_abc123 --json
+
+# Pause dev when prod runs
+codika-helper publish tmpl_abc123 --auto-toggle-dev-prod
+```
+
+### Output
+
+```
+✓ Published successfully!
+
+  Version:              1.1
+  Template ID:          tmpl_abc123
+  Prod Instance ID:     pi_prod_789
+  Webhook URL:          https://...
+```
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Publish successful |
+| `1` | API error |
+| `2` | CLI validation error (missing templateId, no project ID) |
+
+### Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika-helper login` |
+| 403 | Missing scope | Create key with `deploy:use-case` scope |
+| 404 | Template not found | Check templateId in project.json deployments |
+| 400 | Invalid status | Template already published or not in inactive state |

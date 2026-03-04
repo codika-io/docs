@@ -90,8 +90,10 @@
               "cli/init",
               "cli/verify",
               "cli/deploy",
+              "cli/publish",
               "cli/trigger",
               "cli/get",
+              "cli/list",
               "cli/project",
               "cli/status"
             ]
@@ -113,9 +115,11 @@
               "skills/init-use-case",
               "skills/verify-use-case",
               "skills/deploy-use-case",
+              "skills/publish-use-case",
               "skills/fetch-use-case",
               "skills/trigger-workflow",
-              "skills/get-execution"
+              "skills/get-execution",
+              "skills/list-executions"
             ]
           }
         ]

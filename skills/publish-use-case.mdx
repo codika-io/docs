@@ -1,0 +1,99 @@
+---
+title: "publish-use-case"
+description: "Skill for publishing a deployed use case to production, with visibility settings and optional dev/prod auto-toggle"
+---
+
+## When to use
+
+- Promote a deployed use case from dev to production
+- Make a process available to end users for the first time
+- Configure visibility (private, organizational, public) on first publish
+- Enable dev/prod auto-toggle to pause dev when prod is running
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- A deployed use case with `project.json` containing a `deployments` map (run `deploy-use-case` first)
+- API key with `deploy:use-case` scope
+
+## Command
+
+```bash
+codika-helper publish <templateId> [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--path <path>` | Path to folder with `project.json` | Current directory |
+| `--project-file <path>` | Custom project file path | `project.json` |
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--visibility <value>` | `private`, `organizational`, or `public` (first publish only) | — |
+| `--shared-with <value>` | `owner_only`, `admins`, or `everyone` (org processes only) | — |
+| `--auto-toggle-dev-prod` | Pause dev instance when prod instance is running | Off |
+| `--skip-prod-instance` | Deploy to prod without creating a prod process instance | — |
+| `--json` | JSON output | — |
+| `--api-key <key>` | Override API key | — |
+| `--api-url <url>` | Override API URL | — |
+
+## Finding the template ID
+
+After `deploy-use-case` runs, `project.json` contains a `deployments` map keyed by API version:
+
+```json
+{
+  "projectId": "abc123",
+  "organizationId": "org-456",
+  "devProcessInstanceId": "pi-dev-789",
+  "deployments": {
+    "1.0": {
+      "templateId": "tmpl-abc123",
+      "createdAt": "2026-03-04T14:30:00.000Z"
+    }
+  }
+}
+```
+
+Look up the version you want to publish and use the `templateId` value — `tmpl-abc123` in this example.
+
+## What happens on publish
+
+1. Template ID is validated against the platform API
+2. Visibility and sharing settings are applied (visibility is set only on first publish)
+3. A production n8n workflow instance is activated
+4. A prod process instance is created in Firestore
+5. If `--auto-toggle-dev-prod` is set, the dev instance is configured to pause when prod runs
+6. `prodProcessInstanceId` is saved to `project.json`
+
+## Examples
+
+```bash
+# Basic publish
+codika-helper publish tmpl-abc123 --path .
+
+# With visibility and sharing
+codika-helper publish tmpl-abc123 --path . \
+  --visibility organizational \
+  --shared-with everyone
+
+# Enable dev/prod auto-toggle
+codika-helper publish tmpl-abc123 --path . --auto-toggle-dev-prod
+
+# JSON output for automation
+codika-helper publish tmpl-abc123 --path . --json
+```
+
+## Dev/Prod toggle
+
+When `--auto-toggle-dev-prod` is enabled, the platform automatically pauses the dev process instance whenever the prod instance is actively running. This prevents duplicate executions and ensures dev runs don't interfere with production traffic.
+
+To disable the toggle after publishing, re-publish without the flag or update the setting in the platform UI.
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Publish successful |
+| `1` | API error or publish failure |
+| `2` | CLI validation error (missing arguments, invalid flags) |

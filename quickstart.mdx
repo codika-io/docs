@@ -140,6 +140,22 @@ codika-helper get execution <executionId> --deep --slim
 
 The `--deep` flag fetches sub-workflow executions recursively. The `--slim` flag strips noise for readability.
 
+## Optional: Publish to production
+
+Once you're happy with your dev deployment, publish it to production:
+
+```bash
+codika-helper publish <templateId>
+```
+
+The `templateId` is stored in `project.json` under the `deployments` map after each deploy. Check it with:
+
+```bash
+cat project.json | grep templateId
+```
+
+This creates a production process instance. See [publish](/cli/publish) for visibility and sharing options.
+
 ## What's next
 
 <CardGroup cols={2}>

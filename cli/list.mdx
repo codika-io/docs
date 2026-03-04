@@ -1,0 +1,100 @@
+---
+title: "list"
+description: "List recent executions for a process instance with `list executions` — filter by workflow, status, or limit results"
+---
+
+## list executions
+
+List recent executions for a process instance.
+
+```bash
+codika-helper list executions <processInstanceId> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<processInstanceId>` | Process instance ID (dev or prod) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--workflow-id <id>` | Filter by workflow ID | All workflows |
+| `--failed-only` | Only show failed executions | — |
+| `--limit <n>` | Number of results (1-100) | 20 |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | — |
+
+### Behavior
+
+1. Fetches recent executions from the platform API
+2. Returns lightweight summaries (no full result data — use `get execution` for that)
+3. Sorted by creation time, newest first
+
+### Dev vs prod executions
+
+| Instance type | Where to find the ID |
+|---------------|---------------------|
+| Dev | `devProcessInstanceId` in `project.json` — set after `codika-helper deploy` |
+| Prod | `prodProcessInstanceId` in `project.json` — set after `codika-helper publish` |
+
+### Examples
+
+```bash
+# List recent executions for dev instance
+codika-helper list executions pi_dev_456
+
+# Filter by workflow
+codika-helper list executions pi_dev_456 --workflow-id main-workflow
+
+# Only failed executions
+codika-helper list executions pi_dev_456 --failed-only
+
+# Limit results
+codika-helper list executions pi_dev_456 --limit 5
+
+# JSON output
+codika-helper list executions pi_dev_456 --json
+
+# Prod executions (use prod instance ID from project.json)
+codika-helper list executions pi_prod_789
+```
+
+### Output
+
+```
+● Recent Executions (pi_dev_456...)
+
+  ID             Workflow             Status     Duration   Created
+  ────────────── ──────────────────── ────────── ────────── ───────────────────
+  exec-001abc    main-workflow        ✓ success  1.2s       2026-03-04 14:30:00
+  exec-002def    main-workflow        ✗ failed   0.8s       2026-03-04 14:00:00
+    └─ [HTTP Request] Connection refused
+  exec-003ghi    helper-workflow      ⋯ pending  -          2026-03-04 13:30:00
+
+  Showing 3 executions
+```
+
+Each row shows the execution ID (truncated), workflow ID, status with icon, duration, and creation timestamp. Failed executions show the error message and failed node name on the next line.
+
+To inspect the full result data for a specific execution, use [`get execution`](/cli/get#get-execution).
+
+### Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika-helper login` |
+| 403 | Missing scope | Create key with `executions:read` scope |
+| 403 | No access | Process instance in different org |
+| 404 | Instance not found | Check process instance ID |
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error |
+| `2` | CLI validation error |

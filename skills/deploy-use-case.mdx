@@ -58,7 +58,10 @@ codika-helper deploy use-case <path> [options]
    - Update `version.json` with new version
    - Archive deployment in `deployments/{projectId}/`
    - Save `devProcessInstanceId` to `project.json`
+   - Save deployment to `deployments` map in `project.json` (version → templateId + timestamp)
    - Update `project-info.json` with version mapping
+
+The `deployments` map in `project.json` is used by `codika-helper publish` to promote a deployment to production.
 
 ## API key resolution (org-aware)
 
@@ -102,7 +105,7 @@ After a successful deployment, the folder contains:
 ```
 my-use-case/
   version.json              # Updated with new version
-  project.json              # Updated with devProcessInstanceId
+  project.json              # Updated with devProcessInstanceId + deployments map
   deployments/
     {projectId}/
       project-info.json     # Version mapping history

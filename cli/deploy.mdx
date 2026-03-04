@@ -54,8 +54,11 @@ codika-helper deploy use-case <path> [options]
 8. **On success:**
    - Update `version.json` with new local version
    - Save `devProcessInstanceId` to `project.json`
+   - Save deployment to `deployments` map in `project.json` (version → templateId + timestamp)
    - Archive deployment in `deployments/{projectId}/process/{apiVersion}/`
    - Update `project-info.json` with version mapping
+
+The `deployments` map in `project.json` tracks all deployments by version — use it with `codika-helper publish` to promote a deployment to production.
 
 ### Dry-run mode
 

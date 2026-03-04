@@ -24,7 +24,7 @@ npx skills add https://github.com/codika-io/codika-marketplace
 
 ### Install the Codika plugin
 
-Once the marketplace is added, the `codika` plugin is available with all 8 skills.
+Once the marketplace is added, the `codika` plugin is available with all 10 skills.
 
 ## Available skills
 
@@ -35,9 +35,11 @@ Once the marketplace is added, the `codika` plugin is available with all 8 skill
 | [init-use-case](/skills/init-use-case) | `init` | Scaffold use case folders with template workflows |
 | [verify-use-case](/skills/verify-use-case) | `verify use-case`, `verify workflow` | Validate workflows and auto-fix issues |
 | [deploy-use-case](/skills/deploy-use-case) | `deploy use-case` | Deploy with version management and archival |
+| [publish-use-case](/skills/publish-use-case) | `publish` | Publish deployments to production with visibility controls |
 | [fetch-use-case](/skills/fetch-use-case) | `get use-case` | Download deployed use cases from the platform |
 | [trigger-workflow](/skills/trigger-workflow) | `trigger` | Execute workflows with payload and polling |
 | [get-execution](/skills/get-execution) | `get execution` | Debug executions with recursive sub-workflow details |
+| [list-executions](/skills/list-executions) | `list executions` | List recent executions for a process instance |
 
 ## How skills work
 
@@ -57,13 +59,15 @@ Skills are designed to be **read by agents**, not executed. The agent reads the 
 An agent orchestrating a full deployment would use skills in this order:
 
 ```
-1. setup-codika     → Verify CLI installed and authenticated
-2. init-use-case    → Scaffold the use case folder
+1. setup-codika      → Verify CLI installed and authenticated
+2. init-use-case     → Scaffold the use case folder
 3. (Agent builds config.ts and workflows)
-4. verify-use-case  → Validate before deploying
-5. deploy-use-case  → Deploy to platform
-6. trigger-workflow  → Test the deployment
-7. get-execution    → Debug if needed
+4. verify-use-case   → Validate before deploying
+5. deploy-use-case   → Deploy to platform (dev)
+6. trigger-workflow   → Test the deployment
+7. get-execution     → Debug if needed
+8. list-executions   → Review recent execution history
+9. publish-use-case  → Publish to production when ready
 ```
 
 ## Design principles
