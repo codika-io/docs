@@ -115,6 +115,8 @@
               "skills/init-use-case",
               "skills/verify-use-case",
               "skills/deploy-use-case",
+              "skills/deploy-data-ingestion",
+              "skills/deploy-documents",
               "skills/publish-use-case",
               "skills/fetch-use-case",
               "skills/trigger-workflow",

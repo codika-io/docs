@@ -106,6 +106,8 @@ After a successful deployment, the folder contains:
 my-use-case/
   version.json              # Updated with new version
   project.json              # Updated with devProcessInstanceId + deployments map
+  data-ingestion/           # Optional — process-level DI (deployed separately)
+    embedding.json
   deployments/
     {projectId}/
       project-info.json     # Version mapping history
@@ -114,7 +116,16 @@ my-use-case/
           deployment-info.json
           config-snapshot.json
           workflows/*.json
+      data-ingestion/       # Present if DI was deployed
+        {apiVersion}/
+          deployment-info.json
+          config-snapshot.json
+          <workflow>.json
 ```
+
+<Note>
+Data ingestion workflows live in a separate `data-ingestion/` folder and are deployed independently via `codika-helper deploy process-data-ingestion`. They have their own version line and do not trigger "update available" notifications.
+</Note>
 
 ## Exit codes
 

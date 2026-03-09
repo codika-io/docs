@@ -42,6 +42,9 @@ codika-helper get use-case <projectId> [outputPath] [options]
 | Option | Description |
 |--------|-------------|
 | `--version <X.Y>` | Fetch specific version (latest if omitted) |
+| `--with-data-ingestion` | Include data ingestion workflow (default: true) |
+| `--no-data-ingestion` | Exclude data ingestion workflow |
+| `--di-version <version>` | Data ingestion version in `X.Y` format (latest if omitted) |
 | `--list` | List documents without downloading |
 | `--api-url <url>` | Override API URL |
 | `--api-key <key>` | Override API key |
@@ -66,6 +69,12 @@ codika-helper get use-case abc123 ./restored --version 1.0
 # List files without downloading
 codika-helper get use-case abc123 --list
 
+# Download with specific data ingestion version
+codika-helper get use-case abc123 --di-version 1.2
+
+# Download without data ingestion
+codika-helper get use-case abc123 --no-data-ingestion
+
 # List with JSON output
 codika-helper get use-case abc123 --list --json
 
@@ -84,28 +93,32 @@ Fetching use case abc123...
   ✓ config.ts
   ✓ workflows/main-workflow.json
   ✓ workflows/sub-workflow.json
+  ✓ data-ingestion/embedding-ingestion.json
 
 ✓ Use Case Downloaded Successfully
 
   Project:  abc123
   Version:  1.0
+  DI Ver:   1.2
   Output:   ./restored
-  Files:    3 file(s) downloaded
+  Files:    4 file(s) downloaded
 ```
 
 ### List mode
 
 ```
-✓ Found 3 document(s)
+✓ Found 4 document(s)
 
   Project:      abc123
   Version:      1.0
+  DI Version:   1.2
   Organization: org_456
 
   Documents:
     config.ts  (8.1 KB, text/typescript)
     workflows/main-workflow.json  (5.8 KB, application/json)
     workflows/sub-workflow.json  (2.0 KB, application/json)
+    data-ingestion/embedding-ingestion.json  (3.2 KB, application/json)
 ```
 
 ## Exit codes

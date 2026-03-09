@@ -24,7 +24,7 @@ npx skills add https://github.com/codika-io/codika-marketplace
 
 ### Install the Codika plugin
 
-Once the marketplace is added, the `codika` plugin is available with all 10 skills.
+Once the marketplace is added, the `codika` plugin is available with all 12 skills.
 
 ## Available skills
 
@@ -35,6 +35,8 @@ Once the marketplace is added, the `codika` plugin is available with all 10 skil
 | [init-use-case](/skills/init-use-case) | `init` | Scaffold use case folders with template workflows |
 | [verify-use-case](/skills/verify-use-case) | `verify use-case`, `verify workflow` | Validate workflows and auto-fix issues |
 | [deploy-use-case](/skills/deploy-use-case) | `deploy use-case` | Deploy with version management and archival |
+| [deploy-data-ingestion](/skills/deploy-data-ingestion) | `deploy process-data-ingestion` | Deploy data ingestion config with independent versioning |
+| [deploy-documents](/skills/deploy-documents) | `deploy documents` | Upload stage markdown documentation to the platform |
 | [publish-use-case](/skills/publish-use-case) | `publish` | Publish deployments to production with visibility controls |
 | [fetch-use-case](/skills/fetch-use-case) | `get use-case` | Download deployed use cases from the platform |
 | [trigger-workflow](/skills/trigger-workflow) | `trigger` | Execute workflows with payload and polling |
@@ -64,6 +66,8 @@ An agent orchestrating a full deployment would use skills in this order:
 3. (Agent builds config.ts and workflows)
 4. verify-use-case   → Validate before deploying
 5. deploy-use-case   → Deploy to platform (dev)
+5b. deploy-data-ingestion → Deploy DI config (if RAG use case)
+5c. deploy-documents → Upload stage documents
 6. trigger-workflow   → Test the deployment
 7. get-execution     → Debug if needed
 8. list-executions   → Review recent execution history

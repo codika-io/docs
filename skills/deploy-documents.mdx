@@ -1,0 +1,113 @@
+---
+title: "deploy-documents"
+description: "Skill for uploading use case documentation (stage markdown files) to the Codika platform"
+---
+
+## When to use
+
+- Upload or deploy use case documents to the platform
+- After creating or updating stage markdown files in `documents/`
+- When deploying documentation alongside a use case
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- A use case folder with a `documents/` subfolder containing stage markdown files
+- A project to deploy to (via `project.json` or `PROJECT_ID` in `config.ts`)
+
+## Document folder structure
+
+```
+my-use-case/
+  project.json
+  documents/
+    1_business_requirements.md
+    2_solution_architecture.md
+    3_detailed_design.md
+    4_implementation_plan.md
+```
+
+Files must follow the pattern `{stage}_{name}.md`:
+
+| Pattern | Stage | Example Title |
+|---------|-------|---------------|
+| `1_*.md` | 1 | "Business Requirements" |
+| `2_*.md` | 2 | "Solution Architecture" |
+| `3_*.md` | 3 | "Detailed Design" |
+| `4_*.md` | 4 | "Implementation Plan" |
+
+Not all stages are required — the CLI uploads whichever stages exist.
+
+## Command
+
+```bash
+codika-helper deploy documents <path> [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--project-file <path>` | Path to custom project file | `project.json` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | Profile |
+| `--json` | JSON output | — |
+
+### Project ID resolution
+
+1. `--project-id` flag (highest priority)
+2. `project.json` file (default or `--project-file`)
+3. `PROJECT_ID` export in `config.ts` (fallback)
+
+## Examples
+
+```bash
+# Deploy documents
+codika-helper deploy documents ./my-use-case
+
+# With explicit project ID
+codika-helper deploy documents ./my-use-case --project-id abc123
+
+# JSON output for CI
+codika-helper deploy documents ./my-use-case --json
+```
+
+## What happens on deploy
+
+1. Scans `documents/` for files matching `{1,2,3,4}_*.md`
+2. For each file: derives title from filename, extracts summary from first paragraph (max 200 chars)
+3. Resolves project ID: `--project-id` > `project.json` > `config.ts`
+4. Uploads all documents to the platform in a single API call
+5. Reports per-stage results (document ID, version, status)
+
+## Document versioning
+
+Documents are versioned on the platform:
+- First upload for a stage creates version `1.0.0`
+- Subsequent uploads increment the minor version (e.g., `1.0.0` -> `1.1.0`)
+- Each document version is tracked in the platform's `version_history` collection
+
+## Output
+
+```
+Reading document files...
+  Stage 1: 1_business_requirements.md -> "Business Requirements" (2450 chars, ~380 words)
+  Stage 2: 2_solution_architecture.md -> "Solution Architecture" (5120 chars, ~790 words)
+
+Uploading 2 document(s)...
+
+✓ Documents Deployed Successfully
+
+  Stage 1: v1.0.0 (doc-abc123)
+  Stage 2: v1.0.0 (doc-def456)
+
+  Request ID: req-789
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Documents deployed successfully |
+| `1` | Deployment failed |

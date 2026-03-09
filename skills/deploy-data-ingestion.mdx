@@ -1,0 +1,130 @@
+---
+title: "deploy-data-ingestion"
+description: "Skill for deploying a process-level data ingestion configuration to the Codika platform with independent versioning"
+---
+
+## When to use
+
+- Deploy a data ingestion workflow (document embedding pipeline)
+- After creating or modifying data ingestion configuration in `config.ts`
+- The use case has a `getDataIngestionConfig()` export in `config.ts`
+
+## Prerequisites
+
+- `codika-helper` CLI installed and authenticated
+- A use case folder with `config.ts` exporting `getDataIngestionConfig()` and a `data-ingestion/` folder with exactly one workflow JSON file
+- A project to deploy to (via `project.json`)
+
+## Use case folder structure
+
+```
+my-use-case/
+  project.json
+  config.ts               # Must export getDataIngestionConfig()
+  data-ingestion/
+    <workflow>.json        # Exactly one workflow JSON file (auto-discovered)
+```
+
+## Command
+
+```bash
+codika-helper deploy process-data-ingestion <path> [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--version-strategy <strategy>` | `major_bump`, `minor_bump`, or `explicit` | `minor_bump` |
+| `--explicit-version <version>` | Required if strategy is `explicit` | — |
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--project-file <path>` | Path to custom project file | `project.json` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | Profile |
+| `--json` | JSON output | — |
+
+## Examples
+
+```bash
+# Default deployment (minor bump)
+codika-helper deploy process-data-ingestion ./my-use-case
+
+# Major version bump
+codika-helper deploy process-data-ingestion ./my-use-case --version-strategy major_bump
+
+# Explicit version
+codika-helper deploy process-data-ingestion ./my-use-case --version-strategy explicit --explicit-version 3.0
+
+# JSON output for CI
+codika-helper deploy process-data-ingestion ./my-use-case --json
+```
+
+## What happens on deploy
+
+1. `config.ts` is loaded — `getDataIngestionConfig()` is read
+2. The CLI auto-discovers the single `.json` file in `data-ingestion/`
+3. Project ID is resolved from `--project-id` > `project.json`
+4. Configuration is sent to the platform
+5. On success:
+   - `version.json` is updated with the new `dataIngestionVersion`
+   - Deployment is archived in `deployments/{projectId}/data-ingestion/{apiVersion}/`
+   - `project-info.json` is updated with the version mapping
+   - `project.json` is updated with `dataIngestionDeployments` map
+
+## Version tracking
+
+Data ingestion has its own version line, separate from use case deployments:
+
+```json
+// version.json
+{
+  "version": "1.0.4",
+  "dataIngestionVersion": "1.1.0"
+}
+```
+
+```json
+// project.json (partial)
+{
+  "dataIngestionDeployments": {
+    "1.0": {
+      "dataIngestionId": "di-abc123",
+      "createdAt": "2025-01-20T14:30:00.000Z",
+      "webhookUrls": {
+        "embed": "https://n8n.example.com/webhook/embed-xxx",
+        "delete": "https://n8n.example.com/webhook/delete-xxx"
+      }
+    }
+  }
+}
+```
+
+## Key differences from use case deployment
+
+| Aspect | Use Case Deploy | Data Ingestion Deploy |
+|--------|----------------|----------------------|
+| Command | `deploy use-case` | `deploy process-data-ingestion` |
+| Scope | Per-user instance (dev/prod) | Per-process (shared by all users) |
+| Versioning | Semantic (X.Y.Z) + API (X.Y) | Simple (X.Y) + local (X.Y.Z) |
+| Notifications | Triggers "update available" | Does NOT trigger notifications |
+| Version flag | `--patch`, `--minor`, `--major` | `--version-strategy` |
+
+## Output
+
+```
+✓ Data Ingestion Deployment Successful
+
+  Data Ingestion ID:  di-abc123
+  API Version:        1.2
+  Local Version:      1.0.0 -> 1.1.0
+  Project ID:         proj-456
+  Webhook (embed):    https://n8n.example.com/webhook/embed-xxx
+  Webhook (delete):   https://n8n.example.com/webhook/delete-xxx
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Deployment successful |
+| `1` | API error or validation failure |

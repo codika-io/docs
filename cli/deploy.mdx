@@ -121,7 +121,7 @@ codika-helper deploy use-case ./email-automation --json
 
 ## deploy process-data-ingestion
 
-Deploy a data ingestion configuration for RAG (document embedding) workflows.
+Deploy a data ingestion configuration for RAG (document embedding) workflows. The CLI auto-discovers the single `.json` workflow file from the `data-ingestion/` folder — no export needed in `config.ts` for the workflow file path.
 
 ```bash
 codika-helper deploy process-data-ingestion <path> [options]
@@ -131,7 +131,7 @@ codika-helper deploy process-data-ingestion <path> [options]
 
 | Argument | Description |
 |----------|-------------|
-| `<path>` | Path to use case folder (config.ts must export `getDataIngestionConfig()`) |
+| `<path>` | Path to use case folder (config.ts must export `getDataIngestionConfig()`, and `data-ingestion/` folder must contain exactly one workflow JSON file) |
 
 ### Options
 
@@ -157,6 +157,85 @@ codika-helper deploy process-data-ingestion <path> [options]
 ```
 
 Data ingestion deployments are independent from use case deployments — they do not trigger "update available" notifications.
+
+---
+
+## deploy documents
+
+Upload use case documentation (stage 1–4 markdown files) to the Codika platform. Auto-discovers document files from the use case's `documents/` folder.
+
+```bash
+codika-helper deploy documents <path> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Path to use case folder (must contain a `documents/` folder with stage markdown files) |
+
+### Document folder structure
+
+```
+my-use-case/
+  documents/
+    1_business_requirements.md
+    2_solution_architecture.md
+    3_detailed_design.md
+    4_implementation_plan.md
+```
+
+Files must follow the pattern `{stage}_{name}.md` where stage is 1–4. Not all stages are required.
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--project-file <path>` | Path to custom project file | `project.json` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | `CODIKA_API_KEY` env or profile |
+| `--json` | JSON output | — |
+
+### What happens on deploy
+
+1. Scans `documents/` for files matching `{1,2,3,4}_*.md`
+2. For each file: derives title from filename, extracts summary from first paragraph
+3. Resolves project ID: `--project-id` > `project.json` > `config.ts`
+4. Uploads all documents to the platform in a single API call
+5. Reports per-stage results (document ID, version, status)
+
+### Examples
+
+```bash
+# Deploy documents
+codika-helper deploy documents ./my-use-case
+
+# With explicit project ID
+codika-helper deploy documents ./my-use-case --project-id abc123
+
+# JSON output for CI
+codika-helper deploy documents ./my-use-case --json
+```
+
+### Output
+
+```
+Reading document files...
+  Stage 1: 1_business_requirements.md -> "Business Requirements" (2450 chars, ~380 words)
+  Stage 2: 2_solution_architecture.md -> "Solution Architecture" (5120 chars, ~790 words)
+
+Uploading 2 document(s)...
+
+✓ Documents Deployed Successfully
+
+  Stage 1: v1.0.0 (doc-abc123)
+  Stage 2: v1.0.0 (doc-def456)
+
+  Request ID: req-789
+```
+
+---
 
 ## Exit codes
 
