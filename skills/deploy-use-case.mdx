@@ -11,7 +11,7 @@ description: "Skill for deploying a validated use case to the Codika platform wi
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - Use case folder with `config.ts` and `workflows/` directory
 - Platform project (via `project.json` or `PROJECT_ID` in config.ts)
 
@@ -19,15 +19,15 @@ description: "Skill for deploying a validated use case to the Codika platform wi
 
 ```bash
 cd my-use-case
-codika-helper project create --name "My Project" --path .   # If no project.json
-codika-helper verify use-case .                              # Validate first
-codika-helper deploy use-case .                              # Deploy
+codika project create --name "My Project" --path .   # If no project.json
+codika verify use-case .                              # Validate first
+codika deploy use-case .                              # Deploy
 ```
 
 ## Command
 
 ```bash
-codika-helper deploy use-case <path> [options]
+codika deploy use-case <path> [options]
 ```
 
 ## Options
@@ -61,7 +61,7 @@ codika-helper deploy use-case <path> [options]
    - Save deployment to `deployments` map in `project.json` (version → templateId + timestamp)
    - Update `project-info.json` with version mapping
 
-The `deployments` map in `project.json` is used by `codika-helper publish` to promote a deployment to production.
+The `deployments` map in `project.json` is used by `codika publish` to promote a deployment to production.
 
 ## API key resolution (org-aware)
 
@@ -76,26 +76,26 @@ If `project.json` contains `organizationId`, the CLI automatically selects the p
 
 ```bash
 # Default patch bump
-codika-helper deploy use-case .
+codika deploy use-case .
 
 # Minor version
-codika-helper deploy use-case . --minor
+codika deploy use-case . --minor
 
 # Major version
-codika-helper deploy use-case . --major
+codika deploy use-case . --major
 
 # Explicit API version
-codika-helper deploy use-case . --version 2.0
+codika deploy use-case . --version 2.0
 
 # Dry-run preview
-codika-helper deploy use-case . --dry-run
+codika deploy use-case . --dry-run
 
 # With extra documentation file
-codika-helper deploy use-case . \
+codika deploy use-case . \
   --additional-file "/path/to/readme.md:docs/readme.md"
 
 # JSON output for automation
-codika-helper deploy use-case . --json
+codika deploy use-case . --json
 ```
 
 ## Post-deploy files
@@ -124,7 +124,7 @@ my-use-case/
 ```
 
 <Note>
-Data ingestion workflows live in a separate `data-ingestion/` folder and are deployed independently via `codika-helper deploy process-data-ingestion`. They have their own version line and do not trigger "update available" notifications.
+Data ingestion workflows live in a separate `data-ingestion/` folder and are deployed independently via `codika deploy process-data-ingestion`. They have their own version line and do not trigger "update available" notifications.
 </Note>
 
 ## Exit codes

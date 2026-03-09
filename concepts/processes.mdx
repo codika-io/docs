@@ -78,12 +78,12 @@ A user's personal installation of a process. Each user gets their own instance w
 Process owners get automatic environment management:
 
 - **First deploy:** Creates a `dev` instance, activates it
-- **Publish to prod:** Use `codika-helper publish <templateId>` to promote a deployment. Auto-creates a `prod` instance.
+- **Publish to prod:** Use `codika publish <templateId>` to promote a deployment. Auto-creates a `prod` instance.
 - **Redeploy to dev:** Updates the `dev` instance with new workflows
 
 By default, both dev and prod instances run simultaneously after publishing. Use `--auto-toggle-dev-prod` with the publish command to pause dev when prod is active.
 
-Use `codika-helper list executions <instanceId>` to view recent executions for either environment — pass the dev or prod instance ID.
+Use `codika list executions <instanceId>` to view recent executions for either environment — pass the dev or prod instance ID.
 
 ## Deployment instance
 
@@ -105,7 +105,7 @@ deployed → updating → deployed (version update success)
 
 ## Deployment pipeline
 
-When you run `codika-helper deploy use-case`, the platform:
+When you run `codika deploy use-case`, the platform:
 
 1. **Validates** the request (authentication, format, required fields)
 2. **Calculates version** based on your version strategy (patch/minor/major)
@@ -129,4 +129,4 @@ If an automatic update fails, the instance falls back to showing "update availab
 
 Process instances with HTTP triggers expose a public API for triggering workflows and checking execution status. Authentication uses a per-instance API key passed via the `X-API-Key` header.
 
-The `codika-helper trigger` and `codika-helper get execution` commands wrap these endpoints — you don't need to call them directly.
+The `codika trigger` and `codika get execution` commands wrap these endpoints — you don't need to call them directly.

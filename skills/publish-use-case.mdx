@@ -12,14 +12,14 @@ description: "Skill for publishing a deployed use case to production, with visib
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - A deployed use case with `project.json` containing a `deployments` map (run `deploy-use-case` first)
 - API key with `deploy:use-case` scope
 
 ## Command
 
 ```bash
-codika-helper publish <templateId> [options]
+codika publish <templateId> [options]
 ```
 
 ## Options
@@ -70,18 +70,18 @@ Look up the version you want to publish and use the `templateId` value — `tmpl
 
 ```bash
 # Basic publish
-codika-helper publish tmpl-abc123 --path .
+codika publish tmpl-abc123 --path .
 
 # With visibility and sharing
-codika-helper publish tmpl-abc123 --path . \
+codika publish tmpl-abc123 --path . \
   --visibility organizational \
   --shared-with everyone
 
 # Enable dev/prod auto-toggle
-codika-helper publish tmpl-abc123 --path . --auto-toggle-dev-prod
+codika publish tmpl-abc123 --path . --auto-toggle-dev-prod
 
 # JSON output for automation
-codika-helper publish tmpl-abc123 --path . --json
+codika publish tmpl-abc123 --path . --json
 ```
 
 ## Dev/Prod toggle

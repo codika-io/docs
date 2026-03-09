@@ -11,7 +11,7 @@ description: "Skill for uploading use case documentation (stage markdown files) 
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - A use case folder with a `documents/` subfolder containing stage markdown files
 - A project to deploy to (via `project.json` or `PROJECT_ID` in `config.ts`)
 
@@ -41,7 +41,7 @@ Not all stages are required — the CLI uploads whichever stages exist.
 ## Command
 
 ```bash
-codika-helper deploy documents <path> [options]
+codika deploy documents <path> [options]
 ```
 
 ## Options
@@ -64,13 +64,13 @@ codika-helper deploy documents <path> [options]
 
 ```bash
 # Deploy documents
-codika-helper deploy documents ./my-use-case
+codika deploy documents ./my-use-case
 
 # With explicit project ID
-codika-helper deploy documents ./my-use-case --project-id abc123
+codika deploy documents ./my-use-case --project-id abc123
 
 # JSON output for CI
-codika-helper deploy documents ./my-use-case --json
+codika deploy documents ./my-use-case --json
 ```
 
 ## What happens on deploy

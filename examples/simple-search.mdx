@@ -141,9 +141,9 @@ Returns a single text field with formatted search results.
 
 ```bash
 cd tavily-search
-codika-helper verify use-case .
-codika-helper deploy use-case .
-codika-helper trigger tavily-search --poll --payload-file - <<'EOF'
+codika verify use-case .
+codika deploy use-case .
+codika trigger tavily-search --poll --payload-file - <<'EOF'
 {"query": "latest AI news"}
 EOF
 ```

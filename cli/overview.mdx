@@ -1,6 +1,6 @@
 ---
 title: "CLI Overview"
-description: "Install and configure the codika-helper CLI — the command-line tool for scaffolding, validating, and deploying Codika use cases"
+description: "Install and configure the codika CLI — the command-line tool for scaffolding, validating, and deploying Codika use cases"
 ---
 
 ## Installation
@@ -12,17 +12,17 @@ npm install -g @codika-io/helper-sdk
 Verify:
 
 ```bash
-codika-helper --version
+codika --version
 ```
 
-The package name is `@codika-io/helper-sdk`. The binary is `codika-helper`.
+The package name is `@codika-io/helper-sdk`. The binary is `codika`.
 
 **Requirements:** Node.js 22 or higher (uses experimental strip-types).
 
 ## Command hierarchy
 
 ```
-codika-helper
+codika
   ├── login                      # Save API key (alias for config set)
   ├── logout [name]              # Remove a profile
   ├── whoami                     # Show current identity
@@ -53,7 +53,7 @@ codika-helper
 
 ## Configuration
 
-Configuration is stored at `~/.config/codika-helper/config.json` (XDG-compliant) with permissions `0o600`.
+Configuration is stored at `~/.config/codika/config.json` (XDG-compliant) with permissions `0o600`.
 
 The CLI supports **multiple named profiles**, each containing:
 

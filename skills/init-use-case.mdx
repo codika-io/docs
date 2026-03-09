@@ -11,13 +11,13 @@ description: "Skill for scaffolding a new Codika use case folder with config, te
 
 ## Prerequisites
 
-- `codika-helper` CLI installed
-- For project creation: authenticated via `codika-helper login` (optional — scaffolding works without auth)
+- `codika` CLI installed
+- For project creation: authenticated via `codika login` (optional — scaffolding works without auth)
 
 ## Command
 
 ```bash
-codika-helper init <path> [options]
+codika init <path> [options]
 ```
 
 ## Options
@@ -57,8 +57,8 @@ For managing several use cases in one repository, set up a shared workspace with
 mkdir my-automations && cd my-automations
 npm init -y && npm install @codika-io/helper-sdk
 echo 'node_modules/' > .gitignore
-codika-helper init ./email-tool --name "Email Tool"
-codika-helper init ./report-gen --name "Report Generator"
+codika init ./email-tool --name "Email Tool"
+codika init ./report-gen --name "Report Generator"
 ```
 
 ```
@@ -93,29 +93,29 @@ The CLI detects the existing dependency and skips per-use-case dependency setup.
 
 ```bash
 # Interactive (prompts for name)
-codika-helper init ./my-automation
+codika init ./my-automation
 
 # Named with project creation
-codika-helper init ./email-tool --name "Email Tool"
+codika init ./email-tool --name "Email Tool"
 
 # Without project (offline scaffolding)
-codika-helper init ./local-test --name "Local Test" --no-project
+codika init ./local-test --name "Local Test" --no-project
 
 # With existing project
-codika-helper init ./my-tool --name "My Tool" --project-id abc123
+codika init ./my-tool --name "My Tool" --project-id abc123
 ```
 
 ## Next steps after init
 
 ```bash
 # Validate the scaffold
-codika-helper verify use-case ./my-automation
+codika verify use-case ./my-automation
 
 # If --no-project was used, create a project
-codika-helper project create --name "My Automation" --path ./my-automation
+codika project create --name "My Automation" --path ./my-automation
 
 # Customize config.ts and workflows, then deploy
-codika-helper deploy use-case ./my-automation
+codika deploy use-case ./my-automation
 ```
 
 ## Exit codes

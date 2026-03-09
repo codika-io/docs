@@ -8,7 +8,7 @@ description: "List recent executions for a process instance with `list execution
 List recent executions for a process instance.
 
 ```bash
-codika-helper list executions <processInstanceId> [options]
+codika list executions <processInstanceId> [options]
 ```
 
 ### Arguments
@@ -38,29 +38,29 @@ codika-helper list executions <processInstanceId> [options]
 
 | Instance type | Where to find the ID |
 |---------------|---------------------|
-| Dev | `devProcessInstanceId` in `project.json` — set after `codika-helper deploy` |
-| Prod | `prodProcessInstanceId` in `project.json` — set after `codika-helper publish` |
+| Dev | `devProcessInstanceId` in `project.json` — set after `codika deploy` |
+| Prod | `prodProcessInstanceId` in `project.json` — set after `codika publish` |
 
 ### Examples
 
 ```bash
 # List recent executions for dev instance
-codika-helper list executions pi_dev_456
+codika list executions pi_dev_456
 
 # Filter by workflow
-codika-helper list executions pi_dev_456 --workflow-id main-workflow
+codika list executions pi_dev_456 --workflow-id main-workflow
 
 # Only failed executions
-codika-helper list executions pi_dev_456 --failed-only
+codika list executions pi_dev_456 --failed-only
 
 # Limit results
-codika-helper list executions pi_dev_456 --limit 5
+codika list executions pi_dev_456 --limit 5
 
 # JSON output
-codika-helper list executions pi_dev_456 --json
+codika list executions pi_dev_456 --json
 
 # Prod executions (use prod instance ID from project.json)
-codika-helper list executions pi_prod_789
+codika list executions pi_prod_789
 ```
 
 ### Output
@@ -86,7 +86,7 @@ To inspect the full result data for a specific execution, use [`get execution`](
 
 | HTTP | Error | Fix |
 |------|-------|-----|
-| 401 | Invalid API key | Re-login with `codika-helper login` |
+| 401 | Invalid API key | Re-login with `codika login` |
 | 403 | Missing scope | Create key with `executions:read` scope |
 | 403 | No access | Process instance in different org |
 | 404 | Instance not found | Check process instance ID |

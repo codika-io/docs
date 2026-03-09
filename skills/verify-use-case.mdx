@@ -12,16 +12,16 @@ description: "Skill for validating use case folders and individual workflow file
 
 ## Prerequisites
 
-- `codika-helper` CLI installed (no authentication needed)
+- `codika` CLI installed (no authentication needed)
 
 ## Commands
 
 ```bash
 # Validate entire use case folder
-codika-helper verify use-case <path> [options]
+codika verify use-case <path> [options]
 
 # Validate single workflow file
-codika-helper verify workflow <path> [options]
+codika verify workflow <path> [options]
 ```
 
 ## Options
@@ -53,37 +53,37 @@ codika-helper verify workflow <path> [options]
 
 ```bash
 # 1. See all issues
-codika-helper verify use-case <path>
+codika verify use-case <path>
 
 # 2. Auto-fix fixable violations
-codika-helper verify use-case <path> --fix
+codika verify use-case <path> --fix
 
 # 3. Manually fix remaining must violations
 
 # 4. Verify clean
-codika-helper verify use-case <path>
+codika verify use-case <path>
 
 # 5. Deploy
-codika-helper deploy use-case <path>
+codika deploy use-case <path>
 ```
 
 ## Examples
 
 ```bash
 # Basic validation
-codika-helper verify use-case ./my-use-case
+codika verify use-case ./my-use-case
 
 # Auto-fix + validate
-codika-helper verify use-case ./my-use-case --fix
+codika verify use-case ./my-use-case --fix
 
 # Strict mode
-codika-helper verify use-case ./my-use-case --strict
+codika verify use-case ./my-use-case --strict
 
 # Single workflow
-codika-helper verify workflow ./my-use-case/workflows/main.json
+codika verify workflow ./my-use-case/workflows/main.json
 
 # JSON for CI
-codika-helper verify use-case ./my-use-case --json
+codika verify use-case ./my-use-case --json
 ```
 
 ## Exit codes

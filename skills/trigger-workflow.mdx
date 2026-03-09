@@ -12,7 +12,7 @@ description: "Skill for triggering a deployed Codika workflow and optionally pol
 ## Prerequisites
 
 - Use case deployed (`project.json` contains `devProcessInstanceId`)
-- Authenticated via `codika-helper login` or `CODIKA_API_KEY` env var
+- Authenticated via `codika login` or `CODIKA_API_KEY` env var
 - API key with `workflows:trigger` scope
 
 ## Resolving the workflow ID
@@ -22,7 +22,7 @@ The `workflowId` is the `workflowTemplateId` from `config.ts`. If the user provi
 ## Command
 
 ```bash
-codika-helper trigger <workflowId> [options]
+codika trigger <workflowId> [options]
 ```
 
 ## Arguments
@@ -48,7 +48,7 @@ codika-helper trigger <workflowId> [options]
 ### With payload (recommended: heredoc via stdin)
 
 ```bash
-codika-helper trigger search --poll --payload-file - <<'EOF'
+codika trigger search --poll --payload-file - <<'EOF'
 {"query": "test"}
 EOF
 ```
@@ -58,7 +58,7 @@ Using `--payload-file -` with a heredoc avoids shell escaping issues with inline
 ### Fire-and-forget
 
 ```bash
-codika-helper trigger search
+codika trigger search
 ```
 
 Returns immediately with execution ID.
@@ -66,13 +66,13 @@ Returns immediately with execution ID.
 ### Payload from file
 
 ```bash
-codika-helper trigger analyze --payload-file ./test-input.json --poll
+codika trigger analyze --payload-file ./test-input.json --poll
 ```
 
 ### Save result
 
 ```bash
-codika-helper trigger search --poll -o result.json --payload-file - <<'EOF'
+codika trigger search --poll -o result.json --payload-file - <<'EOF'
 {"query": "test"}
 EOF
 ```
@@ -80,7 +80,7 @@ EOF
 ### Custom timeout
 
 ```bash
-codika-helper trigger generate --poll --timeout 300
+codika trigger generate --poll --timeout 300
 ```
 
 ## Process instance ID resolution
@@ -101,7 +101,7 @@ codika-helper trigger generate --poll --timeout 300
 
 | HTTP | Error | Fix |
 |------|-------|-----|
-| 401 | Invalid API key | Re-login with `codika-helper login` |
+| 401 | Invalid API key | Re-login with `codika login` |
 | 403 | Missing scope | Create key with `workflows:trigger` scope |
 | 404 | Workflow not found | Check `workflowTemplateId` in config.ts |
 | 412 | Instance inactive | Re-deploy or activate in platform |

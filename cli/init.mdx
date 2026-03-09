@@ -6,7 +6,7 @@ description: "Scaffold a new use case folder with config, workflows, version tra
 ## Usage
 
 ```bash
-codika-helper init <path> [options]
+codika init <path> [options]
 ```
 
 ## Arguments
@@ -89,7 +89,7 @@ The scaffold generates three workflows that demonstrate different patterns:
 When you scaffold a use case in a standalone directory, the CLI creates a self-contained project with its own `package.json` and dependencies:
 
 ```bash
-codika-helper init ./email-automation --name "Email Automation"
+codika init ./email-automation --name "Email Automation"
 ```
 
 ```
@@ -119,9 +119,9 @@ npm install @codika-io/helper-sdk
 echo 'node_modules/' > .gitignore
 
 # 2. Scaffold use cases inside it
-codika-helper init ./email-automation --name "Email Automation"
-codika-helper init ./report-generator --name "Report Generator"
-codika-helper init ./crm-sync --name "CRM Sync"
+codika init ./email-automation --name "Email Automation"
+codika init ./report-generator --name "Report Generator"
+codika init ./crm-sync --name "CRM Sync"
 ```
 
 ```
@@ -142,7 +142,7 @@ my-automations/
     workflows/
 ```
 
-The CLI automatically detects the shared `package.json` and skips creating per-use-case dependency files. Each use case is still independently deployable — `codika-helper deploy use-case ./email-automation` works regardless of the project structure.
+The CLI automatically detects the shared `package.json` and skips creating per-use-case dependency files. Each use case is still independently deployable — `codika deploy use-case ./email-automation` works regardless of the project structure.
 
 This is the recommended approach when you have multiple use cases, since it avoids duplicating `node_modules` and keeps everything in one place.
 
@@ -150,16 +150,16 @@ This is the recommended approach when you have multiple use cases, since it avoi
 
 ```bash
 # Interactive scaffold with auto project creation
-codika-helper init ./email-automation --name "Email Automation"
+codika init ./email-automation --name "Email Automation"
 
 # Scaffold without creating a platform project
-codika-helper init ./local-test --name "Local Test" --no-project
+codika init ./local-test --name "Local Test" --no-project
 
 # Scaffold with an existing project ID
-codika-helper init ./my-tool --name "My Tool" --project-id abc123
+codika init ./my-tool --name "My Tool" --project-id abc123
 
 # Non-interactive, full options
-codika-helper init ./crm-sync \
+codika init ./crm-sync \
   --name "CRM Sync" \
   --description "Syncs contacts between CRM and email" \
   --icon "RefreshCw"
@@ -169,16 +169,16 @@ codika-helper init ./crm-sync \
 
 ```bash
 # Verify the scaffold is valid
-codika-helper verify use-case ./my-use-case
+codika verify use-case ./my-use-case
 
 # Deploy to the platform
-codika-helper deploy use-case ./my-use-case
+codika deploy use-case ./my-use-case
 ```
 
 If you used `--no-project`, create a project before deploying:
 
 ```bash
-codika-helper project create --name "My Automation" --path ./my-use-case
+codika project create --name "My Automation" --path ./my-use-case
 ```
 
 ## Exit codes

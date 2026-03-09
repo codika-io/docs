@@ -6,7 +6,7 @@ description: "Execute a deployed workflow via its HTTP webhook, optionally polli
 ## Usage
 
 ```bash
-codika-helper trigger <workflowId> [options]
+codika trigger <workflowId> [options]
 ```
 
 ## Arguments
@@ -44,7 +44,7 @@ codika-helper trigger <workflowId> [options]
 Returns immediately with the execution ID:
 
 ```bash
-codika-helper trigger main-workflow
+codika trigger main-workflow
 ```
 
 ```
@@ -55,7 +55,7 @@ codika-helper trigger main-workflow
   Workflow:          main-workflow
 
   Poll for status:
-    codika-helper get execution exec_abc123
+    codika get execution exec_abc123
 ```
 
 ### Poll for results (`--poll`)
@@ -63,7 +63,7 @@ codika-helper trigger main-workflow
 Waits for the execution to complete, polling every 3-5 seconds:
 
 ```bash
-codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+codika trigger main-workflow --poll --payload-file - <<'EOF'
 {"query": "test"}
 EOF
 ```
@@ -87,7 +87,7 @@ EOF
 Use `--payload-file -` with a heredoc to pass JSON without shell escaping issues:
 
 ```bash
-codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+codika trigger main-workflow --poll --payload-file - <<'EOF'
 {"query": "machine learning", "maxResults": 10}
 EOF
 ```
@@ -97,7 +97,7 @@ This is the recommended approach when calling from scripts or AI agents, as it a
 ### Payload from file
 
 ```bash
-codika-helper trigger main-workflow --payload-file ./test-input.json --poll
+codika trigger main-workflow --payload-file ./test-input.json --poll
 ```
 
 The file must contain a JSON object.
@@ -105,7 +105,7 @@ The file must contain a JSON object.
 ### Save result to file
 
 ```bash
-codika-helper trigger main-workflow --poll -o ./result.json --payload-file - <<'EOF'
+codika trigger main-workflow --poll -o ./result.json --payload-file - <<'EOF'
 {"query": "test"}
 EOF
 ```
@@ -114,32 +114,32 @@ EOF
 
 ```bash
 # Trigger with heredoc payload and poll
-codika-helper trigger search --poll --payload-file - <<'EOF'
+codika trigger search --poll --payload-file - <<'EOF'
 {"query": "machine learning"}
 EOF
 
 # Trigger with payload file and poll
-codika-helper trigger analyze \
+codika trigger analyze \
   --payload-file input.json \
   --poll \
   --timeout 300
 
 # Trigger from a different directory
-codika-helper trigger main-workflow \
+codika trigger main-workflow \
   --path ./my-use-case \
   --poll --payload-file - <<'EOF'
 {"text": "hello"}
 EOF
 
 # Explicit process instance ID
-codika-helper trigger main-workflow \
+codika trigger main-workflow \
   --process-instance-id pi_abc123 \
   --poll --payload-file - <<'EOF'
 {"text": "hello"}
 EOF
 
 # JSON output for scripting
-codika-helper trigger main-workflow \
+codika trigger main-workflow \
   --poll \
   --json \
   --payload-file - <<'EOF'
@@ -159,9 +159,9 @@ EOF
 
 | HTTP | Error | Cause | Fix |
 |------|-------|-------|-----|
-| 401 | Invalid API key | Wrong or expired key | `codika-helper whoami`, then `codika-helper login` |
+| 401 | Invalid API key | Wrong or expired key | `codika whoami`, then `codika login` |
 | 403 | Missing scope | Key lacks `workflows:trigger` | Create new key with scope |
-| 403 | No access | Process in different org | `codika-helper use <profile>` |
+| 403 | No access | Process in different org | `codika use <profile>` |
 | 404 | Workflow not found | Wrong workflowId | Check `config.ts` workflowTemplateId |
 | 412 | Instance inactive | Process paused or failed | Re-deploy or check platform |
 

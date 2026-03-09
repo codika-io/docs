@@ -8,7 +8,7 @@ description: "Deploy use cases and data ingestion configurations with version ma
 Deploy a use case folder to the Codika platform.
 
 ```bash
-codika-helper deploy use-case <path> [options]
+codika deploy use-case <path> [options]
 ```
 
 ### Arguments
@@ -58,14 +58,14 @@ codika-helper deploy use-case <path> [options]
    - Archive deployment in `deployments/{projectId}/process/{apiVersion}/`
    - Update `project-info.json` with version mapping
 
-The `deployments` map in `project.json` tracks all deployments by version — use it with `codika-helper publish` to promote a deployment to production.
+The `deployments` map in `project.json` tracks all deployments by version — use it with `codika publish` to promote a deployment to production.
 
 ### Dry-run mode
 
 Preview the deployment without calling the API:
 
 ```bash
-codika-helper deploy use-case ./my-use-case --dry-run
+codika deploy use-case ./my-use-case --dry-run
 ```
 
 This validates the configuration, displays the deployment plan (versions, workflows, project ID, integrations), and exits with the validation status.
@@ -75,7 +75,7 @@ This validates the configuration, displays the deployment plan (versions, workfl
 Attach extra files to the deployment (e.g., documentation, data files):
 
 ```bash
-codika-helper deploy use-case ./my-use-case \
+codika deploy use-case ./my-use-case \
   --additional-file "/absolute/path/to/readme.md:docs/readme.md" \
   --additional-file "/absolute/path/to/data.json:data/seed.json"
 ```
@@ -86,25 +86,25 @@ Format: `absolutePath:relativePath` — the relative path determines where the f
 
 ```bash
 # Default deployment (patch bump)
-codika-helper deploy use-case ./email-automation
+codika deploy use-case ./email-automation
 
 # Minor version bump
-codika-helper deploy use-case ./email-automation --minor
+codika deploy use-case ./email-automation --minor
 
 # Major version bump
-codika-helper deploy use-case ./email-automation --major
+codika deploy use-case ./email-automation --major
 
 # Explicit API version
-codika-helper deploy use-case ./email-automation --version 2.0
+codika deploy use-case ./email-automation --version 2.0
 
 # Dry-run preview
-codika-helper deploy use-case ./email-automation --dry-run
+codika deploy use-case ./email-automation --dry-run
 
 # Deploy with specific project ID
-codika-helper deploy use-case ./email-automation --project-id abc123
+codika deploy use-case ./email-automation --project-id abc123
 
 # JSON output for CI
-codika-helper deploy use-case ./email-automation --json
+codika deploy use-case ./email-automation --json
 ```
 
 ### Output
@@ -124,7 +124,7 @@ codika-helper deploy use-case ./email-automation --json
 Deploy a data ingestion configuration for RAG (document embedding) workflows. The CLI auto-discovers the single `.json` workflow file from the `data-ingestion/` folder — no export needed in `config.ts` for the workflow file path.
 
 ```bash
-codika-helper deploy process-data-ingestion <path> [options]
+codika deploy process-data-ingestion <path> [options]
 ```
 
 ### Arguments
@@ -165,7 +165,7 @@ Data ingestion deployments are independent from use case deployments — they do
 Upload use case documentation (stage 1–4 markdown files) to the Codika platform. Auto-discovers document files from the use case's `documents/` folder.
 
 ```bash
-codika-helper deploy documents <path> [options]
+codika deploy documents <path> [options]
 ```
 
 ### Arguments
@@ -209,13 +209,13 @@ Files must follow the pattern `{stage}_{name}.md` where stage is 1–4. Not all 
 
 ```bash
 # Deploy documents
-codika-helper deploy documents ./my-use-case
+codika deploy documents ./my-use-case
 
 # With explicit project ID
-codika-helper deploy documents ./my-use-case --project-id abc123
+codika deploy documents ./my-use-case --project-id abc123
 
 # JSON output for CI
-codika-helper deploy documents ./my-use-case --json
+codika deploy documents ./my-use-case --json
 ```
 
 ### Output

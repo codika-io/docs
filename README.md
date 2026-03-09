@@ -25,7 +25,7 @@ View at `http://localhost:3000`.
 - `index.mdx` — Platform overview
 - `quickstart.mdx` — Getting started guide
 - `concepts/` — Core concepts (use cases, processes, workflows, placeholders, triggers, credentials, schemas)
-- `cli/` — CLI reference (all codika-helper commands)
+- `cli/` — CLI reference (all codika commands)
 - `guides/` — Step-by-step tutorials
 - `examples/` — Real-world use case examples
 - `skills/` — Agent skill reference

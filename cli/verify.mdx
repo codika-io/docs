@@ -7,10 +7,10 @@ description: "Validate use case folders and individual workflow files against st
 
 ```bash
 # Validate an entire use case folder
-codika-helper verify use-case <path> [options]
+codika verify use-case <path> [options]
 
 # Validate a single workflow file
-codika-helper verify workflow <path> [options]
+codika verify workflow <path> [options]
 ```
 
 **No authentication required.** Validation runs entirely locally.
@@ -132,43 +132,43 @@ config.ts:
 
 ```bash
 # 1. Run verification to see all issues
-codika-helper verify use-case ./my-use-case
+codika verify use-case ./my-use-case
 
 # 2. Auto-fix what you can
-codika-helper verify use-case ./my-use-case --fix
+codika verify use-case ./my-use-case --fix
 
 # 3. Manually fix remaining "must" violations
 
 # 4. Verify again to confirm clean
-codika-helper verify use-case ./my-use-case
+codika verify use-case ./my-use-case
 
 # 5. Deploy
-codika-helper deploy use-case ./my-use-case
+codika deploy use-case ./my-use-case
 ```
 
 ## Examples
 
 ```bash
 # Validate and auto-fix
-codika-helper verify use-case ./email-automation --fix
+codika verify use-case ./email-automation --fix
 
 # Strict mode (warnings become errors)
-codika-helper verify use-case ./email-automation --strict
+codika verify use-case ./email-automation --strict
 
 # Run only specific rules
-codika-helper verify use-case ./email-automation --rules CK-INIT,CK-SUBMIT
+codika verify use-case ./email-automation --rules CK-INIT,CK-SUBMIT
 
 # Exclude rules
-codika-helper verify use-case ./email-automation --exclude-rules WF-LLM-MODEL
+codika verify use-case ./email-automation --exclude-rules WF-LLM-MODEL
 
 # Preview fixes without applying
-codika-helper verify use-case ./email-automation --fix --dry-run
+codika verify use-case ./email-automation --fix --dry-run
 
 # Validate a single workflow
-codika-helper verify workflow ./email-automation/workflows/main.json
+codika verify workflow ./email-automation/workflows/main.json
 
 # JSON output for CI pipelines
-codika-helper verify use-case ./email-automation --json
+codika verify use-case ./email-automation --json
 ```
 
 ## Exit codes

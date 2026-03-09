@@ -2,9 +2,9 @@
 
 ## What is Codika?
 
-Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable, shareable business automations. Users define a **use case** (a folder with `config.ts` + `workflows/*.json`), deploy it via the `codika-helper` CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution.
+Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable, shareable business automations. Users define a **use case** (a folder with `config.ts` + `workflows/*.json`), deploy it via the `codika` CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution.
 
-The CLI tool is `codika-helper`, installed via `npm install -g @codika-io/helper-sdk`.
+The CLI tool is `codika`, installed via `npm install -g @codika-io/helper-sdk`.
 
 ## How to navigate this documentation
 
@@ -83,7 +83,7 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 3. Placeholder suffixes are the type name reversed (e.g., `FLEXCRED` → `_DERCXELF`)
 4. Credentials go on the model node (`lmChatAnthropic`), NOT on `chainLlm` or `agent`
 5. Use `chainLlm` for structured JSON output, `agent` for multi-step reasoning
-6. Always validate before deploying: `codika-helper verify use-case <path>`
+6. Always validate before deploying: `codika verify use-case <path>`
 7. INSTPARM placeholders are context-aware — do NOT add extra quotes in Code nodes
 
 ## Terminology

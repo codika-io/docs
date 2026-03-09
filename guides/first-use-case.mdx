@@ -9,14 +9,14 @@ A web search tool that takes a query via HTTP, searches the web using Tavily, an
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated (see [Quickstart](/quickstart))
+- `codika` CLI installed and authenticated (see [Quickstart](/quickstart))
 - A Codika API key with `deploy:use-case` and `workflows:trigger` scopes
 
 ## Step 1: Create the project
 
 ```bash
 mkdir web-search && cd web-search
-codika-helper project create --name "Web Search Tool" --path .
+codika project create --name "Web Search Tool" --path .
 ```
 
 This creates `project.json` with your `projectId` and `organizationId`.
@@ -242,25 +242,25 @@ Create the `workflows/` directory and the workflow JSON:
 ## Step 5: Validate
 
 ```bash
-codika-helper verify use-case .
+codika verify use-case .
 ```
 
 Fix any issues:
 
 ```bash
-codika-helper verify use-case . --fix
+codika verify use-case . --fix
 ```
 
 ## Step 6: Deploy
 
 ```bash
-codika-helper deploy use-case .
+codika deploy use-case .
 ```
 
 ## Step 7: Test
 
 ```bash
-codika-helper trigger web-search --poll --payload-file - <<'EOF'
+codika trigger web-search --poll --payload-file - <<'EOF'
 {"query": "best practices for n8n workflows"}
 EOF
 ```

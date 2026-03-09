@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Get started in 7 steps — install codika-helper, authenticate, scaffold a use case, validate, deploy, trigger, and debug"
+description: "Get started in 7 steps — install codika, authenticate, scaffold a use case, validate, deploy, trigger, and debug"
 ---
 
 ## Prerequisites
@@ -18,27 +18,27 @@ npm install -g @codika-io/helper-sdk
 Verify the installation:
 
 ```bash
-codika-helper --version
+codika --version
 ```
 
 ## Step 2: Authenticate
 
 ```bash
-codika-helper login
+codika login
 ```
 
-This prompts for your API key (masked input), verifies it against the platform, and stores a named profile in `~/.config/codika-helper/config.json`.
+This prompts for your API key (masked input), verifies it against the platform, and stores a named profile in `~/.config/codika/config.json`.
 
 For non-interactive environments:
 
 ```bash
-codika-helper login --api-key cko_your_api_key_here
+codika login --api-key cko_your_api_key_here
 ```
 
 Verify your identity:
 
 ```bash
-codika-helper whoami
+codika whoami
 ```
 
 Output:
@@ -55,7 +55,7 @@ Profile:       my-company
 ## Step 3: Scaffold a use case
 
 ```bash
-codika-helper init my-first-automation --name "My First Automation"
+codika init my-first-automation --name "My First Automation"
 ```
 
 This creates:
@@ -80,7 +80,7 @@ The template includes three workflows demonstrating different trigger types (HTT
 ## Step 4: Validate
 
 ```bash
-codika-helper verify use-case ./my-first-automation
+codika verify use-case ./my-first-automation
 ```
 
 Expected output if valid:
@@ -93,13 +93,13 @@ Expected output if valid:
 If there are issues, the CLI lists each finding with rule ID, severity, file, and message. Use `--fix` to auto-fix what it can:
 
 ```bash
-codika-helper verify use-case ./my-first-automation --fix
+codika verify use-case ./my-first-automation --fix
 ```
 
 ## Step 5: Deploy
 
 ```bash
-codika-helper deploy use-case ./my-first-automation
+codika deploy use-case ./my-first-automation
 ```
 
 The CLI:
@@ -123,7 +123,7 @@ Output:
 ## Step 6: Trigger a workflow
 
 ```bash
-codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+codika trigger main-workflow --poll --payload-file - <<'EOF'
 {"message": "Hello world"}
 EOF
 ```
@@ -135,7 +135,7 @@ The `--poll` flag waits for execution to complete (default timeout: 120 seconds)
 If you need to debug:
 
 ```bash
-codika-helper get execution <executionId> --deep --slim
+codika get execution <executionId> --deep --slim
 ```
 
 The `--deep` flag fetches sub-workflow executions recursively. The `--slim` flag strips noise for readability.
@@ -145,7 +145,7 @@ The `--deep` flag fetches sub-workflow executions recursively. The `--slim` flag
 Once you're happy with your dev deployment, publish it to production:
 
 ```bash
-codika-helper publish <templateId>
+codika publish <templateId>
 ```
 
 The `templateId` is stored in `project.json` under the `deployments` map after each deploy. Check it with:

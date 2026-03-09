@@ -12,7 +12,7 @@ description: "Skill for fetching full n8n workflow execution details for debuggi
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - A deployed and triggered workflow
 - An execution ID (from the `trigger` command response)
 
@@ -20,21 +20,21 @@ description: "Skill for fetching full n8n workflow execution details for debuggi
 
 ```bash
 # 1. Deploy
-codika-helper deploy use-case .
+codika deploy use-case .
 
 # 2. Trigger and get execution ID
-codika-helper trigger main-workflow --poll --payload-file - <<'EOF'
+codika trigger main-workflow --poll --payload-file - <<'EOF'
 {"text": "test"}
 EOF
 
 # 3. Debug with full details
-codika-helper get execution <executionId> --deep --slim
+codika get execution <executionId> --deep --slim
 ```
 
 ## Command
 
 ```bash
-codika-helper get execution <executionId> [options]
+codika get execution <executionId> [options]
 ```
 
 ## Arguments
@@ -59,7 +59,7 @@ codika-helper get execution <executionId> [options]
 For most debugging, use both flags together:
 
 ```bash
-codika-helper get execution <id> --deep --slim
+codika get execution <id> --deep --slim
 ```
 
 - `--deep` gives you the complete execution tree including sub-workflows
@@ -69,19 +69,19 @@ codika-helper get execution <id> --deep --slim
 
 ```bash
 # Basic details
-codika-helper get execution exec_abc123
+codika get execution exec_abc123
 
 # Full recursive + clean output
-codika-helper get execution exec_abc123 --deep --slim
+codika get execution exec_abc123 --deep --slim
 
 # Save to file for analysis
-codika-helper get execution exec_abc123 --deep --slim -o debug.json
+codika get execution exec_abc123 --deep --slim -o debug.json
 
 # From a specific use case directory
-codika-helper get execution exec_abc123 --path ./my-use-case
+codika get execution exec_abc123 --path ./my-use-case
 
 # Explicit process instance
-codika-helper get execution exec_abc123 --process-instance-id pi_def456
+codika get execution exec_abc123 --process-instance-id pi_def456
 ```
 
 ## Process instance ID resolution

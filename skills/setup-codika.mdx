@@ -1,6 +1,6 @@
 ---
 title: "setup-codika"
-description: "Skill for installing the codika-helper CLI and managing authentication profiles"
+description: "Skill for installing the codika CLI and managing authentication profiles"
 ---
 
 ## When to use
@@ -21,7 +21,7 @@ description: "Skill for installing the codika-helper CLI and managing authentica
 
 ```bash
 # Check if installed
-codika-helper -V
+codika -V
 
 # Install globally
 npm install -g @codika-io/helper-sdk
@@ -30,7 +30,7 @@ npm install -g @codika-io/helper-sdk
 ### Login (interactive)
 
 ```bash
-codika-helper login
+codika login
 ```
 
 Prompts for API key with masked input. Verifies the key, stores a named profile.
@@ -38,13 +38,13 @@ Prompts for API key with masked input. Verifies the key, stores a named profile.
 ### Login (non-interactive)
 
 ```bash
-codika-helper login --api-key cko_your_key_here
+codika login --api-key cko_your_key_here
 ```
 
 ### Check identity
 
 ```bash
-codika-helper whoami
+codika whoami
 ```
 
 Returns: organization name, key name, masked key, scopes, expiry, profile name.
@@ -52,7 +52,7 @@ Returns: organization name, key name, masked key, scopes, expiry, profile name.
 ### List profiles
 
 ```bash
-codika-helper use
+codika use
 ```
 
 Shows all stored profiles with an active marker.
@@ -60,34 +60,34 @@ Shows all stored profiles with an active marker.
 ### Switch profile
 
 ```bash
-codika-helper use <profile-name>
+codika use <profile-name>
 ```
 
 ### Remove profile
 
 ```bash
-codika-helper logout
-codika-helper logout <profile-name>
+codika logout
+codika logout <profile-name>
 ```
 
 ### View all configuration
 
 ```bash
-codika-helper config show
+codika config show
 ```
 
 ### Clear configuration
 
 ```bash
-codika-helper config clear
-codika-helper config clear --profile <name>
+codika config clear
+codika config clear --profile <name>
 ```
 
 ## Configuration storage
 
 | Item | Location |
 |------|----------|
-| Config file | `~/.config/codika-helper/config.json` |
+| Config file | `~/.config/codika/config.json` |
 | Permissions | `0o600` (owner read/write only) |
 | Format | Multi-profile JSON with active profile pointer |
 
@@ -106,7 +106,7 @@ When `project.json` in a use case folder contains an `organizationId`, the CLI a
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| "API key is required" | No key provided or found | Run `codika-helper login` |
-| "Invalid API key" | Key is wrong or expired | Check with `codika-helper whoami`, re-login |
+| "API key is required" | No key provided or found | Run `codika login` |
+| "Invalid API key" | Key is wrong or expired | Check with `codika whoami`, re-login |
 | "EACCES" on npm install | Permission denied | Use `sudo npm install -g` or fix npm permissions |
-| Wrong org on deploy | Active profile doesn't match project | Use `codika-helper use <correct-profile>` |
+| Wrong org on deploy | Active profile doesn't match project | Use `codika use <correct-profile>` |

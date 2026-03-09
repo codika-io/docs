@@ -1,12 +1,12 @@
 ---
 title: "status"
-description: "Check identity, use case context detection, profile match status, and deployment readiness with `codika-helper status`"
+description: "Check identity, use case context detection, profile match status, and deployment readiness with `codika status`"
 ---
 
 ## Usage
 
 ```bash
-codika-helper status [path] [options]
+codika status [path] [options]
 ```
 
 ## Arguments
@@ -75,7 +75,7 @@ Or with issues:
 Readiness:
   ✗ Not ready to deploy
     - No project.json found
-    - Profile org does not match project org (try: codika-helper use staging)
+    - Profile org does not match project org (try: codika use staging)
 ```
 
 ### Warnings
@@ -88,16 +88,16 @@ Readiness:
 
 ```bash
 # Check status in current directory
-codika-helper status
+codika status
 
 # Check a specific directory
-codika-helper status ./email-automation
+codika status ./email-automation
 
 # Check with validation
-codika-helper status ./email-automation --verify
+codika status ./email-automation --verify
 
 # Machine-readable output
-codika-helper status --json
+codika status --json
 ```
 
 ## Exit codes

@@ -11,13 +11,13 @@ description: "Skill for creating a new project on the Codika platform and linkin
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - Valid API key with appropriate scopes
 
 ## Command
 
 ```bash
-codika-helper project create --name "Project Name" [options]
+codika project create --name "Project Name" [options]
 ```
 
 ## Options
@@ -39,7 +39,7 @@ Always use `--path .` when creating a project for a use case folder:
 
 ```bash
 cd my-use-case
-codika-helper project create --name "My Automation" --path .
+codika project create --name "My Automation" --path .
 ```
 
 This writes `project.json`:
@@ -60,19 +60,19 @@ Benefits of `project.json`:
 
 ```bash
 # Create and link to current directory
-codika-helper project create --name "Email Automation" --path .
+codika project create --name "Email Automation" --path .
 
 # Create with description
-codika-helper project create \
+codika project create \
   --name "CRM Reporter" \
   --description "Weekly pipeline reports to Slack" \
   --path ./crm-reporter
 
 # Create without saving locally
-codika-helper project create --name "Quick Test"
+codika project create --name "Quick Test"
 
 # For admin keys targeting a specific org
-codika-helper project create \
+codika project create \
   --name "Team Tool" \
   --organization-id org_abc123 \
   --path .

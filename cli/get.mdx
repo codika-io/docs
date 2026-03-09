@@ -8,7 +8,7 @@ description: "Download deployed use cases with `get use-case` and debug executio
 Download a deployed use case with all its metadata documents.
 
 ```bash
-codika-helper get use-case <projectId> [outputPath] [options]
+codika get use-case <projectId> [outputPath] [options]
 ```
 
 ### Arguments
@@ -47,25 +47,25 @@ codika-helper get use-case <projectId> [outputPath] [options]
 
 ```bash
 # Download latest version
-codika-helper get use-case abc123
+codika get use-case abc123
 
 # Download to a specific directory
-codika-helper get use-case abc123 ./my-download
+codika get use-case abc123 ./my-download
 
 # Download a specific version
-codika-helper get use-case abc123 --version 1.2
+codika get use-case abc123 --version 1.2
 
 # Download without data ingestion
-codika-helper get use-case abc123 --no-data-ingestion
+codika get use-case abc123 --no-data-ingestion
 
 # Download with specific data ingestion version
-codika-helper get use-case abc123 --di-version 1.0
+codika get use-case abc123 --di-version 1.0
 
 # List documents without downloading
-codika-helper get use-case abc123 --list
+codika get use-case abc123 --list
 
 # JSON output
-codika-helper get use-case abc123 --list --json
+codika get use-case abc123 --list --json
 ```
 
 ### Output
@@ -91,7 +91,7 @@ codika-helper get use-case abc123 --list --json
 Fetch full n8n execution details for debugging.
 
 ```bash
-codika-helper get execution <executionId> [options]
+codika get execution <executionId> [options]
 ```
 
 ### Arguments
@@ -137,19 +137,19 @@ Best used with `--deep` for debugging: `--deep --slim`
 
 ```bash
 # Basic execution details
-codika-helper get execution exec_abc123
+codika get execution exec_abc123
 
 # Full recursive details, clean output
-codika-helper get execution exec_abc123 --deep --slim
+codika get execution exec_abc123 --deep --slim
 
 # Save to file for analysis
-codika-helper get execution exec_abc123 --deep --slim -o debug.json
+codika get execution exec_abc123 --deep --slim -o debug.json
 
 # Explicit process instance ID
-codika-helper get execution exec_abc123 --process-instance-id pi_def456
+codika get execution exec_abc123 --process-instance-id pi_def456
 
 # From a specific use case directory
-codika-helper get execution exec_abc123 --path ./my-use-case
+codika get execution exec_abc123 --path ./my-use-case
 ```
 
 ### Output

@@ -1,6 +1,6 @@
 # Codika
 
-> Codika is a multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations. Users define use cases (config + n8n workflows), deploy them via CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution. The CLI tool is `codika-helper` (npm package `@codika-io/helper-sdk`).
+> Codika is a multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations. Users define use cases (config + n8n workflows), deploy them via CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution. The CLI tool is `codika` (npm package `@codika-io/helper-sdk`).
 
 Codika solves the problem of productizing n8n workflows. A use case is a folder containing `config.ts` and `workflows/*.json` that defines a deployable automation. When deployed, placeholders in workflows (11 types including FLEXCRED, USERCRED, ORGCRED, INSTPARM, SUBWKFL) are replaced with real values per user. Every user gets isolated credentials, deployment parameters, and execution tracking.
 
@@ -14,8 +14,8 @@ When helping users build Codika use cases:
 - Credentials go on the MODEL node (e.g., lmChatAnthropic), never on chainLlm or agent nodes
 - Use `chainLlm` for structured JSON output, `agent` for multi-step reasoning with tools
 - Placeholder suffixes are the type name reversed: FLEXCRED → _DERCXELF, USERDATA → _ATADRESU, PROCDATA → _ATADCORP
-- Always validate before deploying: `codika-helper verify use-case <path>`
-- Use `codika-helper verify use-case <path> --fix` to auto-fix fixable violations
+- Always validate before deploying: `codika verify use-case <path>`
+- Use `codika verify use-case <path> --fix` to auto-fix fixable violations
 - INSTPARM placeholders are context-aware — do NOT add extra quotes in Code nodes
 
 ## Getting Started

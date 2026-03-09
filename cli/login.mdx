@@ -1,6 +1,6 @@
 ---
 title: "login"
-description: "Login, manage profiles, switch organizations, and verify identity with the codika-helper CLI"
+description: "Login, manage profiles, switch organizations, and verify identity with the codika CLI"
 ---
 
 ## login
@@ -8,7 +8,7 @@ description: "Login, manage profiles, switch organizations, and verify identity 
 Save an API key and create a named profile. Alias for `config set`.
 
 ```bash
-codika-helper login [options]
+codika login [options]
 ```
 
 ### Options
@@ -31,16 +31,16 @@ codika-helper login [options]
 
 ```bash
 # Interactive login
-codika-helper login
+codika login
 
 # Non-interactive login
-codika-helper login --api-key cko_abc123def456
+codika login --api-key cko_abc123def456
 
 # Login with custom profile name
-codika-helper login --api-key cko_abc123def456 --name staging
+codika login --api-key cko_abc123def456 --name staging
 
 # Login to a custom environment
-codika-helper login --api-key cko_abc123def456 --base-url https://custom.api.example.com
+codika login --api-key cko_abc123def456 --base-url https://custom.api.example.com
 ```
 
 ## whoami
@@ -48,7 +48,7 @@ codika-helper login --api-key cko_abc123def456 --base-url https://custom.api.exa
 Show the current authenticated identity.
 
 ```bash
-codika-helper whoami [options]
+codika whoami [options]
 ```
 
 ### Options
@@ -77,7 +77,7 @@ Profile:       acme-corp
 Switch the active profile or list all profiles.
 
 ```bash
-codika-helper use [name]
+codika use [name]
 ```
 
 ### Arguments
@@ -95,10 +95,10 @@ codika-helper use [name]
 
 ```bash
 # List all profiles
-codika-helper use
+codika use
 
 # Switch to a specific profile
-codika-helper use staging
+codika use staging
 ```
 
 ### Output (list mode)
@@ -114,7 +114,7 @@ codika-helper use staging
 Remove a profile.
 
 ```bash
-codika-helper logout [name]
+codika logout [name]
 ```
 
 ### Arguments
@@ -132,7 +132,7 @@ Removes the specified profile. If it was the active profile, switches to the nex
 Save API key and base URL. Same as `login`.
 
 ```bash
-codika-helper config set [options]
+codika config set [options]
 ```
 
 Options are identical to `login`.
@@ -142,7 +142,7 @@ Options are identical to `login`.
 Display all stored profiles.
 
 ```bash
-codika-helper config show
+codika config show
 ```
 
 ### Output
@@ -160,7 +160,7 @@ Exit code 0 if profiles exist, 1 if none.
 Remove configuration.
 
 ```bash
-codika-helper config clear [options]
+codika config clear [options]
 ```
 
 ### Options
@@ -173,8 +173,8 @@ codika-helper config clear [options]
 
 ```bash
 # Clear a specific profile
-codika-helper config clear --profile staging
+codika config clear --profile staging
 
 # Clear all profiles and configuration
-codika-helper config clear
+codika config clear
 ```

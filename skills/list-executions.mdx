@@ -12,14 +12,14 @@ description: "Skill for listing recent executions for a process instance, with f
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - A deployed process instance (`devProcessInstanceId` or `prodProcessInstanceId` in `project.json`)
 - API key with `executions:read` scope
 
 ## Command
 
 ```bash
-codika-helper list executions <processInstanceId> [options]
+codika list executions <processInstanceId> [options]
 ```
 
 ## Arguments
@@ -56,16 +56,16 @@ Use `devProcessInstanceId` to list dev executions and `prodProcessInstanceId` to
 
 ```bash
 # List recent executions for a dev instance
-codika-helper list executions pi-dev-789
+codika list executions pi-dev-789
 
 # Filter by workflow
-codika-helper list executions pi-dev-789 --workflow-id wf-abc123
+codika list executions pi-dev-789 --workflow-id wf-abc123
 
 # Failed executions only
-codika-helper list executions pi-dev-789 --failed-only
+codika list executions pi-dev-789 --failed-only
 
 # Increase result count and output JSON
-codika-helper list executions pi-dev-789 --limit 50 --json
+codika list executions pi-dev-789 --limit 50 --json
 ```
 
 ## Output
@@ -86,15 +86,15 @@ codika-helper list executions pi-dev-789 --limit 50 --json
 
 Failed executions show the error message and failed node name on the next line.
 
-Pass any execution ID to `codika-helper get execution <id>` for full node-level details.
+Pass any execution ID to `codika get execution <id>` for full node-level details.
 
 ## Error reference
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| "API key is required" | Not authenticated | Run `codika-helper login` |
+| "API key is required" | Not authenticated | Run `codika login` |
 | "Process instance not found" | Invalid process instance ID | Check `devProcessInstanceId` or `prodProcessInstanceId` in `project.json` |
-| 401 / Unauthorized | Invalid or expired API key | Run `codika-helper whoami`, then `codika-helper login` |
+| 401 / Unauthorized | Invalid or expired API key | Run `codika whoami`, then `codika login` |
 
 Note: Zero executions is not an error — the CLI prints "No executions found." and exits with code 0.
 

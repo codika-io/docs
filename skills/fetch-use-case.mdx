@@ -12,7 +12,7 @@ description: "Skill for downloading a deployed use case and its metadata documen
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - Project ID of the deployed use case
 
 ## Resolving the project ID
@@ -27,7 +27,7 @@ cat <use-case-path>/project.json
 ## Command
 
 ```bash
-codika-helper get use-case <projectId> [outputPath] [options]
+codika get use-case <projectId> [outputPath] [options]
 ```
 
 ## Arguments
@@ -58,28 +58,28 @@ The global CLI version flag is `-V` / `--cli-version`. The `--version` flag on t
 
 ```bash
 # Download latest version
-codika-helper get use-case abc123
+codika get use-case abc123
 
 # Download to specific directory
-codika-helper get use-case abc123 ./my-local-copy
+codika get use-case abc123 ./my-local-copy
 
 # Download specific version
-codika-helper get use-case abc123 ./restored --version 1.0
+codika get use-case abc123 ./restored --version 1.0
 
 # List files without downloading
-codika-helper get use-case abc123 --list
+codika get use-case abc123 --list
 
 # Download with specific data ingestion version
-codika-helper get use-case abc123 --di-version 1.2
+codika get use-case abc123 --di-version 1.2
 
 # Download without data ingestion
-codika-helper get use-case abc123 --no-data-ingestion
+codika get use-case abc123 --no-data-ingestion
 
 # List with JSON output
-codika-helper get use-case abc123 --list --json
+codika get use-case abc123 --list --json
 
 # Check CLI version (not use case version)
-codika-helper -V
+codika -V
 ```
 
 ## Output

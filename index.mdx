@@ -37,15 +37,15 @@ The system has three layers:
 | Layer | What it does |
 |-------|-------------|
 | **Codika Dashboard** | Web application where users manage organizations, projects, integrations, and processes. |
-| **codika-helper CLI** | Command-line tool (`npm install -g @codika-io/helper-sdk`) for scaffolding, validating, and deploying use cases. |
+| **codika CLI** | Command-line tool (`npm install -g @codika-io/helper-sdk`) for scaffolding, validating, and deploying use cases. |
 | **Codika Platform API** | Backend that handles deployment orchestration, credential resolution, version management, and workflow execution. |
 
 ## How deployment works
 
 ```
 Use case folder (config.ts + workflows/*.json)
-  → codika-helper verify (validation)
-  → codika-helper deploy (packaging + API call)
+  → codika verify (validation)
+  → codika deploy (packaging + API call)
     → Codika Platform (version management, deployment records)
       → n8n (placeholder replacement, credential injection, workflow creation)
         → Live automation (accessible via triggers)
@@ -97,7 +97,7 @@ Organization
     Understand how use cases are organized and configured.
   </Card>
   <Card title="CLI reference" icon="terminal" href="/cli/overview">
-    Full reference for all codika-helper commands.
+    Full reference for all codika commands.
   </Card>
   <Card title="Examples" icon="code" href="/examples/overview">
     Real-world use case examples with complete code.

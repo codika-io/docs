@@ -11,7 +11,7 @@ description: "Skill for deploying a process-level data ingestion configuration t
 
 ## Prerequisites
 
-- `codika-helper` CLI installed and authenticated
+- `codika` CLI installed and authenticated
 - A use case folder with `config.ts` exporting `getDataIngestionConfig()` and a `data-ingestion/` folder with exactly one workflow JSON file
 - A project to deploy to (via `project.json`)
 
@@ -28,7 +28,7 @@ my-use-case/
 ## Command
 
 ```bash
-codika-helper deploy process-data-ingestion <path> [options]
+codika deploy process-data-ingestion <path> [options]
 ```
 
 ## Options
@@ -47,16 +47,16 @@ codika-helper deploy process-data-ingestion <path> [options]
 
 ```bash
 # Default deployment (minor bump)
-codika-helper deploy process-data-ingestion ./my-use-case
+codika deploy process-data-ingestion ./my-use-case
 
 # Major version bump
-codika-helper deploy process-data-ingestion ./my-use-case --version-strategy major_bump
+codika deploy process-data-ingestion ./my-use-case --version-strategy major_bump
 
 # Explicit version
-codika-helper deploy process-data-ingestion ./my-use-case --version-strategy explicit --explicit-version 3.0
+codika deploy process-data-ingestion ./my-use-case --version-strategy explicit --explicit-version 3.0
 
 # JSON output for CI
-codika-helper deploy process-data-ingestion ./my-use-case --json
+codika deploy process-data-ingestion ./my-use-case --json
 ```
 
 ## What happens on deploy

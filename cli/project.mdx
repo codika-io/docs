@@ -8,7 +8,7 @@ description: "Create platform projects with `project create` and link them to us
 Create a new project on the Codika platform.
 
 ```bash
-codika-helper project create [options]
+codika project create [options]
 ```
 
 ### Options
@@ -39,7 +39,7 @@ Using `--path .` is recommended when creating a project for an existing use case
 
 ```bash
 cd my-use-case
-codika-helper project create --name "My Automation" --path .
+codika project create --name "My Automation" --path .
 ```
 
 This creates `./project.json`:
@@ -55,23 +55,23 @@ This creates `./project.json`:
 
 ```bash
 # Create a project and save project.json locally
-codika-helper project create --name "Email Automation" --path ./email-automation
+codika project create --name "Email Automation" --path ./email-automation
 
 # Create a project without saving locally
-codika-helper project create --name "Test Project"
+codika project create --name "Test Project"
 
 # With description
-codika-helper project create \
+codika project create \
   --name "CRM Reporter" \
   --description "Generates weekly CRM pipeline reports"
 
 # For a specific organization (admin keys)
-codika-helper project create \
+codika project create \
   --name "Team Tool" \
   --organization-id org_abc123
 
 # JSON output
-codika-helper project create --name "My Project" --json
+codika project create --name "My Project" --json
 ```
 
 ### Output

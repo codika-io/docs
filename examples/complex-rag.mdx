@@ -236,7 +236,7 @@ Users upload a document (requirements file), the workflow processes it, generate
 ### 5. RAG data ingestion
 Separate data ingestion workflow embeds documents into Pinecone. Deployed independently via:
 ```bash
-codika-helper deploy process-data-ingestion ./proposal-generation
+codika deploy process-data-ingestion ./proposal-generation
 ```
 
 ### 6. Knowledge base tags
@@ -249,16 +249,16 @@ Main workflow costs 15 credits, retrieval costs 5, sub-workflow costs 0 (attribu
 
 ```bash
 # 1. Validate
-codika-helper verify use-case ./proposal-generation
+codika verify use-case ./proposal-generation
 
 # 2. Deploy use case (all 3 workflows)
-codika-helper deploy use-case ./proposal-generation
+codika deploy use-case ./proposal-generation
 
 # 3. Deploy data ingestion (separate)
-codika-helper deploy process-data-ingestion ./proposal-generation
+codika deploy process-data-ingestion ./proposal-generation
 
 # 4. Test retrieval
-codika-helper trigger document-retrieval --poll --payload-file - <<'EOF'
+codika trigger document-retrieval --poll --payload-file - <<'EOF'
 {"query": "software development proposal"}
 EOF
 
