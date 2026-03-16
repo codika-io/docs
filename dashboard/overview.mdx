@@ -1,0 +1,65 @@
+---
+title: "Dashboard Integration"
+description: "Build custom frontends and dashboards on top of Codika use cases — trigger workflows, poll results, and manage environments via the public API"
+---
+
+## Why build a custom dashboard?
+
+Codika deploys your workflows as stable HTTP endpoints with credential isolation and execution tracking. You can trigger these endpoints from **any frontend** — not just the Codika dashboard.
+
+This means you can build a custom app that:
+- Triggers your workflows from your own UI
+- Displays results in your own format
+- Manages its own users and data
+- Talks to your own database alongside Codika
+
+## Architecture
+
+```
+Your App (SvelteKit, Next.js, any framework)
+  → Your API routes (server-side, holds API key)
+    → Codika Public API (trigger + poll)
+      → n8n workflow (business logic, integrations)
+        → Result returned to your app
+```
+
+**What Codika provides:**
+- Stable HTTP endpoints per workflow (don't change across versions)
+- Credential isolation (your app never sees integration tokens)
+- Execution tracking (trigger, poll status, get results)
+- Dev/prod environments with separate instance IDs and API keys
+
+**What you build:**
+- The frontend (UI, forms, data display)
+- Your own database (users, audit logs, app-specific data)
+- Server-side API routes that proxy to Codika (keeps API key private)
+- Business logic around the workflow results
+
+## The integration is simple
+
+Your app only needs three things from Codika:
+
+| What | How |
+|------|-----|
+| **Trigger a workflow** | `POST triggerWebhookPublic/{processInstanceId}/{workflowId}` with `X-API-Key` header |
+| **Poll for results** | `GET getExecutionStatusPublic/{processInstanceId}/{executionId}` with `X-API-Key` header |
+| **Know what's available** | Agent skills describe each endpoint's input/output (optional but helpful) |
+
+That's it. Two endpoints, one API key, and you can build anything on top.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/dashboard/authentication">
+    Understand the two API key types and how to store them securely.
+  </Card>
+  <Card title="Trigger & Poll" icon="play" href="/dashboard/triggering-workflows">
+    The core pattern: trigger a workflow, poll for results, parse the output.
+  </Card>
+  <Card title="Environments" icon="toggle-left" href="/dashboard/environments">
+    Switch between dev and prod with separate instance IDs and API keys.
+  </Card>
+  <Card title="Common Patterns" icon="lightbulb" href="/dashboard/patterns">
+    Error handling, retry logic, audit trails, and security best practices.
+  </Card>
+</CardGroup>

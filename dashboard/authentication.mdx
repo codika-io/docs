@@ -1,0 +1,121 @@
+---
+title: "API Keys & Authentication"
+description: "Two API key types for different use cases — instance keys for apps, org keys for CLI and agents"
+---
+
+## Two key types
+
+Codika has two types of API keys that serve different purposes:
+
+| | Instance Key (`ck_`) | Organization Key (`cko_`) |
+|---|---|---|
+| **Created by** | Auto-generated per process instance | You create in the Codika dashboard |
+| **Scope** | One specific process instance | Any instance in the organization |
+| **Permissions** | Trigger workflows + poll status | Configurable (deploy, trigger, skills, etc.) |
+| **Best for** | Custom dashboards, apps | CLI, agents, CI/CD |
+| **Header** | `X-API-Key` | `X-Process-Manager-Key` |
+
+**For custom dashboards, use instance keys (`ck_`).** They're auto-generated, scoped to exactly one process instance, and require no setup beyond copying the key.
+
+## Where to find your instance API key
+
+1. Open the Codika dashboard
+2. Go to your process instance
+3. Open the trigger panel (playground)
+4. Find the "Public API Access" section
+5. Copy the API key (format: `ck_...`)
+
+The API key is also visible in the cURL examples shown in the trigger panel.
+
+<Warning>
+**Instance API keys are secrets.** Treat them like passwords. Never expose them in client-side code, public repositories, or browser network requests.
+</Warning>
+
+## Store keys server-side only
+
+Your custom app should **never** send the API key from the browser. Instead, proxy all Codika calls through your own server-side API routes.
+
+```
+Browser → Your API route (server-side, has API key) → Codika Public API
+```
+
+### Example: SvelteKit server endpoint
+
+```typescript
+// src/routes/api/trigger/+server.ts
+import { json } from '@sveltejs/kit';
+import { CODIKA_API_KEY, PROCESS_INSTANCE_ID } from '$env/static/private';
+
+const TRIGGER_URL = `https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/${PROCESS_INSTANCE_ID}`;
+
+export async function POST({ request }) {
+  const { workflowId, payload } = await request.json();
+
+  const response = await fetch(`${TRIGGER_URL}/${workflowId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': CODIKA_API_KEY
+    },
+    body: JSON.stringify({ payload })
+  });
+
+  const data = await response.json();
+  return json(data);
+}
+```
+
+### Example: Next.js API route
+
+```typescript
+// app/api/trigger/route.ts
+import { NextResponse } from 'next/server';
+
+const CODIKA_API_KEY = process.env.CODIKA_API_KEY!;
+const PROCESS_INSTANCE_ID = process.env.PROCESS_INSTANCE_ID!;
+const TRIGGER_URL = `https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/${PROCESS_INSTANCE_ID}`;
+
+export async function POST(request: Request) {
+  const { workflowId, payload } = await request.json();
+
+  const response = await fetch(`${TRIGGER_URL}/${workflowId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': CODIKA_API_KEY
+    },
+    body: JSON.stringify({ payload })
+  });
+
+  const data = await response.json();
+  return NextResponse.json(data);
+}
+```
+
+## Environment variables
+
+Store these in your `.env` file (gitignored):
+
+```env
+# Codika integration
+CODIKA_API_KEY=ck_your_instance_api_key_here
+PROCESS_INSTANCE_ID=your_process_instance_id_here
+
+# Base URLs (same for all instances)
+CODIKA_TRIGGER_BASE_URL=https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic
+CODIKA_STATUS_BASE_URL=https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic
+```
+
+## Key regeneration
+
+If an instance API key is compromised, you can regenerate it from the Codika dashboard. The old key is immediately invalidated. Update your app's environment variables with the new key.
+
+## When to use org keys instead
+
+Use `cko_` organization keys when your app needs to:
+- Access **multiple** process instances (not just one)
+- Deploy use cases programmatically
+- Read agent skills via the API
+- Operate across the organization
+
+For most custom dashboards that serve one use case, `ck_` instance keys are simpler and more secure (narrower scope).

@@ -1,0 +1,111 @@
+---
+title: "Dev & Prod Environments"
+description: "Switch between development and production with separate process instances, API keys, and configurations"
+---
+
+## How environments work
+
+Every Codika use case has two environments:
+
+| Environment | Purpose | Created when |
+|-------------|---------|-------------|
+| **Dev** | Testing by the creator | First `codika deploy` |
+| **Prod** | Live usage by all users | `codika publish` |
+
+Each environment has its own:
+- **Process instance ID** — different URL path for triggers
+- **API key** (`ck_`) — different credentials
+- **n8n workflows** — separate copies with separate execution history
+
+## Configuration pattern
+
+Structure your app's configuration around environments:
+
+```typescript
+interface CodikaConfig {
+  apiKey: string;
+  triggerBaseUrl: string;
+  statusBaseUrl: string;
+}
+
+type AppMode = 'dev' | 'prod';
+
+function getCodikaConfig(mode: AppMode): CodikaConfig {
+  const instanceId = mode === 'dev'
+    ? process.env.DEV_PROCESS_INSTANCE_ID
+    : process.env.PROD_PROCESS_INSTANCE_ID;
+
+  const apiKey = mode === 'dev'
+    ? process.env.DEV_CODIKA_API_KEY
+    : process.env.PROD_CODIKA_API_KEY;
+
+  const baseUrl = 'https://europe-west1-codika-app.cloudfunctions.net';
+
+  return {
+    apiKey: apiKey!,
+    triggerBaseUrl: `${baseUrl}/triggerWebhookPublic/${instanceId}`,
+    statusBaseUrl: `${baseUrl}/getExecutionStatusPublic/${instanceId}`
+  };
+}
+```
+
+## Environment variables
+
+```env
+# Dev environment
+DEV_PROCESS_INSTANCE_ID=019c8fb3-xxxx-dev
+DEV_CODIKA_API_KEY=ck_dev_xxxxxxxx
+
+# Prod environment
+PROD_PROCESS_INSTANCE_ID=019d1a2b-xxxx-prod
+PROD_CODIKA_API_KEY=ck_prod_xxxxxxxx
+```
+
+## Where to find instance IDs
+
+- **Dev instance ID**: In `project.json` after deploying (`devProcessInstanceId`)
+- **Prod instance ID**: In `project.json` after publishing (`prodProcessInstanceId`)
+- **Both**: Visible in the Codika dashboard under your process
+
+## Mode switching in your app
+
+A common pattern is to let the app creator toggle between dev and prod:
+
+```typescript
+// Store mode in a cookie or database
+function setMode(mode: AppMode) {
+  document.cookie = `app_mode=${mode}; path=/; max-age=31536000`;
+}
+
+// Read mode on the server
+function getMode(cookies: Cookies): AppMode {
+  return (cookies.get('app_mode') as AppMode) || 'prod';
+}
+```
+
+Then use the mode to build the config on every request:
+
+```typescript
+// In your server hook or middleware
+const mode = getMode(event.cookies);
+const codikaConfig = getCodikaConfig(mode);
+// Pass to route handlers via locals, context, etc.
+```
+
+## What changes between environments
+
+| | Dev | Prod |
+|---|---|---|
+| Process instance ID | Different | Different |
+| Codika API key (`ck_`) | Different | Different |
+| Workflow versions | Latest deployed | Latest published |
+| Trigger/status base URLs | **Same** | **Same** |
+| Your own database | Up to you (can share or separate) | Up to you |
+
+The Codika base URLs are the same — only the process instance ID in the URL path changes.
+
+## Typical flow
+
+1. **Development**: Deploy use case → get dev instance ID and API key → test with your dashboard
+2. **Ready for production**: Publish the use case → get prod instance ID and API key → update your `.env`
+3. **New version**: Deploy again → dev updates automatically → test → publish → prod updates for all users

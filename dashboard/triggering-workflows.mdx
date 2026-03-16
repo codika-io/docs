@@ -1,0 +1,244 @@
+---
+title: "Triggering Workflows"
+description: "The trigger and poll pattern — fire a workflow, track its execution, and parse the results"
+---
+
+## The two endpoints
+
+Your app uses two Codika public API endpoints:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `triggerWebhookPublic/{processInstanceId}/{workflowId}` | POST | Trigger a workflow |
+| `getExecutionStatusPublic/{processInstanceId}/{executionId}` | GET | Poll execution status |
+
+Both require the `X-API-Key` header with your instance API key.
+
+## Step 1: Trigger a workflow
+
+```
+POST https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/{processInstanceId}/{workflowId}
+
+Headers:
+  Content-Type: application/json
+  X-API-Key: ck_your_instance_key
+
+Body:
+{
+  "payload": {
+    "field1": "value1",
+    "field2": "value2"
+  }
+}
+```
+
+The `payload` fields must match the workflow's input schema (defined in `config.ts`).
+
+### Response
+
+```json
+{
+  "success": true,
+  "executionId": "019c8fb3-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "message": "Execution started"
+}
+```
+
+Save the `executionId` — you'll need it for polling.
+
+### The `workflowId`
+
+This is the `workflowTemplateId` from the use case's `config.ts`. It's a stable identifier that doesn't change across versions. Examples: `main-workflow`, `http-direct-messaging`, `scheduled-report`.
+
+If the use case has agent skills, each skill's `workflowTemplateId` field tells you the ID to use.
+
+## Step 2: Poll for results
+
+```
+GET https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic/{processInstanceId}/{executionId}
+
+Headers:
+  X-API-Key: ck_your_instance_key
+```
+
+### Response
+
+```json
+{
+  "execution": {
+    "status": "success",
+    "resultData": {
+      "result": "Processed output",
+      "processedAt": "2025-03-15T10:30:00.000Z"
+    }
+  }
+}
+```
+
+### Status values
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| `pending` | Workflow is still running | Continue polling |
+| `success` | Workflow completed successfully | Read `execution.resultData` |
+| `failed` | Workflow encountered an error | Read `execution.errorDetails.message` |
+
+## Complete trigger + poll implementation
+
+Here's a reusable implementation in TypeScript:
+
+```typescript
+interface TriggerResult {
+  executionId: string;
+}
+
+interface ExecutionResult<T> {
+  status: 'success' | 'failed';
+  data?: T;
+  error?: string;
+}
+
+const TRIGGER_BASE = 'https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic';
+const STATUS_BASE = 'https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic';
+
+/**
+ * Trigger a workflow and return the execution ID.
+ */
+async function triggerWorkflow(
+  processInstanceId: string,
+  workflowId: string,
+  payload: Record<string, unknown>,
+  apiKey: string
+): Promise<string> {
+  const response = await fetch(
+    `${TRIGGER_BASE}/${processInstanceId}/${workflowId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      },
+      body: JSON.stringify({ payload })
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Trigger failed (${response.status}): ${text}`);
+  }
+
+  const data = await response.json();
+  const executionId = data.executionId ?? data.id;
+
+  if (!executionId) {
+    throw new Error('No executionId in trigger response');
+  }
+
+  return executionId;
+}
+
+/**
+ * Poll until the execution completes or times out.
+ */
+async function pollExecution<T>(
+  processInstanceId: string,
+  executionId: string,
+  apiKey: string,
+  parseResult: (resultData: unknown) => T,
+  options?: { maxWaitMs?: number; pollIntervalMs?: number }
+): Promise<ExecutionResult<T>> {
+  const maxWait = options?.maxWaitMs ?? 120_000;
+  const interval = options?.pollIntervalMs ?? 1_500;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWait) {
+    await new Promise(resolve => setTimeout(resolve, interval));
+
+    const response = await fetch(
+      `${STATUS_BASE}/${processInstanceId}/${executionId}`,
+      { headers: { 'X-API-Key': apiKey } }
+    );
+
+    if (!response.ok) continue; // Retry on transient errors
+
+    const data = await response.json();
+    const status = data.execution?.status;
+
+    if (status === 'pending') continue;
+
+    if (status === 'success') {
+      return {
+        status: 'success',
+        data: parseResult(data.execution.resultData)
+      };
+    }
+
+    if (status === 'failed') {
+      return {
+        status: 'failed',
+        error: data.execution.errorDetails?.message ?? 'Unknown error'
+      };
+    }
+  }
+
+  throw new Error(`Execution timed out after ${maxWait / 1000}s`);
+}
+```
+
+### Usage
+
+```typescript
+// Trigger
+const executionId = await triggerWorkflow(
+  PROCESS_INSTANCE_ID,
+  'http-direct-messaging',
+  { phone_numbers: ['32477123456'], message_content: 'Hello!' },
+  CODIKA_API_KEY
+);
+
+// Poll and parse
+const result = await pollExecution(
+  PROCESS_INSTANCE_ID,
+  executionId,
+  CODIKA_API_KEY,
+  (data) => data as { success: boolean; total_sent: number }
+);
+
+if (result.status === 'success') {
+  console.log(`Sent to ${result.data.total_sent} recipients`);
+} else {
+  console.error(`Failed: ${result.error}`);
+}
+```
+
+## Payload format
+
+The trigger endpoint wraps your input in a `payload` field:
+
+```json
+{
+  "payload": {
+    "text_input": "Hello world",
+    "processing_mode": "summarize"
+  }
+}
+```
+
+The keys inside `payload` must match the workflow's `inputSchema` field names.
+
+<Info>
+The `payload` wrapper is recommended but not required. If no `payload` key is present, the entire request body is passed through as-is. However, using the wrapper is safer and consistent with how the Codika dashboard sends data.
+</Info>
+
+## Workflows without input
+
+Some workflows (like scheduled reports with manual triggers) don't require input. Send an empty body or empty payload:
+
+```typescript
+const executionId = await triggerWorkflow(
+  PROCESS_INSTANCE_ID,
+  'scheduled-report',
+  {},
+  CODIKA_API_KEY
+);
+```

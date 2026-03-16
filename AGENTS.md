@@ -78,6 +78,8 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | Make workflows accessible to agents | `concepts/agent-skills.mdx` |
 | Create agent skills for a use case | `guides/agent-skills.mdx` |
 | Download skills from a deployed process | `skills/get-skills.mdx` or `cli/get.mdx` |
+| Build a custom dashboard on a use case | `dashboard/overview.mdx` |
+| Understand the trigger + poll API | `dashboard/triggering-workflows.mdx` |
 | Look up CLI command flags | `cli/<command>.mdx` |
 | Check all validation rules | `cli/verify.mdx` |
 | Pick the right API key for a project | Read `project.json` for `organizationId`, run `codika use --json` to list profiles with org IDs, then pass `--profile <name>` |

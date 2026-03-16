@@ -1,0 +1,242 @@
+---
+title: "Common Patterns"
+description: "Error handling, retry logic, audit trails, and security best practices for dashboard integrations"
+---
+
+## Error handling
+
+### Trigger failures
+
+The trigger endpoint can fail for several reasons:
+
+```typescript
+const response = await fetch(triggerUrl, { method: 'POST', ... });
+
+if (!response.ok) {
+  const text = await response.text();
+  // Handle by status code
+  switch (response.status) {
+    case 401: // Invalid API key
+    case 403: // API key doesn't have access to this instance
+    case 404: // Process instance or workflow not found
+    case 500: // Platform error
+  }
+}
+```
+
+### Polling failures
+
+The status endpoint may be temporarily unavailable while the execution is being registered. **Don't treat transient errors as fatal** — continue polling:
+
+```typescript
+while (Date.now() - startTime < maxWaitMs) {
+  await sleep(pollIntervalMs);
+
+  const response = await fetch(statusUrl, { headers: { 'X-API-Key': apiKey } });
+
+  // Transient error — keep polling
+  if (!response.ok) continue;
+
+  const data = await response.json();
+  const status = data.execution?.status;
+
+  if (status === 'pending') continue;
+  if (status === 'success') return parseResult(data.execution.resultData);
+  if (status === 'failed') throw new Error(data.execution.errorDetails?.message);
+}
+
+throw new Error('Timed out');
+```
+
+### Execution failures
+
+When a workflow fails, the error details are in `execution.errorDetails`:
+
+```json
+{
+  "execution": {
+    "status": "failed",
+    "errorDetails": {
+      "message": "External API returned 429: Rate limit exceeded",
+      "type": "external_api_error"
+    }
+  }
+}
+```
+
+Error types: `node_failure`, `validation_error`, `external_api_error`, `timeout`
+
+## Result parsing with fallbacks
+
+Workflow output shapes can vary. Always validate before assuming structure:
+
+```typescript
+function parseResult(resultData: unknown): MyResult {
+  if (resultData && typeof resultData === 'object') {
+    const data = resultData as Record<string, unknown>;
+
+    // Try to parse expected shape
+    if (typeof data.result === 'string') {
+      return {
+        result: data.result,
+        processedAt: data.processedAt as string
+      };
+    }
+  }
+
+  // Fallback for unexpected shapes
+  return {
+    result: JSON.stringify(resultData),
+    processedAt: new Date().toISOString()
+  };
+}
+```
+
+## Retry logic
+
+### Retrying failed items in a batch
+
+If a workflow processes multiple items and some fail, retry only the failures:
+
+```typescript
+const result = await triggerAndPoll('batch-send', {
+  phone_numbers: allNumbers,
+  message: 'Hello'
+});
+
+// Find failures
+const failed = result.results.filter(r => r.status === 'failed');
+
+if (failed.length > 0) {
+  // Retry only failed items
+  const retryResult = await triggerAndPoll('batch-send', {
+    phone_numbers: failed.map(f => f.phone),
+    message: 'Hello'
+  });
+}
+```
+
+### Idempotency
+
+Codika workflows are **not idempotent by default**. Retrying a trigger creates a new execution. If your workflow has side effects (sending messages, creating records), design your retry logic accordingly:
+
+- Track which items succeeded before retrying
+- Use your own database to record trigger history
+- Don't blindly re-trigger the entire batch
+
+## Audit trail
+
+Log every workflow trigger and result to your own database for accountability:
+
+```typescript
+async function triggerWithAudit(
+  workflowId: string,
+  payload: Record<string, unknown>,
+  initiatedBy: string
+) {
+  // 1. Create audit record
+  const auditId = await db.insert('workflow_triggers', {
+    workflowId,
+    payload: JSON.stringify(payload),
+    initiatedBy,
+    triggeredAt: new Date(),
+    status: 'triggered'
+  });
+
+  // 2. Trigger and poll
+  try {
+    const executionId = await triggerWorkflow(workflowId, payload);
+    const result = await pollExecution(executionId);
+
+    // 3. Update audit record
+    await db.update('workflow_triggers', auditId, {
+      executionId,
+      status: result.status,
+      resultData: JSON.stringify(result.data),
+      completedAt: new Date()
+    });
+
+    return result;
+  } catch (error) {
+    await db.update('workflow_triggers', auditId, {
+      status: 'error',
+      error: error.message,
+      completedAt: new Date()
+    });
+    throw error;
+  }
+}
+```
+
+## Security best practices
+
+### Keep API keys server-side
+
+Never expose the Codika API key in client-side code. All calls to Codika should go through your server:
+
+```
+Browser → Your API route → Codika Public API
+```
+
+Your API route handles:
+- Authentication of your own users (session, JWT, etc.)
+- Authorization (can this user trigger this workflow?)
+- API key injection (adds the X-API-Key header)
+- Response filtering (only return what the client needs)
+
+### Validate input before triggering
+
+Don't pass raw user input to the workflow. Validate and sanitize on your server before calling the trigger endpoint:
+
+```typescript
+export async function POST({ request, locals }) {
+  const { message, recipients } = await request.json();
+
+  // Validate
+  if (!message || message.length > 4096) {
+    return json({ error: 'Invalid message' }, { status: 400 });
+  }
+
+  if (!Array.isArray(recipients) || recipients.length > 500) {
+    return json({ error: 'Invalid recipients' }, { status: 400 });
+  }
+
+  // Sanitized payload
+  const payload = {
+    message_content: message.trim(),
+    phone_numbers: recipients.map(r => r.replace(/\D/g, ''))
+  };
+
+  // Trigger
+  const executionId = await triggerWorkflow('batch-send', payload);
+  return json({ executionId });
+}
+```
+
+### Rate limit your own endpoints
+
+Codika doesn't rate-limit workflow triggers beyond n8n's capacity. Add rate limiting to your own API routes to prevent abuse:
+
+```typescript
+// Example: max 10 triggers per minute per user
+const rateLimiter = new RateLimiter({ maxRequests: 10, windowMs: 60_000 });
+
+export async function POST({ request, locals }) {
+  if (!rateLimiter.allow(locals.userId)) {
+    return json({ error: 'Too many requests' }, { status: 429 });
+  }
+  // ... trigger workflow
+}
+```
+
+## Polling configuration
+
+Tune polling parameters based on your workflow's expected duration:
+
+| Workflow type | Suggested interval | Suggested timeout |
+|---------------|-------------------|-------------------|
+| Fast (validation, lookup) | 1s | 30s |
+| Medium (API calls, processing) | 1.5s | 120s |
+| Slow (AI generation, file processing) | 3s | 300s |
+
+Start with 1.5s interval / 120s timeout and adjust based on actual execution times.

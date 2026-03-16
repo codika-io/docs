@@ -103,6 +103,24 @@
         ]
       },
       {
+        "tab": "Dashboard Integration",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["dashboard/overview"]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "dashboard/authentication",
+              "dashboard/triggering-workflows",
+              "dashboard/environments",
+              "dashboard/patterns"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Agent Skills",
         "groups": [
           {

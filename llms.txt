@@ -67,6 +67,14 @@ When helping users build Codika use cases:
 - [Scheduled CRM Report](https://docs.codika.io/examples/scheduled-report): Dual triggers (schedule + HTTP), Folk/Slack ORGCRED, select deployment parameters
 - [Proposal Generator (RAG)](https://docs.codika.io/examples/complex-rag): 3 workflows, sub-workflow PDF conversion, file upload/download, Pinecone RAG, data ingestion
 
+## Dashboard Integration
+
+- [Dashboard Overview](https://docs.codika.io/dashboard/overview): Build custom frontends on Codika use cases — architecture, what Codika provides vs what you build
+- [API Keys & Auth](https://docs.codika.io/dashboard/authentication): Two key types (ck_ instance keys for apps, cko_ org keys for CLI), server-side storage, framework examples (SvelteKit, Next.js)
+- [Triggering Workflows](https://docs.codika.io/dashboard/triggering-workflows): Trigger + poll pattern with triggerWebhookPublic and getExecutionStatusPublic endpoints, complete TypeScript implementation, payload format
+- [Environments](https://docs.codika.io/dashboard/environments): Dev/prod switching with separate process instance IDs and API keys, mode-based config pattern
+- [Common Patterns](https://docs.codika.io/dashboard/patterns): Error handling (trigger failures, polling, execution errors), retry logic, audit trails, input validation, rate limiting, security best practices
+
 ## Agent Skills
 
 - [Skills Overview](https://docs.codika.io/skills/overview): What Codika skills are, plugin installation, available skills, typical agent workflow
