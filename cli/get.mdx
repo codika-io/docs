@@ -1,6 +1,6 @@
 ---
 title: "get"
-description: "Download deployed use cases with `get use-case` and debug executions with `get execution` — supports --deep recursive sub-workflow fetching and --slim clean output"
+description: "Download use cases with `get use-case`, debug executions with `get execution`, and fetch agent skills with `get skills`"
 ---
 
 ## get use-case
@@ -82,6 +82,79 @@ codika get use-case abc123 --list --json
     workflows/helper.json
     workflows/scheduler.json
     data-ingestion/embedding-ingestion.json
+```
+
+---
+
+## get skills
+
+Fetch agent skill documents from a deployed process instance. Skills describe how to interact with the use case's workflows.
+
+```bash
+codika get skills [processInstanceId] [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `[processInstanceId]` | Process instance ID. If omitted, resolves from project.json. |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--process-instance-id <id>` | Alternative to positional argument | — |
+| `--path <path>` | Path to use case folder (to resolve from project.json) | Current directory |
+| `--project-file <path>` | Custom project file name | `project.json` |
+| `-o, --output <dir>` | Output directory for skill files | `./skills` |
+| `--stdout` | Print to stdout instead of writing files | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | — |
+
+### Behavior
+
+Downloads skill documents from the active deployment instance and writes them as Claude-compatible directories (`{name}/SKILL.md`).
+
+### Process instance ID resolution
+
+1. Positional argument
+2. `--process-instance-id` flag
+3. `devProcessInstanceId` from project.json in `--path` directory
+4. `devProcessInstanceId` from project.json in current directory
+
+### Examples
+
+```bash
+# From inside a use case folder
+codika get skills
+
+# With explicit ID
+codika get skills abc123def456
+
+# Download to Claude Code skills directory
+codika get skills --output .claude/skills
+
+# JSON output
+codika get skills --json
+
+# Print to stdout
+codika get skills --stdout
+```
+
+### Output
+
+```
+✓ Downloaded 3 skill(s) to ./skills/
+
+  wat-direct-messaging/SKILL.md
+    Sends a WhatsApp message to a list of phone numbers via Twilio
+    Trigger: codika trigger http-direct-messaging
+
+  wat-test-bot/SKILL.md
+    Sends a test message and returns AI response without Twilio
+    Trigger: codika trigger http-test-bot
 ```
 
 ---

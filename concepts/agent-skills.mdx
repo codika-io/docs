@@ -1,0 +1,326 @@
+---
+title: "Agent Skills"
+description: "Make your workflows discoverable and usable by AI agents — skills describe what each endpoint does, how to call it, and what to expect back"
+---
+
+## What are agent skills?
+
+Agent skills are documentation files that describe how to interact with your deployed workflows. Each skill is a directory containing a `SKILL.md` file that follows the [Claude Agent Skills format](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
+
+When you deploy a use case with skills, agents can download them via `codika get skills` and immediately understand how to trigger your workflows — input schemas, output schemas, example payloads, and all.
+
+## Why skills matter
+
+Without skills, an agent has no way to know what endpoints your use case exposes or how to use them. Skills bridge the gap between **deployed workflows** and **agent consumption**.
+
+```
+You build workflows → Codika deploys as HTTP endpoints → Skills explain how to use them → Agents discover and call them
+```
+
+**Credential decoupling:** You connect integrations to the platform once. When an agent triggers a workflow, Codika injects the right credentials at runtime. The agent only holds a Codika API key — it calls actions, not raw APIs. You control the agent's tool stack by choosing which workflows get skills.
+
+## How agents use skills
+
+Skills are documentation — they explain what's available. The actual execution always goes through the Codika platform:
+
+```
+Agent reads SKILL.md → understands input/output
+Agent calls: codika trigger <workflowId> --payload-file input.json
+  → Codika CLI sends request with API key
+    → triggerWebhookPublic cloud function validates key
+      → Platform resolves integration credentials (OAuth, API keys)
+        → n8n workflow executes with real credentials injected
+          → Result returned to agent
+```
+
+### What agents need
+
+| Requirement | Why | How |
+|-------------|-----|-----|
+| `codika` CLI installed | To trigger workflows and fetch skills | `npm install -g @codika-io/helper-sdk` |
+| Codika API key | Authentication for all platform calls | `codika login` or `CODIKA_API_KEY` env var |
+| Process instance ID | Identifies which deployed use case to interact with | From `project.json` or provided explicitly |
+
+### What the agent never touches
+
+All integration credentials (OAuth tokens, API keys, database passwords) are managed by the platform and injected into workflows at runtime via the [placeholder system](/concepts/placeholders). The Codika API key only grants permission to trigger workflows and read skills — it cannot access the underlying integration credentials. This is the core of Codika's credential decoupling: **agents get actions, not keys**.
+
+## Which workflows get skills?
+
+| Workflow type | Gets a skill? | Why |
+|---------------|---------------|-----|
+| HTTP-triggered | **Yes** | User/agent-facing endpoint with input/output |
+| Scheduled (with manual trigger URL) | **Yes** | Auto-runs but can be manually triggered for testing |
+| Sub-workflow | No | Internal helper, called by other workflows |
+| Data ingestion | No | Internal, triggered by document uploads |
+| Service event (webhook receiver) | Usually no | Triggered by external services, not by agents |
+
+## Folder structure
+
+Skills live in a `skills/` folder alongside `workflows/`:
+
+```
+my-use-case/
+├── config.ts
+├── workflows/
+│   ├── main-workflow.json
+│   ├── scheduled-report.json
+│   └── text-processor.json          # sub-workflow — no skill
+└── skills/
+    ├── main-workflow/                # one directory per skill
+    │   └── SKILL.md
+    └── scheduled-report/
+        └── SKILL.md
+```
+
+Each skill is a **directory** containing a `SKILL.md` file. This matches Claude's expected format — downloaded skills can be placed directly in `.claude/skills/` for Claude Code auto-discovery or uploaded to the Claude API.
+
+## SKILL.md format
+
+### Frontmatter (required)
+
+```yaml
+---
+name: my-use-case-process-text
+description: Submits text for AI processing via the main-workflow HTTP endpoint. Returns processed text with a timestamp.
+workflowTemplateId: main-workflow
+---
+```
+
+| Field | Required | Constraints |
+|-------|----------|-------------|
+| `name` | Yes | Max 64 chars, lowercase letters/numbers/hyphens only, no "anthropic" or "claude" |
+| `description` | Yes | Max 1024 chars, non-empty, **third person** ("Submits text for..." not "Use this to...") |
+| `workflowTemplateId` | Yes | Must match a `workflowTemplateId` from the workflows array in `config.ts` |
+
+### Body
+
+The body should be concise (under 500 lines) and include:
+
+1. **Title** — H1 with the workflow name
+2. **One-line overview** — What the endpoint does, which integrations it uses
+3. **How to trigger** — Exact `codika trigger` command with example payload
+4. **Input** — Table of input parameters
+5. **Output** — Example JSON response
+6. **Notes** — Cost, limitations, edge cases
+
+## HTTP workflow skill example
+
+```markdown
+---
+name: wat-direct-messaging
+description: Sends a WhatsApp message to a list of phone numbers via Twilio. Accepts up to 500 recipients and returns delivery statistics.
+workflowTemplateId: http-direct-messaging
+---
+
+# Direct Messaging
+
+Sends a WhatsApp message to up to 500 phone numbers via Twilio.
+
+## How to trigger
+
+\`\`\`bash
+codika trigger http-direct-messaging --payload-file - <<'EOF'
+{
+  "phone_numbers": ["32477123456", "33612345678"],
+  "message_content": "Hello from WAT community!"
+}
+EOF
+\`\`\`
+
+## Input
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| phone_numbers | array of strings | yes | Phone numbers (8-15 digits, no + prefix). Max 500. |
+| message_content | text | yes | Message body. Max 4096 characters. |
+
+## Output
+
+\`\`\`json
+{
+  "success": true,
+  "total_sent": 2,
+  "total_failed": 0,
+  "sent_at": "2025-03-15T10:30:00.000Z"
+}
+\`\`\`
+
+## Notes
+
+- Cost: 1 credit per execution
+- Uses: Twilio (WhatsApp), Supabase (audit logging)
+```
+
+## Scheduled workflow skill example
+
+```markdown
+---
+name: wat-event-weekly-digest
+description: Sends a personalized weekly digest of upcoming events to community members every Monday at 9 AM. Can be manually triggered for testing.
+workflowTemplateId: scheduled-event-weekly-digest
+---
+
+# Event Weekly Digest
+
+Runs automatically every Monday at 9:00 AM (Europe/Brussels).
+
+## Manual trigger (for testing)
+
+\`\`\`bash
+codika trigger scheduled-event-weekly-digest
+\`\`\`
+
+No payload required.
+
+## Notes
+
+- Cost: 1 credit per execution
+- Uses: Supabase (event data), Twilio (WhatsApp delivery)
+```
+
+## Deployment lifecycle
+
+### 1. Create skills alongside workflows
+
+```bash
+codika init ./my-use-case --name "My Use Case"
+# Creates skills/main-workflow/SKILL.md and skills/scheduled-report/SKILL.md
+```
+
+### 2. Validate
+
+```bash
+codika verify use-case ./my-use-case
+```
+
+The verifier checks:
+- Every subdirectory in `skills/` contains a `SKILL.md` file
+- Frontmatter has valid `name`, `description`, and `workflowTemplateId`
+- `name` follows Claude naming rules (lowercase, hyphens, max 64 chars)
+- `workflowTemplateId` matches an existing workflow
+
+### 3. Deploy
+
+```bash
+codika deploy use-case ./my-use-case
+```
+
+Skills are automatically collected from `skills/*/SKILL.md` and sent with the deployment. No changes to `config.ts` needed.
+
+### 4. Download skills (agents)
+
+```bash
+# From inside a use case folder
+codika get skills
+
+# With explicit process instance ID
+codika get skills <processInstanceId>
+
+# Save directly to Claude Code skills directory
+codika get skills --output .claude/skills
+
+# JSON output for programmatic use
+codika get skills --json
+```
+
+Downloaded skills are written as proper Claude-compatible directories:
+```
+./skills/
+├── my-use-case-process-text/
+│   └── SKILL.md
+└── my-use-case-scheduled-report/
+    └── SKILL.md
+```
+
+## Installing skills for agents
+
+### Claude Code (one command)
+
+Download skills directly into Claude Code's auto-discovery directory:
+
+```bash
+codika get skills --output .claude/skills
+```
+
+That's it. Claude Code reads `.claude/skills/` at startup. Each skill's `name` and `description` are loaded into the system prompt (~100 tokens each). When a user request matches a skill's description, Claude reads the full `SKILL.md` body and follows the instructions.
+
+**Where `.claude/skills/` lives:**
+- **Project-level** (recommended): `.claude/skills/` in your project root — skills are available in that project
+- **Personal**: `~/.claude/skills/` — skills are available in all your projects
+
+**What happens after installation:**
+
+```
+User: "Send a WhatsApp message to these phone numbers"
+  → Claude sees skill description: "Sends a WhatsApp message to a list of phone numbers via Twilio"
+  → Claude reads skills/wat-direct-messaging/SKILL.md
+  → Claude generates: codika trigger http-direct-messaging --payload-file ...
+  → Workflow executes via Codika platform (credentials injected at runtime)
+  → Result returned to user
+```
+
+### Claude API
+
+Upload skills programmatically for use in API-based agents:
+
+```python
+from anthropic.lib import files_from_dir
+
+# First download locally
+# codika get skills --output ./skills
+
+# Then upload to the Claude API
+skill = client.beta.skills.create(
+    display_title="Direct Messaging",
+    files=files_from_dir("./skills/wat-direct-messaging"),
+    betas=["skills-2025-10-02"],
+)
+
+# Use in a message
+response = client.beta.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=4096,
+    betas=["code-execution-2025-08-25", "skills-2025-10-02"],
+    container={
+        "skills": [{"type": "custom", "skill_id": skill.id, "version": "latest"}]
+    },
+    messages=[{"role": "user", "content": "Send a welcome message to +32477123456"}],
+    tools=[{"type": "code_execution_20250825", "name": "code_execution"}],
+)
+```
+
+### Claude Agent SDK
+
+Place skills in `.claude/skills/` and include `"Skill"` in your `allowed_tools`:
+
+```typescript
+import { Agent } from '@anthropic-ai/agent-sdk';
+
+const agent = new Agent({
+  model: 'claude-sonnet-4-6',
+  allowed_tools: ['Skill', 'Bash'],
+});
+```
+
+The SDK auto-discovers skills from `.claude/skills/` when it runs.
+
+### Triggering from a skill
+
+After reading a skill, the agent generates the appropriate CLI command:
+
+```bash
+codika trigger <workflowTemplateId> --payload-file input.json --poll
+```
+
+All calls go through the Codika platform — credentials are resolved at runtime.
+
+## Best practices
+
+- **One skill per triggerable workflow** — don't combine multiple endpoints into one skill
+- **Be concise** — under 500 lines. Claude is smart; only explain what it can't infer
+- **Show exact payloads** — include real `codika trigger` commands with copy-pasteable JSON
+- **Third-person descriptions** — "Sends a message..." not "Use this to send..."
+- **Prefix names with use case slug** — `wat-direct-messaging`, `propale-generate-proposal`
+- **Mention integrations and cost** — helps agents understand dependencies and expense
+- **For scheduled workflows** — always explain the automatic schedule AND the manual trigger

@@ -48,6 +48,10 @@ Webhook (responseMode: lastNode)
 
 The webhook node must have `responseMode` set to `lastNode` so that Codika Submit Result returns data to the caller.
 
+<Tip>
+**Agent access:** HTTP-triggered workflows are also callable via the public API (`codika trigger <workflowId>`) using an API key. Create an [agent skill](/concepts/agent-skills) to document the endpoint for AI agents — they'll know exactly how to call it without touching any credentials.
+</Tip>
+
 ### n8n node configuration
 
 ```json

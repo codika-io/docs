@@ -19,6 +19,11 @@ my-use-case/
   workflows/
     main-workflow.json         # Required: at least one workflow
     helper-workflow.json       # Optional: sub-workflows
+  skills/                      # Optional: agent skills for triggerable workflows
+    main-workflow/
+      SKILL.md                 # Claude-compatible skill file
+    scheduled-report/
+      SKILL.md
   deployments/                 # Auto-created: deployment archives
     {projectId}/
       project-info.json
@@ -42,6 +47,7 @@ my-use-case/
 | File | Purpose |
 |------|---------|
 | `project.json` | Contains `projectId`, `organizationId`, `devProcessInstanceId`, `prodProcessInstanceId`, and `deployments` map. Created by `codika init` or `codika project create --path .`. Updated on deploy and publish. |
+| `skills/` | Agent skill directories. Each subdirectory contains a `SKILL.md` file describing how to interact with a workflow. Automatically collected during deploy. See [Agent Skills](/concepts/agent-skills). |
 | `deployments/` | Local archive of past deployments. Created automatically by `codika deploy`. |
 
 ## config.ts structure

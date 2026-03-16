@@ -2,7 +2,9 @@
 
 ## What is Codika?
 
-Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable, shareable business automations. Users define a **use case** (a folder with `config.ts` + `workflows/*.json`), deploy it via the `codika` CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution.
+Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable, shareable business automations. Users define a **use case** (a folder with `config.ts` + `workflows/*.json` + optional `skills/*/SKILL.md`), deploy it via the `codika` CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution.
+
+Codika creates software used by both humans and AI agents. Every HTTP endpoint is a stable API that agents can discover via **agent skills** and call via `codika trigger` — without ever touching credentials. The platform handles authentication, so agents never get OAuth tokens or API keys.
 
 The CLI tool is `codika`, installed via `npm install -g @codika-io/helper-sdk`.
 
@@ -17,8 +19,8 @@ For understanding how Codika works. Start here.
 | Section | Pages | When to read |
 |---------|-------|-------------|
 | **Getting Started** | `index.mdx`, `quickstart.mdx` | First visit — what Codika is, how to get started in 7 steps |
-| **Core Concepts** | 7 pages in `concepts/` | When you need to understand a specific concept (use cases, processes, workflows, placeholders, triggers, credentials, schemas) |
-| **Guides** | 5 pages in `guides/` | When building something specific (first use case, AI workflows, sub-workflows, deployment parameters, file uploads) |
+| **Core Concepts** | 8 pages in `concepts/` | When you need to understand a specific concept (use cases, processes, workflows, placeholders, triggers, credentials, schemas, agent skills) |
+| **Guides** | 6 pages in `guides/` | When building something specific (first use case, AI workflows, sub-workflows, deployment parameters, file uploads, agent skills) |
 | **Examples** | 5 pages in `examples/` | When you need real-world reference code (minimal search tool, email automation, CRM reporter, RAG proposal generator) |
 
 ### Tab 2: CLI Reference
@@ -33,7 +35,7 @@ For looking up specific CLI commands, flags, and options.
 | `cli/verify.mdx` | `verify use-case`, `verify workflow` | Validation rules, --fix, --strict |
 | `cli/deploy.mdx` | `deploy use-case`, `deploy process-data-ingestion` | Deployment with version management |
 | `cli/trigger.mdx` | `trigger <workflowId>` | Execute workflows, poll for results |
-| `cli/get.mdx` | `get use-case`, `get execution` | Download use cases, debug executions |
+| `cli/get.mdx` | `get use-case`, `get execution`, `get skills` | Download use cases, debug executions, fetch agent skills |
 | `cli/project.mdx` | `project create` | Create platform projects |
 | `cli/status.mdx` | `status [path]` | Check identity and deployment readiness |
 
@@ -73,6 +75,9 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | Upload files from workflows | `guides/file-uploads.mdx` |
 | See a minimal example (1 workflow) | `examples/simple-search.mdx` |
 | See a complex example (RAG + multi-workflow) | `examples/complex-rag.mdx` |
+| Make workflows accessible to agents | `concepts/agent-skills.mdx` |
+| Create agent skills for a use case | `guides/agent-skills.mdx` |
+| Download skills from a deployed process | `skills/get-skills.mdx` or `cli/get.mdx` |
 | Look up CLI command flags | `cli/<command>.mdx` |
 | Check all validation rules | `cli/verify.mdx` |
 
@@ -97,6 +102,7 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | Codika nodes | Custom n8n nodes: Init, Submit Result, Report Error, Upload File |
 | Trigger | How a workflow starts: HTTP, schedule, service event, or sub-workflow |
 | Deployment parameter | Value configured at install time, injected via INSTPARM placeholder |
+| Agent skill | A Claude-compatible `SKILL.md` file describing how to interact with a deployed workflow endpoint |
 
 ## About this documentation site
 

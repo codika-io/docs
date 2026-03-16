@@ -1,0 +1,180 @@
+---
+title: "get-skills"
+description: "Download agent skill documents from a deployed process instance — discover available workflow endpoints and their documentation"
+---
+
+## When to use
+
+- You need to discover what workflow endpoints are available for a process instance
+- You want to download skills to use with Claude Code or the Claude API
+- You need to inspect the available workflows and their input/output schemas
+- An agent needs to understand how to interact with a deployed use case
+
+## Prerequisites
+
+- Authenticated with `codika login` or `CODIKA_API_KEY` environment variable
+- A deployed process instance (with `devProcessInstanceId` in project.json, or known ID)
+
+## Command
+
+```bash
+codika get skills [processInstanceId] [options]
+```
+
+### Arguments
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `processInstanceId` | No | Process instance ID. If omitted, resolves from project.json. |
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--process-instance-id <id>` | — | Alternative to positional argument |
+| `--path <path>` | — | Path to use case folder (to resolve from project.json) |
+| `--project-file <path>` | `project.json` | Custom project file name |
+| `-o, --output <dir>` | `./skills` | Output directory for skill files |
+| `--stdout` | `false` | Print to stdout instead of writing files |
+| `--api-url <url>` | Production | Override API URL |
+| `--api-key <key>` | Active profile | Override API key |
+| `--json` | `false` | Structured JSON output |
+
+## Examples
+
+### From inside a use case folder
+
+```bash
+codika get skills
+```
+
+Resolves `devProcessInstanceId` from `project.json`.
+
+### With explicit process instance ID
+
+```bash
+codika get skills abc123def456
+```
+
+### Download directly to Claude Code skills directory
+
+```bash
+codika get skills --output .claude/skills
+```
+
+Skills are immediately auto-discoverable by Claude Code.
+
+### JSON output for scripting
+
+```bash
+codika get skills --json
+```
+
+### Print all skills to stdout
+
+```bash
+codika get skills --stdout
+```
+
+## Expected output
+
+### Human-readable (default)
+
+```
+✓ Downloaded 3 skill(s) to ./skills/
+
+  wat-direct-messaging/SKILL.md
+    Sends a WhatsApp message to a list of phone numbers via Twilio
+    Trigger: codika trigger http-direct-messaging
+
+  wat-test-bot/SKILL.md
+    Sends a test message and returns AI response without Twilio
+    Trigger: codika trigger http-test-bot
+
+  wat-event-weekly-digest/SKILL.md
+    Sends a personalized weekly digest every Monday at 9 AM
+    Trigger: codika trigger scheduled-event-weekly-digest
+
+To use with Claude Code, copy to .claude/skills/
+```
+
+### JSON output
+
+```json
+{
+  "success": true,
+  "processInstanceId": "abc123def456",
+  "skillCount": 3,
+  "skills": [
+    {
+      "name": "wat-direct-messaging",
+      "description": "Sends a WhatsApp message to a list of phone numbers via Twilio.",
+      "workflowTemplateId": "http-direct-messaging",
+      "contentMarkdown": "---\nname: wat-direct-messaging\n...",
+      "relativePath": "skills/direct-messaging/SKILL.md"
+    }
+  ]
+}
+```
+
+## Process instance ID resolution
+
+Priority order:
+
+1. Positional argument (highest)
+2. `--process-instance-id` flag
+3. `devProcessInstanceId` from project.json in `--path` directory
+4. `devProcessInstanceId` from project.json in current directory
+
+## How it works
+
+1. Resolves process instance ID from flag, argument, or project.json
+2. Calls `getProcessSkillsPublic` cloud function with API key auth
+3. Reads skills from the process's active deployment instance
+4. Writes each skill as a Claude-compatible directory: `{name}/SKILL.md`
+
+## Using downloaded skills
+
+### With Claude Code
+
+```bash
+codika get skills --output .claude/skills
+```
+
+Claude Code auto-discovers skills in `.claude/skills/` and can use them in conversations.
+
+### With the Claude API
+
+```python
+from anthropic.lib import files_from_dir
+
+skill = client.beta.skills.create(
+    display_title="Direct Messaging",
+    files=files_from_dir("./skills/wat-direct-messaging"),
+    betas=["skills-2025-10-02"],
+)
+```
+
+### Triggering a workflow from a skill
+
+After reading a skill, trigger the workflow it describes:
+
+```bash
+codika trigger http-direct-messaging --payload-file input.json --poll
+```
+
+## Error handling
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Process instance ID is required` | No ID found | Provide ID or ensure project.json has `devProcessInstanceId` |
+| `API key is required` | No API key found | Run `codika login` or set `CODIKA_API_KEY` |
+| `No skills found` | Process has no skills deployed | Add `skills/` folder to use case and redeploy |
+| `401 Unauthorized` | Invalid API key | Run `codika login` to refresh credentials |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Error (API failure, auth failure) |

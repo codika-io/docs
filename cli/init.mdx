@@ -37,6 +37,7 @@ my-use-case/
   config.ts                    # Deployment configuration with 3 template workflows
   version.json                 # Version tracking, initialized to 1.0.0
   project.json                 # Platform project ID and org ID (if project created)
+  CLAUDE.md                    # Use case documentation for AI agents
   package.json                 # Dependencies (@codika-io/helper-sdk)
   tsconfig.json                # TypeScript config for IDE type-checking
   .gitignore                   # Ignores node_modules/
@@ -45,7 +46,18 @@ my-use-case/
     main-workflow.json         # HTTP-triggered parent workflow
     scheduled-report.json      # Schedule-triggered workflow (Monday 9 AM)
     text-processor.json        # Sub-workflow called by main workflow
+  skills/
+    main-workflow/
+      SKILL.md                 # Agent skill for the HTTP workflow
+    scheduled-report/
+      SKILL.md                 # Agent skill for the scheduled workflow
 ```
+
+### Agent skills
+
+The scaffold includes two [agent skills](/concepts/agent-skills) — one for each triggerable workflow. Skills are Claude-compatible `SKILL.md` files that describe how to interact with the workflow's endpoint. No skill is created for `text-processor` because sub-workflows are not directly triggerable.
+
+Skills are automatically collected and deployed when you run `codika deploy use-case`.
 
 ## Template workflows
 

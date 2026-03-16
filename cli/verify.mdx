@@ -84,6 +84,11 @@ Folder-level checks that validate the use case as a whole.
 | `UC-CALLEDBY` | should | calledBy arrays are consistent with actual usage |
 | `UC-SCHEMA-TYPES` | should | Input/output schema field types are valid |
 | `UC-INTEGRATIONS` | should | Integration UIDs are properly inherited |
+| `SKILL-STRUCTURE` | must | Every subdirectory in `skills/` contains a `SKILL.md` file |
+| `SKILL-NAME-FORMAT` | must | Skill `name` is max 64 chars, lowercase+numbers+hyphens, no reserved words |
+| `SKILL-DESCRIPTION` | should | Skill `description` is non-empty, max 1024 chars |
+| `SKILL-WORKFLOW-REF` | must | Skill `workflowTemplateId` matches an existing workflow file |
+| `SKILL-DUPLICATE` | must | No duplicate skill names or workflowTemplateIds |
 
 ## Output
 

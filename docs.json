@@ -51,7 +51,8 @@
               "concepts/placeholders",
               "concepts/triggers",
               "concepts/credentials",
-              "concepts/schemas"
+              "concepts/schemas",
+              "concepts/agent-skills"
             ]
           },
           {
@@ -61,7 +62,8 @@
               "guides/ai-workflows",
               "guides/sub-workflows",
               "guides/deployment-parameters",
-              "guides/file-uploads"
+              "guides/file-uploads",
+              "guides/agent-skills"
             ]
           },
           {
@@ -121,7 +123,8 @@
               "skills/fetch-use-case",
               "skills/trigger-workflow",
               "skills/get-execution",
-              "skills/list-executions"
+              "skills/list-executions",
+              "skills/get-skills"
             ]
           }
         ]

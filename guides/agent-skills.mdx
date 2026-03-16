@@ -1,0 +1,219 @@
+---
+title: "Creating Agent Skills"
+description: "Step-by-step guide to creating skills that make your use case workflows accessible to AI agents"
+---
+
+## Overview
+
+This guide walks you through adding agent skills to an existing use case. By the end, your HTTP endpoints and scheduled workflows will be discoverable and usable by any Claude-based agent.
+
+<Info>
+**New use cases get skills automatically.** When you run `codika init`, the scaffolded use case includes example skills for both the HTTP workflow and the scheduled workflow. This guide is for adding skills to existing use cases or customizing the defaults.
+</Info>
+
+## Step 1: Identify triggerable workflows
+
+Open your `config.ts` and list all workflows with `http` or `schedule` trigger types. Skip sub-workflows, data ingestion, and service event workflows.
+
+```bash
+# Quick check — list workflow files that are NOT sub-workflows
+grep -l '"type": "n8n-nodes-base.webhook"' workflows/*.json
+grep -l '"type": "n8n-nodes-base.scheduleTrigger"' workflows/*.json
+```
+
+For each triggerable workflow, note:
+- `workflowTemplateId` from config.ts
+- Trigger type (http or schedule)
+- Input schema fields (for HTTP)
+- Output schema fields
+- Integration UIDs used
+- Credit cost
+
+## Step 2: Create the skills directory
+
+```bash
+mkdir -p skills
+```
+
+For each triggerable workflow, create a subdirectory:
+
+```bash
+mkdir skills/main-workflow
+mkdir skills/scheduled-report
+```
+
+## Step 3: Write SKILL.md files
+
+### For HTTP workflows
+
+Create `skills/{name}/SKILL.md`:
+
+```markdown
+---
+name: {usecase-slug}-{action}
+description: {Third-person description. What it does and what it returns.}
+workflowTemplateId: {workflow-template-id}
+---
+
+# {Workflow Name}
+
+{One-line description with integrations used.}
+
+## How to trigger
+
+\`\`\`bash
+codika trigger {workflow-template-id} --payload-file - <<'EOF'
+{
+  "field1": "example value",
+  "field2": 42
+}
+EOF
+\`\`\`
+
+## Input
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| field1 | string | yes | What this field does |
+| field2 | number | no | What this field does |
+
+## Output
+
+\`\`\`json
+{
+  "result": "example output",
+  "timestamp": "2025-01-01T00:00:00.000Z"
+}
+\`\`\`
+
+## Notes
+
+- Cost: {N} credit(s)
+- Uses: {Integration1}, {Integration2}
+```
+
+### For scheduled workflows
+
+```markdown
+---
+name: {usecase-slug}-{action}
+description: {Third-person description. Mention the schedule AND manual trigger.}
+workflowTemplateId: {workflow-template-id}
+---
+
+# {Workflow Name}
+
+Runs automatically on a schedule ({schedule description}).
+
+## Schedule
+
+`{cron expression}` — {Human-readable} ({timezone})
+
+## Manual trigger (for testing)
+
+\`\`\`bash
+codika trigger {workflow-template-id}
+\`\`\`
+
+No payload required.
+
+## Output
+
+| Field | Type | Description |
+|-------|------|-------------|
+| field1 | string | Description |
+
+## Notes
+
+- Cost: {N} credit(s)
+- Uses: {Integration1}, {Integration2}
+```
+
+## Step 4: Validate
+
+```bash
+codika verify use-case .
+```
+
+Check for skill-related findings:
+- `SKILL-STRUCTURE` — Missing SKILL.md in a skills subdirectory
+- `SKILL-NAME-FORMAT` — Name too long, wrong characters, or reserved words
+- `SKILL-WORKFLOW-REF` — workflowTemplateId doesn't match any workflow
+- `SKILL-DUPLICATE` — Duplicate names or workflowTemplateIds
+
+## Step 5: Deploy
+
+```bash
+codika deploy use-case .
+```
+
+Skills are automatically collected and sent with the deployment. No config.ts changes needed.
+
+## Step 6: Verify agent access
+
+```bash
+# Download the skills you just deployed
+codika get skills
+
+# Or check the JSON output
+codika get skills --json
+```
+
+You should see all your skills listed with their names, descriptions, and content.
+
+## Naming rules
+
+The `name` field must follow Claude's naming constraints:
+
+| Rule | Example |
+|------|---------|
+| Max 64 characters | `wat-event-weekly-digest` (24 chars) |
+| Lowercase letters, numbers, hyphens only | `propale-generate-proposal` |
+| No spaces or underscores | `my-skill` not `my_skill` or `my skill` |
+| No reserved words | Cannot contain "anthropic" or "claude" |
+
+**Convention:** Prefix with your use case slug: `wat-`, `propale-`, `crm-`.
+
+## Description rules
+
+| Rule | Good | Bad |
+|------|------|-----|
+| Third person | "Sends a message to..." | "Use this to send..." |
+| Non-empty | "Generates a weekly digest" | "" |
+| Max 1024 characters | Keep it concise | Don't write a paragraph |
+| Include what AND when | "Sends reminders daily at 8 AM. Can be manually triggered." | "Sends reminders" |
+
+## Progressive disclosure for complex skills
+
+If a skill needs more than 500 lines, split into referenced files:
+
+```
+generate-proposal/
+├── SKILL.md              # Overview + trigger command + basic I/O
+├── INPUT-REFERENCE.md    # Detailed field-by-field input schema
+└── EXAMPLES.md           # Multiple usage examples with different payloads
+```
+
+Reference them from SKILL.md:
+
+```markdown
+For detailed input schema, see [INPUT-REFERENCE.md](INPUT-REFERENCE.md).
+For more examples, see [EXAMPLES.md](EXAMPLES.md).
+```
+
+Claude reads SKILL.md first, then loads referenced files only when needed.
+
+## Checklist
+
+Before deploying:
+
+- [ ] One skill per triggerable workflow (HTTP + scheduled with manual trigger)
+- [ ] No skills for sub-workflows or data ingestion
+- [ ] Each skill is a `{name}/SKILL.md` directory
+- [ ] Frontmatter has `name`, `description`, `workflowTemplateId`
+- [ ] `name` is valid (lowercase, hyphens, max 64 chars, no reserved words)
+- [ ] `description` is third person and under 1024 chars
+- [ ] `workflowTemplateId` matches a workflow in config.ts
+- [ ] Body includes `codika trigger` command with example payload
+- [ ] Body includes input/output schemas
+- [ ] `codika verify use-case .` passes

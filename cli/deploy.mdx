@@ -51,12 +51,17 @@ codika deploy use-case <path> [options]
 5. **Resolve** API key: `--api-key` > env > org-matching profile > active profile
 6. **Package** all workflow files
 7. **Send** to the Codika platform API
-8. **On success:**
+8. **Collect** [agent skills](/concepts/agent-skills) from `skills/*/SKILL.md` (if any exist)
+9. **On success:**
    - Update `version.json` with new local version
    - Save `devProcessInstanceId` to `project.json`
    - Save deployment to `deployments` map in `project.json` (version → templateId + timestamp)
    - Archive deployment in `deployments/{projectId}/process/{apiVersion}/`
    - Update `project-info.json` with version mapping
+
+<Info>
+**Agent skills are automatically included.** If your use case has a `skills/` folder with `SKILL.md` files, they are collected and sent with the deployment. Agents can then download them via `codika get skills`. No config.ts changes needed.
+</Info>
 
 The `deployments` map in `project.json` tracks all deployments by version — use it with `codika publish` to promote a deployment to production.
 

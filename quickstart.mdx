@@ -73,9 +73,12 @@ my-first-automation/
     main-workflow.json         # HTTP-triggered parent workflow
     scheduled-report.json      # Schedule-triggered workflow
     text-processor.json        # Sub-workflow (called by parent)
+  skills/
+    main-workflow/SKILL.md     # Agent skill for the HTTP workflow
+    scheduled-report/SKILL.md  # Agent skill for the scheduled workflow
 ```
 
-The template includes three workflows demonstrating different trigger types (HTTP, schedule, sub-workflow), the mandatory Codika node pattern, and placeholder usage. Dependencies are installed automatically so the use case is immediately deployable.
+The template includes three workflows demonstrating different trigger types (HTTP, schedule, sub-workflow), the mandatory Codika node pattern, and placeholder usage. It also includes two [agent skills](/concepts/agent-skills) that describe how AI agents can interact with the triggerable workflows. Dependencies are installed automatically so the use case is immediately deployable.
 
 ## Step 4: Validate
 
@@ -106,7 +109,7 @@ The CLI:
 
 1. Reads `version.json` (1.0.0)
 2. Bumps to 1.0.1 (patch by default)
-3. Packages all workflow files
+3. Packages all workflow files and collects agent skills from `skills/`
 4. Sends to the Codika platform API
 5. On success: updates `version.json`, archives deployment locally, saves `devProcessInstanceId` to `project.json`
 
@@ -155,6 +158,22 @@ cat project.json | grep templateId
 ```
 
 This creates a production process instance. See [publish](/cli/publish) for visibility and sharing options.
+
+## Optional: Download skills for agents
+
+Your use case already includes agent skills (created during `init`). After deploying, agents can download them:
+
+```bash
+codika get skills
+```
+
+Or download directly into a Claude Code project:
+
+```bash
+codika get skills --output .claude/skills
+```
+
+Claude Code will auto-discover the skills and know how to trigger your workflows. See [Agent Skills](/concepts/agent-skills) for the full story.
 
 ## What's next
 
