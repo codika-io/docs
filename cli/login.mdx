@@ -101,12 +101,47 @@ codika use
 codika use staging
 ```
 
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output machine-readable JSON with profile details |
+
 ### Output (list mode)
 
 ```
   ● acme-corp      (Acme Corp)
     staging         (Acme Corp - Staging)
     other-org       (Other Organization)
+```
+
+### JSON output
+
+When called with `--json`, outputs an array of profile objects — useful for agents to match `project.json` `organizationId` to the correct profile:
+
+```bash
+codika use --json
+```
+
+```json
+[
+  {
+    "name": "acme-corp",
+    "organizationId": "org_abc123",
+    "organizationName": "Acme Corp",
+    "scopes": ["deploy:use-case", "workflows:trigger"],
+    "keyPrefix": "cko_abc",
+    "active": true
+  },
+  {
+    "name": "staging",
+    "organizationId": "org_abc123",
+    "organizationName": "Acme Corp - Staging",
+    "scopes": ["deploy:use-case"],
+    "keyPrefix": "cko_def",
+    "active": false
+  }
+]
 ```
 
 ## logout

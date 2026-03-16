@@ -31,6 +31,7 @@ codika deploy use-case <path> [options]
 | `--version <X.Y>` | Explicit API version | — |
 | `--additional-file <abs:rel>` | Add extra file (repeatable) | — |
 | `--json` | JSON output | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--dry-run` | Preview without calling API | — |
 
 ### Version strategy
@@ -148,6 +149,7 @@ codika deploy process-data-ingestion <path> [options]
 | `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--version-strategy <strategy>` | `major_bump`, `minor_bump`, or `explicit` | `minor_bump` |
 | `--explicit-version <version>` | Required if strategy is `explicit` | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
 
 ### Output
@@ -200,6 +202,7 @@ Files must follow the pattern `{stage}_{name}.md` where stage is 1–4. Not all 
 | `--project-file <path>` | Path to custom project file | `project.json` |
 | `--api-url <url>` | Override API URL | — |
 | `--api-key <key>` | Override API key | `CODIKA_API_KEY` env or profile |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
 
 ### What happens on deploy

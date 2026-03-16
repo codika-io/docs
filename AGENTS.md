@@ -80,6 +80,7 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | Download skills from a deployed process | `skills/get-skills.mdx` or `cli/get.mdx` |
 | Look up CLI command flags | `cli/<command>.mdx` |
 | Check all validation rules | `cli/verify.mdx` |
+| Pick the right API key for a project | Read `project.json` for `organizationId`, run `codika use --json` to list profiles with org IDs, then pass `--profile <name>` |
 
 ## Critical rules for building use cases
 

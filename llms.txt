@@ -38,8 +38,8 @@ When helping users build Codika use cases:
 
 ## CLI Reference
 
-- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), exit codes, configuration
-- [login](https://docs.codika.io/cli/login): Login, whoami, use (switch profile), logout, config set/show/clear — multi-profile management
+- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), `--profile <name>` flag for per-command profile override, exit codes, configuration
+- [login](https://docs.codika.io/cli/login): Login, whoami, use (switch profile, `--json` for machine-readable profile list with organizationId), logout, config set/show/clear — multi-profile management
 - [init](https://docs.codika.io/cli/init): Scaffold new use case with config.ts, 3 template workflows, 2 agent skills, version.json, optional project creation
 - [verify](https://docs.codika.io/cli/verify): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering
 - [deploy](https://docs.codika.io/cli/deploy): Deploy use cases (version bumping, encoding, API call, archival) and data ingestion configs — --patch/--minor/--major/--version, --dry-run
