@@ -109,3 +109,4 @@ The Codika base URLs are the same — only the process instance ID in the URL pa
 1. **Development**: Deploy use case → get dev instance ID and API key → test with your dashboard
 2. **Ready for production**: Publish the use case → get prod instance ID and API key → update your `.env`
 3. **New version**: Deploy again → dev updates automatically → test → publish → prod updates for all users
+4. **Parameter changes**: Use `codika redeploy` to update parameters on dev or prod without creating a new version — only changed parameters are sent, and the platform merges them with existing values

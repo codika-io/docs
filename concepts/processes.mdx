@@ -85,6 +85,30 @@ By default, both dev and prod instances run simultaneously after publishing. Use
 
 Use `codika list executions <instanceId>` to view recent executions for either environment — pass the dev or prod instance ID.
 
+### Redeploying without versioning
+
+Sometimes you need to change deployment parameters (e.g., company name, language, timezone) without creating a new template version. The `codika redeploy` command handles this:
+
+- **Parameters are merged** — you only pass what changed; existing parameters keep their values
+- **No new template** — the instance continues running the same template version
+- **Uses owner credentials** — workflows are redeployed with the instance owner's integration bindings
+- **Retry failed deployments** — failed instances can be retried without `--force`
+
+This is useful after publishing to production when you need to adjust configuration, or when a deployment fails and you want to retry with the same or updated parameters.
+
+```bash
+# Change a parameter on the dev instance
+codika redeploy --param LANGUAGE=fr
+
+# Retry a failed deployment
+codika redeploy --environment dev
+
+# Update prod parameters
+codika redeploy --environment prod --param COMPANY_NAME="New Corp" --force
+```
+
+See the [`codika redeploy` CLI reference](/cli/redeploy) for full details.
+
 ## Deployment instance
 
 The running copy of a process instance with real n8n workflow IDs. This is what connects your process instance to live workflows in n8n.

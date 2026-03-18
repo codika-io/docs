@@ -66,6 +66,10 @@ codika deploy use-case <path> [options]
 
 The `deployments` map in `project.json` tracks all deployments by version — use it with `codika publish` to promote a deployment to production.
 
+<Info>
+**For parameter-only changes**, use [`codika redeploy`](/cli/redeploy) instead. It updates deployment parameters on an existing instance without creating a new template version — no version bump, no new deployment archive.
+</Info>
+
 ### Dry-run mode
 
 Preview the deployment without calling the API:

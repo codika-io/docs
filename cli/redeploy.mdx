@@ -1,0 +1,152 @@
+---
+title: "redeploy"
+description: "Redeploy an existing process instance with different parameters without creating a new template version"
+---
+
+## redeploy
+
+Redeploy an existing process instance with updated parameters. Parameters are **merged** with the existing ones — you only pass what you want to change.
+
+```bash
+codika redeploy [options]
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--process-instance-id <id>` | Target process instance ID | — |
+| `--path <path>` | Path to use case folder with `project.json` | Current directory |
+| `--project-file <path>` | Path to custom project file | `project.json` |
+| `--environment <env>` | Target environment (`dev` or `prod`) | `dev` |
+| `--param <KEY=VALUE>` | Set a single parameter (repeatable) | — |
+| `--params <json>` | JSON string with parameters | — |
+| `--params-file <path>` | Path to JSON file with parameters | — |
+| `--force` | Force redeploy on non-failed instances | `false` |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--json` | JSON output | `false` |
+
+### Process instance resolution
+
+The CLI resolves which process instance to redeploy using this priority:
+
+1. `--process-instance-id` flag (highest priority)
+2. `project.json` field based on `--environment`:
+   - `dev` → `devProcessInstanceId`
+   - `prod` → `prodProcessInstanceId`
+
+If neither is found, the command exits with an error.
+
+### Parameter input methods
+
+You can provide parameters in three ways. When multiple methods are used, they are merged with this priority (highest wins):
+
+1. `--param KEY=VALUE` flags (repeatable, highest priority)
+2. `--params '{"key": "value"}'` JSON string
+3. `--params-file ./params.json` JSON file (lowest priority)
+
+<Info>
+**Parameters are merged, not replaced.** The CLI sends only the parameters you provide. The platform merges them with the instance's existing parameters. If the instance has `COMPANY_NAME=Acme` and `LANGUAGE=en`, and you pass `--param LANGUAGE=fr`, the result is `COMPANY_NAME=Acme` and `LANGUAGE=fr`. Omitted parameters keep their current values.
+</Info>
+
+### What happens on redeploy
+
+1. **Load** the target process instance from the platform
+2. **Load** the deployment template currently associated with the instance
+3. **Merge** provided parameters with existing instance parameters
+4. **Refresh** workflows — re-run placeholder replacement with updated parameters
+5. **Deploy** updated workflows to n8n (using the instance owner's credentials)
+
+The instance owner's credentials are used for deployment, not the API key user's. This ensures workflows are deployed with the correct integration bindings.
+
+<Warning>
+Redeploying does **not** create a new template version. The instance continues to run the same template — only the runtime parameters change. To deploy new workflow logic, use `codika deploy use-case` instead.
+</Warning>
+
+### Force flag
+
+| Instance status | `--force` required? |
+|----------------|---------------------|
+| `failed` | No — failed instances can always be retried |
+| `deployed` | Yes |
+| `deploying` | Yes |
+| `user_paused` | Yes |
+
+### Examples
+
+```bash
+# Change a single parameter
+codika redeploy --param COMPANY_NAME="New Corp"
+
+# Multiple parameters (human-friendly)
+codika redeploy \
+  --param COMPANY_NAME="New Corp" \
+  --param LANGUAGE=fr \
+  --param TIMEZONE="Europe/Paris"
+
+# Agent-friendly JSON
+codika redeploy --params '{"COMPANY_NAME":"New Corp","LANGUAGE":"fr"}'
+
+# From file
+codika redeploy --params-file ./updated-params.json
+
+# Retry a failed deployment (no --force needed)
+codika redeploy --environment dev
+
+# Redeploy prod instance
+codika redeploy --environment prod --param LANGUAGE=fr --force
+
+# Custom project file
+codika redeploy --project-file project-client-a.json --param LANGUAGE=fr
+
+# Specific instance ID
+codika redeploy --process-instance-id pi_abc123 --param LANGUAGE=fr --force
+
+# JSON output for automation
+codika redeploy --params '{"LANGUAGE":"fr"}' --json
+```
+
+### Output
+
+```
+✓ Redeployed successfully
+
+  Instance:    pi_abc123
+  Environment: dev
+  Template:    tmpl_def456
+  Parameters:  2 updated, 3 unchanged
+```
+
+JSON output (`--json`):
+
+```json
+{
+  "success": true,
+  "processInstanceId": "pi_abc123",
+  "environment": "dev",
+  "templateId": "tmpl_def456",
+  "parameters": {
+    "updated": ["COMPANY_NAME", "LANGUAGE"],
+    "unchanged": ["TIMEZONE", "REPORT_EMAIL", "MAX_RETRIES"]
+  }
+}
+```
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Redeploy successful |
+| `1` | Deployment failed or API error |
+
+### Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika login` |
+| 403 | Missing scope | Create key with `deploy:use-case` scope |
+| 404 | Instance not found | Check instance ID in `project.json` or pass `--process-instance-id` |
+| 409 | Instance not in failed state | Add `--force` to redeploy non-failed instances |
+| 400 | Invalid parameters | Check parameter names match `INSTPARM` placeholders in the template |

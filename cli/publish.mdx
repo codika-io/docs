@@ -121,6 +121,10 @@ codika publish tmpl_abc123 --auto-toggle-dev-prod
   Webhook URL:          https://...
 ```
 
+<Info>
+**Need to change parameters without a new version?** After publishing, use [`codika redeploy`](/cli/redeploy) to update deployment parameters on the prod instance without creating a new template version. Only the parameters you specify are changed — everything else stays the same.
+</Info>
+
 ### Exit codes
 
 | Code | Meaning |
