@@ -1,6 +1,6 @@
 # Codika
 
-> Codika is a multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations. Users define use cases (config + n8n workflows), deploy them via CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution. The CLI tool is `codika` (npm package `@codika-io/helper-sdk`).
+> Codika is a multi-tenant SaaS platform for building, deploying, and managing n8n workflow automations. Users define use cases (config + n8n workflows), deploy them via CLI, and the platform handles credential isolation, placeholder replacement, version management, execution tracking, and multi-user distribution. The CLI tool is `codika` (npm package `codika`).
 
 Codika lets you build dedicated APIs that contain the exact actions you want your agents to perform — and completely decouples the authentication layer from agent usage. You connect your integrations (Salesforce, Google, Slack, etc.) once to the platform. The platform manages all credentials. Agents only hold a single Codika API key that grants access to the actions you've defined — nothing more. They download agent skills (SKILL.md files following the Claude Agent Skills format) via `codika get skills` to discover available endpoints, and trigger workflows via `codika trigger`. All calls go through Codika cloud functions, which validate the API key and inject the correct integration credentials at runtime. Agents call actions, not raw APIs.
 

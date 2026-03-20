@@ -21,7 +21,7 @@ User-initiated execution via webhook. The user fills a form (defined by `inputSc
 ### config.ts definition
 
 ```typescript
-import type { HttpTrigger } from '@codika-io/helper-sdk';
+import type { HttpTrigger } from 'codika';
 
 const webhookId = crypto.randomUUID();
 const webhookUrl = `{{ORGSECRET_N8N_BASE_URL_TERCESORG}}/webhook/{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/analyze`;
@@ -75,7 +75,7 @@ Automatic execution on a cron schedule. No user input — the workflow runs at t
 ### config.ts definition
 
 ```typescript
-import type { ScheduleTrigger } from '@codika-io/helper-sdk';
+import type { ScheduleTrigger } from 'codika';
 
 {
   triggerId: crypto.randomUUID(),
@@ -136,7 +136,7 @@ External services (Gmail, Calendly, WhatsApp, etc.) trigger the workflow when an
 ### config.ts definition
 
 ```typescript
-import type { ServiceEventTrigger } from '@codika-io/helper-sdk';
+import type { ServiceEventTrigger } from 'codika';
 
 {
   triggerId: crypto.randomUUID(),
@@ -185,7 +185,7 @@ Sub-workflows are helper workflows called by parent workflows. They are not visi
 ### config.ts definition
 
 ```typescript
-import type { SubworkflowTrigger } from '@codika-io/helper-sdk';
+import type { SubworkflowTrigger } from 'codika';
 
 {
   triggerId: crypto.randomUUID(),

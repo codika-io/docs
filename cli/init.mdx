@@ -39,7 +39,7 @@ my-use-case/
   version.json                 # Version tracking, initialized to 1.0.0
   project.json                 # Platform project ID and org ID (if project created)
   CLAUDE.md                    # Use case documentation for AI agents
-  package.json                 # Dependencies (@codika-io/helper-sdk)
+  package.json                 # Dependencies (codika)
   tsconfig.json                # TypeScript config for IDE type-checking
   .gitignore                   # Ignores node_modules/
   node_modules/                # Installed automatically (unless --no-install)
@@ -90,7 +90,7 @@ The scaffold generates three workflows that demonstrate different patterns:
 3. If `--project-id` is provided:
    - Uses that ID without making an API call
    - Writes to `project.json`
-4. Checks if a parent directory already has `@codika-io/helper-sdk` in its `package.json`:
+4. Checks if a parent directory already has `codika` in its `package.json`:
    - If found (e.g., inside a monorepo): reuses the existing workspace, skips dependency setup
    - If not found: creates `package.json`, `tsconfig.json`, `.gitignore`, and runs `npm install`
 5. If `--no-install` is set: creates the dependency files but skips `npm install`
@@ -113,7 +113,7 @@ email-automation/
   package.json        # Own dependencies
   tsconfig.json
   .gitignore
-  node_modules/       # Own copy of @codika-io/helper-sdk
+  node_modules/       # Own copy of codika
   workflows/
     ...
 ```
@@ -128,7 +128,7 @@ If you plan to manage multiple use cases in a single repository, create a shared
 # 1. Set up the workspace
 mkdir my-automations && cd my-automations
 npm init -y
-npm install @codika-io/helper-sdk
+npm install codika
 echo 'node_modules/' > .gitignore
 
 # 2. Scaffold use cases inside it
@@ -140,7 +140,7 @@ codika init ./crm-sync --name "CRM Sync"
 ```
 my-automations/
   package.json            # Shared dependencies
-  node_modules/           # Single copy of @codika-io/helper-sdk
+  node_modules/           # Single copy of codika
   email-automation/
     config.ts
     version.json

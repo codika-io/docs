@@ -6,7 +6,7 @@ Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable,
 
 Codika creates software used by both humans and AI agents. Every HTTP endpoint is a stable API that agents can discover via **agent skills** and call via `codika trigger` — without ever touching credentials. The platform handles authentication, so agents never get OAuth tokens or API keys.
 
-The CLI tool is `codika`, installed via `npm install -g @codika-io/helper-sdk`.
+The CLI tool is `codika`, installed via `npm install -g codika`.
 
 ## How to navigate this documentation
 
