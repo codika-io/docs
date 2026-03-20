@@ -1,0 +1,187 @@
+---
+title: "integration"
+description: "Manage integrations (API keys, credentials) for organizations and process instances"
+---
+
+The `integration` command manages integrations from the CLI. It supports creating, listing, and deleting integrations for organizations and process instances.
+
+## Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `set` | Create or update an integration |
+| `list` | List integrations and their status |
+| `delete` | Delete an integration |
+
+---
+
+## `codika integration set`
+
+Creates an integration by encrypting secrets client-side and sending them to the platform.
+
+```bash
+codika integration set <integrationId> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `integrationId` | Integration ID (e.g., `openai`, `supabase`, `cstm_acme_crm`) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--secret <KEY=VALUE>` | Secret field (repeatable) | — |
+| `--secrets <json>` | JSON string with all secrets | — |
+| `--secrets-file <path>` | Path to JSON file with secrets | — |
+| `--metadata <KEY=VALUE>` | Metadata field (repeatable) | — |
+| `--context-type <type>` | `organization`, `member`, or `process_instance` | Auto-detected |
+| `--process-instance-id <id>` | Process instance ID | From `project.json` |
+| `--path <path>` | Path to use case folder | Current directory |
+| `--project-file <path>` | Custom project file | `project.json` |
+| `--environment <env>` | `dev` or `prod` | `dev` |
+| `--custom-schema-file <path>` | Custom integration schema JSON | — |
+| `--force` | Delete existing and recreate | `false` |
+| `--profile <name>` | CLI profile to use | Active profile |
+| `--api-key <key>` | Override API key | — |
+| `--json` | Output as JSON | `false` |
+
+### Secret Input Priority
+
+Secrets are merged with this priority (highest wins):
+1. `--secret KEY=VALUE` flags
+2. `--secrets '{"KEY":"VALUE"}'` JSON string
+3. `--secrets-file path.json` file
+
+### Examples
+
+```bash
+# Simple API key
+codika integration set openai --secret OPENAI_API_KEY=sk-proj-xxx
+
+# Multi-field credentials
+codika integration set supabase \
+  --secret SUPABASE_HOST=https://abc.supabase.co \
+  --secret SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiJ9... \
+  --path ./my-use-case
+
+# JSON input (best for automation)
+codika integration set anthropic \
+  --secrets '{"ANTHROPIC_API_KEY":"sk-ant-xxx"}' \
+  --json
+
+# Force overwrite
+codika integration set openai \
+  --secret OPENAI_API_KEY=sk-new-key \
+  --force
+```
+
+### OAuth Integrations
+
+OAuth-based integrations (Gmail, Teams, Slack, etc.) cannot be configured from the CLI. The command will display the dashboard URL instead:
+
+```
+⚠ google_gmail requires OAuth authentication.
+  Connect it via the dashboard at: https://app.codika.io/organizations/.../integrations
+```
+
+---
+
+## `codika integration list`
+
+Lists integrations and their connection status.
+
+```bash
+codika integration list [options]
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--context-type <type>` | `organization` or `process_instance` | `organization` |
+| `--process-instance-id <id>` | Process instance ID | From `project.json` |
+| `--path <path>` | Path to use case folder | Current directory |
+| `--project-file <path>` | Custom project file | `project.json` |
+| `--environment <env>` | `dev` or `prod` | `dev` |
+| `--profile <name>` | CLI profile to use | Active profile |
+| `--api-key <key>` | Override API key | — |
+| `--json` | Output as JSON | `false` |
+
+### Examples
+
+```bash
+# List organization integrations
+codika integration list
+
+# List process instance integrations
+codika integration list --context-type process_instance --path ./my-use-case
+
+# JSON output
+codika integration list --json
+```
+
+---
+
+## `codika integration delete`
+
+Deletes an integration. Uses two-phase deletion by default — first shows dependent processes, then deletes with `--confirm`.
+
+```bash
+codika integration delete <integrationId> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `integrationId` | Integration ID to delete |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--context-type <type>` | `organization`, `member`, or `process_instance` | Auto-detected |
+| `--process-instance-id <id>` | Process instance ID | From `project.json` |
+| `--path <path>` | Path to use case folder | Current directory |
+| `--project-file <path>` | Custom project file | `project.json` |
+| `--environment <env>` | `dev` or `prod` | `dev` |
+| `--confirm` | Skip confirmation and delete immediately | `false` |
+| `--profile <name>` | CLI profile to use | Active profile |
+| `--api-key <key>` | Override API key | — |
+| `--json` | Output as JSON | `false` |
+
+### Examples
+
+```bash
+# Check dependencies first
+codika integration delete openai
+
+# Delete immediately
+codika integration delete openai --confirm
+
+# Delete process instance integration
+codika integration delete supabase \
+  --confirm \
+  --process-instance-id abc123
+```
+
+---
+
+## Authentication
+
+All integration commands require an API key with the `integrations:manage` scope. The standard authentication chain applies:
+
+1. `--api-key` flag (highest priority)
+2. `CODIKA_API_KEY` environment variable
+3. Active profile from `codika login`
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error |
+| `2` | Validation error (missing fields, OAuth integration, unconfirmed delete) |

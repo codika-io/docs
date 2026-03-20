@@ -41,6 +41,10 @@ codika
   │   └── process-data-ingestion <path>  # Deploy data ingestion config
   ├── publish <templateId>       # Publish deployment to production
   ├── redeploy                   # Redeploy instance with updated parameters
+  ├── integration
+  │   ├── set <integrationId>    # Create or update an integration
+  │   ├── list                   # List integrations and connection status
+  │   └── delete <integrationId> # Delete an integration
   ├── trigger <workflowId>       # Trigger a deployed workflow
   ├── get
   │   ├── use-case <projectId>   # Fetch deployed use case

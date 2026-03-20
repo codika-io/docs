@@ -94,6 +94,7 @@
               "cli/deploy",
               "cli/publish",
               "cli/redeploy",
+              "cli/integration",
               "cli/trigger",
               "cli/get",
               "cli/list",
@@ -144,7 +145,8 @@
               "skills/trigger-workflow",
               "skills/get-execution",
               "skills/list-executions",
-              "skills/get-skills"
+              "skills/get-skills",
+              "skills/manage-integrations"
             ]
           }
         ]

@@ -44,6 +44,7 @@ When helping users build Codika use cases:
 - [verify](https://docs.codika.io/cli/verify): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering
 - [deploy](https://docs.codika.io/cli/deploy): Deploy use cases (version bumping, encoding, API call, archival) and data ingestion configs — --patch/--minor/--major/--version, --dry-run
 - [publish](https://docs.codika.io/cli/publish): Publish a deployment to production — visibility, shared-with, auto-toggle dev/prod, saves prodProcessInstanceId to project.json
+- [integration](https://docs.codika.io/cli/integration): Manage integrations (set, list, delete) — encrypt secrets client-side, supports all 42+ built-in and custom cstm_* integrations, requires `integrations:manage` API key scope
 - [trigger](https://docs.codika.io/cli/trigger): Execute HTTP-triggered workflows with --payload-file (or - for stdin), --poll for results, --timeout, process instance ID resolution
 - [get](https://docs.codika.io/cli/get): Fetch deployed use cases (download or list), execution details (--deep for sub-workflows, --slim for clean output), and agent skills (`get skills` downloads Claude-compatible SKILL.md files)
 - [list](https://docs.codika.io/cli/list): List recent executions for a process instance — filter by workflow ID, --failed-only, --limit
@@ -89,6 +90,7 @@ When helping users build Codika use cases:
 - [get-execution](https://docs.codika.io/skills/get-execution): Debug executions with --deep recursive sub-workflow fetching
 - [list-executions](https://docs.codika.io/skills/list-executions): List recent executions for a process instance, filter by workflow or status
 - [get-skills](https://docs.codika.io/skills/get-skills): Download agent skill documents from a deployed process instance — discover endpoints and their documentation
+- [manage-integrations](https://docs.codika.io/skills/manage-integrations): Configure, list, and delete integrations (API keys, credentials) for organizations and process instances via CLI
 
 ## Optional
 

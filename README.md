@@ -6,16 +6,16 @@ Built with [Mintlify](https://mintlify.com).
 
 ## Development
 
-Install the Mintlify CLI:
+Mintlify requires a Node.js LTS version (20 or 22). If you're on a newer non-LTS version (e.g. Node 25), use [nvm](https://github.com/nvm-sh/nvm) to switch:
 
 ```bash
-npm i -g mint
+nvm use 22
 ```
 
 Preview locally:
 
 ```bash
-mint dev
+npx mintlify@latest dev
 ```
 
 View at `http://localhost:3000`.

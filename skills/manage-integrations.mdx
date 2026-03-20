@@ -1,0 +1,85 @@
+---
+title: "manage-integrations"
+description: "Manage integrations (API keys, credentials) via the CLI for organizations and process instances"
+---
+
+## Overview
+
+The `manage-integrations` skill enables agents to configure integrations from the terminal — creating API key connections, listing integration status, and deleting integrations. This closes the automation gap: agents can now deploy use cases AND configure the integrations they require.
+
+## When to Use
+
+- After deploying a use case that requires integrations (OpenAI, Supabase, etc.)
+- When setting up a new organization with required API keys
+- When rotating or updating integration credentials
+- When checking which integrations are connected
+
+## Commands
+
+### Set an Integration
+
+```bash
+codika integration set <integrationId> \
+  --secret KEY=VALUE \
+  --json
+```
+
+Supports three secret input methods with merge priority (highest wins):
+1. `--secret KEY=VALUE` flags (repeatable)
+2. `--secrets '{"KEY":"VALUE"}'` JSON string
+3. `--secrets-file path.json` file
+
+### List Integrations
+
+```bash
+codika integration list [--context-type organization|process_instance] --json
+```
+
+### Delete an Integration
+
+```bash
+codika integration delete <integrationId> --confirm --json
+```
+
+## Common Recipes
+
+### Set up AI provider for an organization
+
+```bash
+codika integration set openai \
+  --secrets '{"OPENAI_API_KEY":"sk-proj-xxx"}' \
+  --json
+```
+
+### Set up Supabase for a process instance
+
+```bash
+codika integration set supabase \
+  --secrets '{"SUPABASE_HOST":"https://abc.supabase.co","SUPABASE_SERVICE_ROLE_KEY":"eyJ..."}' \
+  --path ./my-use-case \
+  --json
+```
+
+### Full deployment + integration flow
+
+```bash
+codika deploy use-case ./my-use-case --json
+codika integration set openai --secrets '{"OPENAI_API_KEY":"sk-xxx"}' --json
+codika integration set supabase \
+  --secrets '{"SUPABASE_HOST":"...","SUPABASE_SERVICE_ROLE_KEY":"..."}' \
+  --path ./my-use-case --json
+codika redeploy --path ./my-use-case --force --json
+```
+
+## OAuth Integrations
+
+Google, Microsoft, Slack, and other OAuth integrations cannot be configured from the CLI. The command will display the dashboard URL for manual setup.
+
+## Prerequisites
+
+- API key with `integrations:manage` scope
+- For process instance integrations: `project.json` with `devProcessInstanceId`
+
+## Reference
+
+See the [CLI integration command](/cli/integration) for full options and examples.
