@@ -25,6 +25,12 @@ When helping users build Codika use cases:
 - [What is Codika?](https://docs.codika.io/): Platform overview, architecture, multi-tenancy model, and key concepts
 - [Quickstart](https://docs.codika.io/quickstart): Install CLI, authenticate, scaffold, validate, deploy, trigger, and debug in 7 steps
 
+## Why Codika
+
+- [Why Codika?](https://docs.codika.io/why-codika/overview): Core value proposition — infrastructure layer between n8n and business needs, agent-native design, use cases as workflow ensembles, self-healing workflows, credential isolation (11 scopes), what you get out of the box (versioning, validation, billing, RAG, marketplace, project stages)
+- [Codika vs Alternatives](https://docs.codika.io/why-codika/vs-n8n): Why no-code tools (Zapier, Make) solve the wrong problem — they simplify code for humans, but agents don't need simplification. No-code assumptions break in an agent-first world (visual editors, drag-and-drop, pre-built connectors, per-task pricing). Also: technical comparison with raw n8n — what Codika adds on top (multi-tenancy, 11 credential scopes, 30+ validation rules, deployment pipeline, versioning, execution tracking, self-healing, billing, marketplace)
+- [Codika and AI Agents](https://docs.codika.io/why-codika/with-agents): How Codika works WITH Claude Code (not instead of) — agents as new employees not sysadmins, custom action APIs instead of raw tool access (least privilege), the agent development loop (describe → design → build → validate → deploy → test → fix → repeat), why agents need guardrails not freedom, self-healing via business context (PRD/BRD), security boundaries (single API key, runtime credential injection, instant revocation), stable API surface via agent skills, the Builder System as proof of agent-native infrastructure
+
 ## Core Concepts
 
 - [Use Cases](https://docs.codika.io/concepts/use-cases): Folder structure (config.ts, workflows/, version.json, project.json), config exports, version management
@@ -36,7 +42,7 @@ When helping users build Codika use cases:
 - [Input & Output Schemas](https://docs.codika.io/concepts/schemas): Form field types (string, text, number, boolean, date, select, file, array, object), section structure, output field types
 - [Agent Skills](https://docs.codika.io/concepts/agent-skills): Making workflows agent-accessible — SKILL.md format, frontmatter spec (name/description/workflowTemplateId), deployment lifecycle, credential decoupling, Claude compatibility
 
-## Operations Reference
+## CLI Reference
 
 - [Operations Overview](https://docs.codika.io/operations/overview): All operations, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), global options, exit codes, typical workflow
 - [Authentication](https://docs.codika.io/operations/authentication): Install CLI, login, whoami, use (switch profile, `--json` for machine-readable profile list with organizationId), logout, config set/show/clear — multi-profile management
@@ -64,6 +70,13 @@ When helping users build Codika use cases:
 - [Deployment Parameters](https://docs.codika.io/guides/deployment-parameters): INSTPARM placeholders, getDeploymentInputSchema(), context-aware serialization, field types
 - [File Uploads](https://docs.codika.io/guides/file-uploads): Codika Upload File node, documentId in output schema, execution metadata override in sub-workflows
 - [Creating Agent Skills](https://docs.codika.io/guides/agent-skills): Step-by-step guide to adding skills to use cases — identify workflows, write SKILL.md, validate, deploy, verify agent access
+
+## Builder System
+
+- [Builder System Overview](https://docs.codika.io/builder/overview): Autonomous AI agents that create, modify, and test Codika use cases from natural language — architecture, plugin structure, prerequisites
+- [Builder Agents](https://docs.codika.io/builder/agents): Four agents — use-case-builder (architect), use-case-modifier (surgeon), n8n-workflow-builder (craftsperson), use-case-tester (QA) — capabilities, delegation patterns, CLI skill dependencies
+- [Usage Patterns](https://docs.codika.io/builder/workflows): Common workflows — creating from scratch, modifying existing, building single workflows, testing, full build-test cycles, prompt writing tips
+- [Builder Reference](https://docs.codika.io/builder/reference): Plugin structure, bundled documentation catalog (core guides, trigger guides, 19 integration guides), agent-to-skill dependency map, troubleshooting
 
 ## Examples
 

@@ -1,0 +1,81 @@
+---
+title: "Builder System"
+description: "Autonomous AI agents that create, modify, and test Codika use cases from natural language requirements"
+---
+
+## What is the Builder System?
+
+The Builder System is a [Claude Code marketplace](https://github.com/anthropics/claude-code) plugin that gives AI agents the ability to autonomously design, build, modify, and test Codika use cases. Instead of manually writing `config.ts` files and n8n workflow JSON, you describe what you need in plain language and the agents handle the rest.
+
+The system reads the same platform documentation you do, designs the architecture, creates all files, validates them, deploys to the platform, and iteratively fixes any issues — all without requiring you to understand n8n internals or Codika patterns.
+
+## How it works
+
+```
+You describe a business goal
+  → use-case-builder reads platform docs, designs architecture
+    → n8n-workflow-builder creates each workflow JSON
+      → use-case-tester deploys, triggers, inspects, fixes
+        → Production-ready use case
+```
+
+The system follows a **read-first, build-second** approach. Before creating anything, agents read the relevant platform guides (trigger types, credential patterns, integration specifics) to ensure every workflow follows Codika's mandatory patterns and placeholder conventions.
+
+## The agents
+
+Four specialized agents work together, each handling a different phase of the lifecycle:
+
+| Agent | What it does | When to use |
+|-------|-------------|-------------|
+| **use-case-builder** | Creates new use cases from scratch — designs architecture, creates config.ts, delegates workflow creation | "I need an automation that does X" |
+| **use-case-modifier** | Modifies existing use cases — reads current state, plans changes, makes targeted edits | "Add Slack notifications to this use case" |
+| **n8n-workflow-builder** | Builds individual n8n workflow JSON files with correct patterns, placeholders, and node positioning | "Build a workflow that calls the Tavily API" |
+| **use-case-tester** | Tests and debugs through deploy-trigger-inspect-fix loops (max 5 iterations) | "Test the invoice-processor and fix any issues" |
+
+See [Builder Agents](/builder/agents) for detailed documentation on each agent.
+
+## The discover-codika-guides skill
+
+All agents rely on a bundled skill called `discover-codika-guides` that ships with the complete Codika platform documentation. This means agents can read the right guides at runtime without needing access to the `codika-processes-lib` repository.
+
+The bundled documentation includes:
+- **Core guides** — use-case-guide.md, config-patterns.md, codika-nodes.md
+- **Trigger-specific guides** — HTTP triggers, schedule triggers, third-party triggers, sub-workflows
+- **Specialized guides** — AI nodes, placeholder patterns, deployment parameters, data ingestion, agent skills
+- **19 integration guides** — Anthropic, OpenAI, Google, Microsoft, Slack, Supabase, and more
+
+## Prerequisites
+
+Before using the Builder System:
+
+1. **Install the codika CLI** — `npm install -g codika`
+2. **Authenticate** — `codika login`
+3. **Install both plugins** — the Builder System depends on the `codika` plugin for CLI operations (deploy, verify, trigger, etc.)
+
+## Architecture
+
+The Builder System is composed of two marketplace plugins that work together:
+
+| Plugin | What it provides |
+|--------|-----------------|
+| **codika** | 14 CLI skills — deploy, verify, trigger, fetch, manage integrations, and more |
+| **use-case-builder** | 4 builder agents + the discover-codika-guides skill |
+
+The builder agents use the `codika` plugin's skills for all platform operations. For example, `use-case-tester` calls `codika:deploy-use-case` to deploy, `codika:trigger-workflow` to test, and `codika:get-execution` to inspect results.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Builder Agents" icon="robot" href="/builder/agents">
+    Understand each agent's capabilities and when to use them.
+  </Card>
+  <Card title="Usage Patterns" icon="route" href="/builder/workflows">
+    See common workflows and tips for writing effective prompts.
+  </Card>
+  <Card title="Reference" icon="book" href="/builder/reference">
+    Plugin structure, bundled documentation catalog, and troubleshooting.
+  </Card>
+  <Card title="First Use Case" icon="hammer" href="/guides/first-use-case">
+    Prefer building manually? Follow the step-by-step guide.
+  </Card>
+</CardGroup>

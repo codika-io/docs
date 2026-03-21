@@ -1,0 +1,253 @@
+---
+title: "Codika and AI Agents"
+description: "How Codika works with Claude Code and other AI agents — not either/or, but better together"
+---
+
+## The question people ask
+
+"Why use Codika when you have Claude Code?"
+
+The answer is simple: **you use both**. Claude Code writes the code. Codika provides the infrastructure to deploy, test, maintain, and iterate on it.
+
+The real question is: "What tool do you give Claude Code to make it effective at building and managing automations?"
+
+Without Codika, Claude Code can create n8n workflow JSON files and use the n8n MCP server to deploy them. But it has no deployment pipeline, no validation rules, no credential management, no version control, no multi-tenancy, no execution debugging, and no way to fix failures based on business context.
+
+With Codika, Claude Code gets a complete toolkit:
+
+| Capability | What the agent uses |
+|---|---|
+| Scaffolding | `codika init` — generates templates with mandatory patterns |
+| Validation | `codika verify` — 30+ rules with auto-fix before deployment |
+| Deployment | `codika deploy` — one command, handles everything |
+| Testing | `codika trigger --poll` — fire a workflow, wait for results |
+| Debugging | `codika get execution --deep --slim` — full execution trace |
+| Integration management | `codika integration set/list/delete` — encrypted credential handling |
+| Status checking | `codika status` — is this use case ready to deploy? |
+| Skill discovery | `codika get skills` — understand what endpoints are available |
+
+This isn't "Codika or Claude Code." It's "Claude Code + the Codika tool."
+
+## The agent development loop
+
+Building automations with agents follows a natural loop:
+
+```
+1. Describe what you need          → "I need daily reports from Supabase sent to Slack"
+2. Agent designs the architecture  → reads Codika docs, picks triggers, integrations, workflows
+3. Agent creates all files         → config.ts + workflow JSON files
+4. Agent validates                 → codika verify use-case (catches issues early)
+5. Agent deploys                   → codika deploy use-case (one command)
+6. Agent tests                     → codika trigger + codika get execution
+7. Agent fixes issues              → edit workflow → verify → redeploy
+8. Repeat until it works
+```
+
+The [Builder System](/builder/overview) automates this entire loop with four specialized agents. The `use-case-builder` designs the architecture, `n8n-workflow-builder` creates each workflow, `use-case-tester` deploys and tests, and `use-case-modifier` handles fixes and enhancements.
+
+Each step in this loop depends on Codika's infrastructure. Without it, agents would need to:
+- Manually manage n8n API calls for deployment
+- Handle credential injection themselves
+- Parse raw n8n execution logs for debugging
+- Track versions in custom metadata files
+- Build their own validation logic
+
+Codika's CLI skills abstract all of this. The agent focuses on **what** to build, not **how** to deploy it.
+
+## Treat agents like new employees, not sysadmins
+
+When you hire a new employee, you don't hand them the root password to every system on day one. You tell them what to do:
+
+> "Find this user in our database. Check in HubSpot whether they're a client. If yes, pull their latest invoice. Check if it's paid. If not, send them a reminder email."
+
+That task spans **five different systems** — a database, a CRM, an invoicing platform, a payment gateway, and an email provider. But the employee doesn't need admin access to any of them. They need a clear action to perform, with appropriate access to the specific data they need.
+
+Now look at how most teams set up AI agents today. They give the agent:
+- Full Supabase access (every table, every row)
+- Full HubSpot API key (every contact, every deal)
+- Full invoicing system access (every invoice, every payment)
+- Full email sending capability (to anyone, about anything)
+
+This is the equivalent of giving a new hire the root password on day one. It's a **security risk**, an **operational risk**, and a **scope risk** — the agent can do far more than it should.
+
+### The Codika approach: custom action APIs
+
+Codika inverts this model. Instead of giving agents access to your tools, you build **highly custom APIs on top of your existing tools**. Each API represents one specific action:
+
+| Action API | What it does behind the scenes |
+|---|---|
+| `check-invoice-status` | Queries Supabase for the user → looks up HubSpot client record → fetches invoice → checks payment status → returns structured result |
+| `send-payment-reminder` | Takes a user ID → fetches their email and invoice details → generates a personalized reminder → sends via your email provider |
+| `update-crm-record` | Takes a contact ID and fields → validates the data → updates HubSpot → logs the change |
+
+Each of these is a Codika use case — a workflow ensemble that encapsulates multi-step business logic across multiple integrations. The agent triggers them via a single HTTP endpoint with a simple JSON payload.
+
+**What the agent sees:**
+```json
+{
+  "action": "check-invoice-status",
+  "input": { "userId": "usr_12345" }
+}
+```
+
+**What the agent never sees:**
+- Supabase connection string
+- HubSpot API key
+- Invoice system credentials
+- Email provider SMTP settings
+
+The agent knows "check-invoice-status" and "send-payment-reminder" — exactly the actions you defined, nothing more. This is the principle of **least privilege** applied to AI agents.
+
+### Why this matters at scale
+
+As you add more agents and more capabilities, the custom action API model scales cleanly:
+
+- **Adding a new action** means building a new use case and publishing it. Existing agents don't change.
+- **Revoking access** means disabling the process instance. One API key gone, all actions removed.
+- **Auditing** means checking execution logs — every action is tracked with structured metadata.
+- **Updating logic** means redeploying the use case. All agents get the update automatically.
+
+Compare this to the alternative: managing API keys for 10 services across 5 agents, each with different permissions, different rotation schedules, and different audit trails. It doesn't scale.
+
+This is the future we're building: a world where agents interact with **purpose-built action APIs**, not raw infrastructure. Codika is the platform that makes building those APIs fast, safe, and maintainable.
+
+## Agents need guardrails, not freedom
+
+A raw n8n API gives agents unlimited freedom. They can create any workflow, any credential, any configuration. But freedom without structure leads to inconsistent, hard-to-debug, unmaintainable workflows.
+
+Codika provides guardrails that keep agent output consistent and production-ready:
+
+**Mandatory workflow patterns.** Every parent workflow must follow: Trigger → Codika Init → Business Logic → IF (success?) → Submit Result / Report Error. This isn't a suggestion — the validation system enforces it. Agents can't deploy a workflow that doesn't follow the pattern.
+
+**Placeholder system.** Credentials, parameters, and references use typed placeholders with validated syntax. Agents can't hardcode API keys or connection strings — the validation system catches it.
+
+**30+ validation rules.** Before any deployment, the use case is checked for structural integrity, credential patterns, placeholder syntax, schema consistency, and more. Issues are caught before they reach production.
+
+**Documentation-driven building.** The Builder System agents read the same platform documentation humans would. They understand **why** patterns exist (credential isolation, execution tracking, error handling), not just **what** to create. This produces workflows that follow conventions naturally, not through blind compliance.
+
+The result: agent-created workflows are indistinguishable from human-created ones. They follow the same patterns, use the same conventions, and pass the same validation rules.
+
+## Agents need context to self-heal
+
+When a workflow fails in raw n8n, you get an error log:
+
+```
+ERROR: NodeOperationError: The credential "Gmail OAuth2" does not exist
+```
+
+This tells you what happened, but not **why** or **how to fix it**. Is the credential name wrong? Was it deleted? Does the user need to re-authorize? Is the placeholder suffix incorrect? The error log doesn't say.
+
+When the same failure happens in Codika, the platform has the full context:
+
+- **The business requirement** — the PRD that says "monitor Gmail for new client emails"
+- **The configuration** — `config.ts` declares Gmail as a USERCRED integration
+- **The placeholder** — `{{USERCRED_GMAIL_ID_DERCRESU}}` in the workflow
+- **The execution trace** — Codika Init succeeded, Gmail trigger node failed
+- **The integration state** — user connected Gmail on March 15, token last refreshed March 20
+
+With this context, Codika's agents can diagnose systematically:
+
+1. Is the placeholder suffix correct? (DERCRESU = USERCRED reversed — yes, correct)
+2. Is the integration declared in `config.ts`? (Yes — `gmail` with scope `usercred`)
+3. Is the user's OAuth connection active? (Check platform — token expired)
+4. Resolution: escalate to user — "Your Gmail connection needs re-authorization"
+
+Or for a different error:
+
+1. "Credential not found" on a FLEXCRED_ANTHROPIC placeholder
+2. Check suffix — DERCXELF = FLEXCRED reversed — correct
+3. Check `config.ts` — integration declared as `anthropic` with scope `flexcred`
+4. Check organization integration — not configured
+5. Check Codika fallback — fallback key exists
+6. Resolution: the org integration ID is mismatched — fix the `integrationUid` in `config.ts`, redeploy
+
+This diagnostic capability is only possible because Codika maintains the full context of what you're building. Raw n8n has none of this context — it just runs workflows.
+
+## Agents need security boundaries
+
+Giving agents direct access to OAuth tokens, API keys, and database credentials is a security and operational nightmare:
+
+- **Token theft** — a compromised agent leaks credentials to every service it has access to
+- **Scope creep** — an agent with full API access can perform actions beyond its intended purpose
+- **Rotation complexity** — rotating one credential means updating every agent that uses it
+- **Audit difficulty** — who accessed what, when, and through which agent?
+
+Codika provides clean security boundaries:
+
+**Single API key.** Each process instance has one Codika API key (`ck_` prefix). This key grants access to the actions defined in that use case — nothing more. The agent never holds OAuth tokens, API keys, or database credentials for any integration.
+
+**Runtime credential injection.** When a workflow executes, Codika injects the correct credentials at runtime. Placeholders in the workflow are replaced with real values during deployment. The agent's trigger request contains only the business payload — no auth headers, no tokens.
+
+**Instant revocation.** Disable the process instance and the agent loses access to every action immediately. No credential rotation across 10 services. No wondering "did we remove access everywhere?"
+
+**Structured audit trail.** Every execution is tracked with: who triggered it (API key), when, what workflow, what input, what result, what errors. Per-org error workflows capture all failures.
+
+## Agents need a stable API surface
+
+Raw n8n workflows change constantly — new versions, renamed nodes, updated schemas, different output formats. An agent that worked yesterday might break today because a node was renamed.
+
+Codika's agent skills provide a **stable, documented API surface**:
+
+```markdown
+---
+name: check-invoice-status
+description: Check the payment status of a user's latest invoice
+workflowTemplateId: check-invoice
+---
+
+## Endpoint
+POST /trigger/{processInstanceId}/{workflowId}
+
+## Input
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| userId | string | yes | The user ID to check |
+
+## Output
+| Field | Type | Description |
+|-------|------|-------------|
+| status | string | "paid", "overdue", or "pending" |
+| amount | number | Invoice amount |
+| dueDate | string | ISO 8601 date |
+```
+
+Agents download skills via `codika get skills` and have a complete, up-to-date understanding of available actions. The skills format follows the [Claude Agent Skills specification](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), making them natively compatible with Claude-based agents.
+
+The deployment pipeline ensures skills stay in sync with workflows. When you redeploy a use case, the skills are repackaged with the deployment. An agent that re-downloads skills always gets the current version.
+
+## The infrastructure agents need
+
+| What agents need | Without Codika | With Codika |
+|---|---|---|
+| Deploy workflows | Manual n8n API calls | `codika deploy` (one command) |
+| Validate before deploying | Hope it works | 30+ validation rules with auto-fix |
+| Test a workflow | Manually call n8n webhook | `codika trigger --poll` (scriptable) |
+| Debug a failure | Parse raw n8n execution logs | `codika get execution --deep --slim` |
+| Manage credentials | Handle OAuth tokens directly | Placeholders resolved at deploy time |
+| Version and rollback | Manual file management | Semantic versioning built-in |
+| Discover available actions | Read n8n API docs | Agent skills (SKILL.md) |
+| Iterate and fix | Start from scratch | Edit → verify → redeploy cycle |
+| Fix failures automatically | Can't (no business context) | Self-healing with PRD/BRD context |
+| Limit agent scope | Give raw API keys (full access) | Custom action APIs (least privilege) |
+
+## The Builder System
+
+Codika includes a [Builder System](/builder/overview) — four specialized agents that automate the entire use case lifecycle:
+
+| Agent | Role |
+|-------|------|
+| **use-case-builder** | Architect — designs and creates new use cases from natural language |
+| **use-case-modifier** | Surgeon — modifies existing use cases with targeted changes |
+| **n8n-workflow-builder** | Craftsperson — builds individual workflow JSON files |
+| **use-case-tester** | QA — deploy-trigger-inspect-fix loops (max 5 iterations) |
+
+These agents read the same platform documentation you would, design architectures based on your business requirements, create all the files, validate them, deploy to the platform, test them, and iteratively fix any issues.
+
+The Builder System is the proof of concept for agent-native infrastructure. When the platform is designed for agents from the ground up, agents can do things that would be impossible on raw infrastructure:
+
+- **Design from intent** — describe a business goal, get a complete architecture
+- **Build with conventions** — every workflow follows platform patterns because the agent read the documentation
+- **Test systematically** — automated deploy-test-fix loops with structured execution inspection
+- **Self-heal** — diagnose and fix failures using business context, not just error logs
+
+This is what it looks like when infrastructure is built for the agents that use it.

@@ -43,6 +43,14 @@
             "pages": ["index", "quickstart"]
           },
           {
+            "group": "Why Codika",
+            "pages": [
+              "why-codika/overview",
+              "why-codika/vs-n8n",
+              "why-codika/with-agents"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "concepts/use-cases",
@@ -67,6 +75,15 @@
             ]
           },
           {
+            "group": "Builder System",
+            "pages": [
+              "builder/overview",
+              "builder/agents",
+              "builder/workflows",
+              "builder/reference"
+            ]
+          },
+          {
             "group": "Examples",
             "pages": [
               "examples/overview",
@@ -79,7 +96,7 @@
         ]
       },
       {
-        "tab": "Operations Reference",
+        "tab": "CLI Reference",
         "groups": [
           {
             "group": "Overview",

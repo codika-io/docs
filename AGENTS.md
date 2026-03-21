@@ -19,11 +19,13 @@ For understanding how Codika works. Start here.
 | Section | Pages | When to read |
 |---------|-------|-------------|
 | **Getting Started** | `index.mdx`, `quickstart.mdx` | First visit — what Codika is, how to get started in 7 steps |
+| **Why Codika** | 3 pages in `why-codika/` | When you need to understand Codika's value proposition, how it compares to raw n8n, or how it works with AI agents |
 | **Core Concepts** | 8 pages in `concepts/` | When you need to understand a specific concept (use cases, processes, workflows, placeholders, triggers, credentials, schemas, agent skills) |
 | **Guides** | 6 pages in `guides/` | When building something specific (first use case, AI workflows, sub-workflows, deployment parameters, file uploads, agent skills) |
+| **Builder System** | 4 pages in `builder/` | When you want AI agents to create, modify, or test use cases automatically |
 | **Examples** | 5 pages in `examples/` | When you need real-world reference code (minimal search tool, email automation, CRM reporter, RAG proposal generator) |
 
-### Tab 2: Operations Reference
+### Tab 2: CLI Reference
 
 Complete reference for every platform operation — authentication, scaffolding, validation, deployment, execution, and debugging. Each page covers one capability with all CLI flags, usage guidance, examples, and error handling.
 
@@ -64,6 +66,9 @@ For building custom frontends on top of deployed workflows.
 | If you need to... | Go to |
 |-------------------|-------|
 | Understand what Codika is | `index.mdx` |
+| Understand why Codika exists | `why-codika/overview.mdx` |
+| Compare Codika to alternatives (Zapier, Make, raw n8n) | `why-codika/vs-n8n.mdx` |
+| Understand how agents use Codika | `why-codika/with-agents.mdx` |
 | Install the CLI and deploy something fast | `quickstart.mdx` |
 | Know how a use case folder is structured | `concepts/use-cases.mdx` |
 | Understand the process lifecycle | `concepts/processes.mdx` |
@@ -79,6 +84,9 @@ For building custom frontends on top of deployed workflows.
 | Upload files from workflows | `guides/file-uploads.mdx` |
 | See a minimal example (1 workflow) | `examples/simple-search.mdx` |
 | See a complex example (RAG + multi-workflow) | `examples/complex-rag.mdx` |
+| Automate use case creation with agents | `builder/overview.mdx` |
+| Understand the builder agents | `builder/agents.mdx` |
+| See builder usage patterns | `builder/workflows.mdx` |
 | Make workflows accessible to agents | `concepts/agent-skills.mdx` |
 | Create agent skills for a use case | `guides/agent-skills.mdx` |
 | Look up any CLI command or operation | `operations/<operation>.mdx` |
@@ -110,6 +118,10 @@ For building custom frontends on top of deployed workflows.
 | Trigger | How a workflow starts: HTTP, schedule, service event, or sub-workflow |
 | Deployment parameter | Value configured at install time, injected via INSTPARM placeholder |
 | Agent skill | A Claude-compatible `SKILL.md` file describing how to interact with a deployed workflow endpoint |
+| Builder System | Marketplace plugin with 4 AI agents that autonomously create, modify, and test Codika use cases |
+| Infrastructure layer | Codika's role between n8n (execution engine) and business needs — handles deployment, credential isolation, versioning, monitoring |
+| Self-healing workflows | Automated diagnosis and repair of failed workflows using business context (PRD/BRD) that raw n8n lacks |
+| Custom action APIs | Purpose-built APIs on top of existing tools — agents trigger specific actions, not raw infrastructure |
 
 ## About this documentation site
 

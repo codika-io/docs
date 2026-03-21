@@ -1,0 +1,159 @@
+---
+title: "Builder Agents"
+description: "Detailed reference for the four agents that create, modify, build, and test Codika use cases"
+---
+
+## Which agent should I use?
+
+| I want to... | Use this agent |
+|--------------|---------------|
+| Create a new use case from a business requirement | **use-case-builder** |
+| Add a feature, change a trigger, or refactor an existing use case | **use-case-modifier** |
+| Build a single workflow JSON file (not a full use case) | **n8n-workflow-builder** |
+| Deploy, test, and fix a use case end-to-end | **use-case-tester** |
+
+## use-case-builder
+
+The main architect agent. Give it a business goal and it designs and creates a complete use case from scratch.
+
+**What it does:**
+
+1. **Understands your goal** — extracts the core business intent from your description. You don't need to specify triggers, placeholders, or implementation details — the agent decides those.
+2. **Reads platform documentation** — always reads the use-case guide, config patterns, and Codika nodes guide. Reads trigger-specific and integration guides based on the architecture it designs.
+3. **Researches similar use cases** — searches the workspace for reference implementations and plan examples.
+4. **Presents an architecture plan** — shows you the proposed workflows, triggers, integrations, and deployment parameters before building anything.
+5. **Creates the folder structure** — scaffolds the use case with `config.ts`, `version.json`, and the workflows directory.
+6. **Delegates workflow creation** — invokes the `n8n-workflow-builder` agent for each workflow, providing it with the full specification.
+7. **Validates everything** — runs `codika verify use-case` to catch issues before you deploy.
+
+**Example prompts:**
+
+```
+"I want to automate invoice processing. Users upload PDFs and get structured data back."
+
+"We need something that monitors our Gmail for new client emails
+and logs them in Google Sheets with an AI summary."
+
+"I need daily reports from our Supabase database sent to Slack."
+```
+
+<Info>
+The builder handles all implementation decisions — trigger types, credential scopes, placeholder patterns, sub-workflow extraction. Describe the **what**, not the **how**.
+</Info>
+
+## use-case-modifier
+
+Modifies, extends, or refactors existing use cases. Reads the current architecture before making any changes.
+
+**What it does:**
+
+1. **Reads the entire use case** — config.ts, all workflow JSON files, project.json. Summarizes the current architecture for your confirmation.
+2. **Reads relevant documentation** — always reads use-case-guide.md and config-patterns.md. Reads additional guides based on the modification (e.g., sub-workflow guide if extracting logic).
+3. **Plans modifications** — specifies which files will be modified, created, or deleted. Includes a risk assessment for breaking changes.
+4. **Makes targeted edits** — modifies existing workflow JSON with surgical edits. Delegates new workflow creation to `n8n-workflow-builder`. Updates config.ts to reflect all changes.
+5. **Validates thoroughly** — checks that existing workflows still pass validation after changes.
+
+**Example prompts:**
+
+```
+"Add a Slack notification workflow to the invoice-processor use case."
+
+"Change the invoice-processor from HTTP trigger to a Gmail trigger."
+
+"The main workflow in customer-onboarding is too complex.
+Extract the email validation part into a sub-workflow."
+```
+
+<Warning>
+The modifier always reads and understands the existing use case before making any changes. It will not blindly add or remove code — it plans first, then acts.
+</Warning>
+
+## n8n-workflow-builder
+
+Builds individual n8n workflow JSON files. Called by the other agents, but can also be invoked directly for single-workflow tasks.
+
+**What it does:**
+
+1. **Reads documentation** — trigger-specific guide, Codika nodes guide, and any relevant integration guides.
+2. **Researches similar workflows** — searches existing use cases for reference implementations.
+3. **Builds the workflow JSON** — creates a complete, valid n8n workflow with correct node types, connections, placeholder usage, credential configuration, and node positioning.
+4. **Validates before output** — runs through a 20+ item checklist covering trigger types, Codika patterns, placeholder suffixes, connection integrity, and more.
+
+**Mandatory patterns it enforces:**
+
+For parent workflows:
+```
+Trigger → Codika Init → Business Logic → IF (success?)
+                                           ├─ Yes → Codika Submit Result
+                                           └─ No  → Codika Report Error
+```
+
+For sub-workflows:
+```
+Execute Workflow Trigger → Business Logic → Return Output
+```
+
+**Key rules:**
+- Credentials go on the **model node** (e.g., `lmChatAnthropic`), never on `chainLlm` or `agent`
+- Placeholder suffixes are the type name reversed: `FLEXCRED` → `_DERCXELF`
+- Every IF node must have both branches connected
+- Sub-workflows must have at least 1 input parameter
+- No hardcoded IDs or secrets — everything uses placeholders
+- Node positioning follows standard spacing (200px horizontal, 150px vertical)
+
+## use-case-tester
+
+Tests and debugs use cases through automated deploy-trigger-inspect-fix loops.
+
+**What it does:**
+
+1. **Verifies prerequisites** — checks the use case folder exists and passes validation.
+2. **Deploys** — uses `codika deploy use-case` to push to the platform.
+3. **Triggers each workflow** — constructs test payloads from `inputSchema` definitions and fires HTTP-triggered workflows. For schedule-triggered workflows, checks for manual trigger URLs.
+4. **Inspects results** — on success, verifies output matches `outputSchema`. On failure, fetches the node-by-node execution trace with `codika get execution --deep --slim`.
+5. **Diagnoses failures** — maps error patterns to root causes using a built-in diagnostic table covering 10+ common failure types.
+6. **Fixes issues** — edits workflow JSON or config.ts directly. For complex rewrites, delegates to `n8n-workflow-builder`.
+7. **Re-validates and redeploys** — runs verify before each redeployment.
+8. **Repeats** — up to 5 iterations. If still failing, escalates with a clear diagnosis of what's wrong and what was tried.
+
+**Testing order:**
+1. Sub-workflows first (no external dependencies)
+2. Independent parent workflows
+3. Workflow chains (parent → sub-workflow)
+4. Edge cases (empty inputs, missing optional fields, error paths)
+
+**Common failures it diagnoses:**
+
+| Error pattern | Root cause |
+|--------------|-----------|
+| credential not found | Wrong placeholder suffix or missing `integrationUid` in config.ts |
+| Cannot read properties | Incorrect expression referencing a previous node |
+| Codika Init failed | Missing `MEMSECRT` placeholder or wrong webhook path |
+| resultData key mismatch | Output doesn't match `outputSchema` definition |
+| Workflow not found | Broken `SUBWKFL` placeholder reference |
+| AI returns unstructured | Should use `chainLlm` instead of `agent` for structured output |
+
+<Info>
+After 5 failed iterations, the tester doesn't silently give up. It presents a clear diagnosis of what's still failing, what it tried, and what the user should investigate (e.g., missing credentials, external API issues).
+</Info>
+
+## How agents delegate to each other
+
+```
+use-case-builder
+  └─ calls n8n-workflow-builder (for each workflow in the new use case)
+
+use-case-modifier
+  └─ calls n8n-workflow-builder (for any new workflows added during modification)
+
+use-case-tester
+  └─ calls n8n-workflow-builder (for complex workflow rewrites during fix cycles)
+
+n8n-workflow-builder
+  └─ standalone (does not delegate)
+```
+
+All agents use CLI skills from the `codika` plugin for platform operations:
+- **use-case-builder** → `codika:init-use-case`, `codika:verify-use-case`
+- **use-case-modifier** → `codika:verify-use-case`
+- **use-case-tester** → `codika:deploy-use-case`, `codika:trigger-workflow`, `codika:list-executions`, `codika:get-execution`, `codika:verify-use-case`

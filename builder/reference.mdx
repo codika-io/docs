@@ -1,0 +1,139 @@
+---
+title: "Builder Reference"
+description: "Plugin structure, bundled documentation catalog, agent invocation details, and troubleshooting"
+---
+
+## Plugin structure
+
+The Builder System is distributed as two marketplace plugins:
+
+### use-case-builder plugin
+
+```
+use-case-builder/
+├── plugin.json
+├── agents/
+│   ├── use-case-builder.md      # Architect — creates new use cases
+│   ├── use-case-modifier.md     # Surgeon — modifies existing use cases
+│   ├── n8n-workflow-builder.md  # Craftsperson — builds workflow JSON
+│   └── use-case-tester.md       # QA — deploy-trigger-fix loops
+└── skills/
+    └── discover-codika-guides/
+        ├── discover-codika-guides.md   # Skill definition
+        └── references/                 # Bundled platform documentation
+```
+
+### codika plugin (dependency)
+
+```
+codika/
+├── plugin.json
+└── skills/
+    ├── setup-codika/             # Install and authenticate CLI
+    ├── create-project/           # Create platform projects
+    ├── init-use-case/            # Scaffold new use cases
+    ├── verify-use-case/          # Validate use cases
+    ├── deploy-use-case/          # Deploy to platform
+    ├── deploy-data-ingestion/    # Deploy RAG pipelines
+    ├── deploy-documents/         # Upload documentation
+    ├── publish-use-case/         # Promote to production
+    ├── redeploy-use-case/        # Update parameters
+    ├── trigger-workflow/         # Execute workflows
+    ├── fetch-use-case/           # Download deployed use cases
+    ├── get-execution/            # Debug execution traces
+    ├── list-executions/          # List recent executions
+    └── manage-integrations/      # Configure credentials
+```
+
+## Bundled documentation catalog
+
+The `discover-codika-guides` skill ships with the complete platform documentation. Agents read these guides at runtime to ensure they follow current patterns.
+
+### Core guides
+
+| Guide | What it covers |
+|-------|---------------|
+| `use-case-guide.md` | Overall architecture, mandatory patterns, placeholder system, trigger types, config structure |
+| `specific/config-patterns.md` | config.ts structure, exports, workflow array, integration UIDs, display metadata |
+| `specific/codika-nodes.md` | Codika Init, Submit Result, Report Error, Upload File node configuration |
+
+### Trigger-specific guides
+
+| Guide | What it covers |
+|-------|---------------|
+| `specific/http-triggers.md` | HTTP webhook and form trigger patterns |
+| `specific/schedule-triggers.md` | Cron/scheduled trigger patterns |
+| `specific/third-party-triggers.md` | Gmail, Slack, WhatsApp, Pipedrive, Calendly service event triggers |
+| `specific/sub-workflows.md` | Reusable workflow logic, Execute Workflow pattern, SUBWKFL placeholders |
+
+### Specialized guides
+
+| Guide | What it covers |
+|-------|---------------|
+| `specific/ai-nodes.md` | chainLlm vs agent nodes, LangChain wiring, model configuration, $fromAI() |
+| `specific/placeholder-patterns.md` | Complete reference for all 11 placeholder types with suffix patterns |
+| `specific/process-input-schema.md` | Deployment parameters (INSTPARM), field types, context-aware serialization |
+| `specific/data-ingestion.md` | RAG/document embedding pipeline configuration |
+| `specific/agent-skills.md` | Creating SKILL.md files for agent discoverability |
+
+### Integration guides (19)
+
+| Category | Integrations |
+|----------|-------------|
+| **AI providers** (FLEXCRED) | Anthropic, OpenAI, Tavily, xAI, OpenRouter, Mistral, Cohere, DeepSeek, Fal AI |
+| **Organization** (ORGCRED) | WhatsApp, Slack, Twilio, Folk CRM, Pipedrive |
+| **User** (USERCRED) | Google (Gmail, Sheets, Drive, Calendar), Microsoft (Teams, Outlook, OneDrive), Calendly, Notion |
+| **Instance** (INSTCRED) | Supabase |
+
+### Additional resources
+
+| Resource | What it covers |
+|----------|---------------|
+| `plan-examples/` | Example build plans showing how the builder agent designs architecture |
+| `post-creation/common-errors.md` | Common issues after creating workflows and how to fix them |
+| `use-case/whatsapp-bots.md` | WhatsApp bot-specific patterns and conventions |
+
+## Agent-to-skill dependency map
+
+Each agent uses a specific set of skills from the `codika` plugin:
+
+| Agent | Skills used |
+|-------|-----------|
+| **use-case-builder** | `init-use-case`, `verify-use-case` |
+| **use-case-modifier** | `verify-use-case` |
+| **n8n-workflow-builder** | _(none — outputs JSON directly)_ |
+| **use-case-tester** | `deploy-use-case`, `trigger-workflow`, `list-executions`, `get-execution`, `verify-use-case` |
+
+All agents use the `discover-codika-guides` skill from the `use-case-builder` plugin.
+
+## Troubleshooting
+
+### Authentication errors
+
+If agents fail with "API key is required" or authentication errors, run:
+```bash
+codika login
+codika whoami  # verify you're authenticated
+```
+
+### Missing codika plugin
+
+The builder agents depend on the `codika` plugin for CLI operations. If deployment or verification skills fail, ensure both plugins are installed.
+
+### Guide not found
+
+If an agent can't find documentation, verify the `discover-codika-guides` skill is available. The skill locates guides using glob patterns against its bundled `references/` directory.
+
+### Validation failures after building
+
+If `codika verify use-case` fails after the builder creates a use case:
+1. Read the specific error messages — they usually point to the exact issue
+2. Use `codika verify use-case <path> --fix` to auto-fix common violations
+3. For persistent issues, invoke `use-case-modifier` with the error details
+
+### Tester stuck in loop
+
+If `use-case-tester` hits its 5-iteration limit:
+- Check the escalation report for what was tried
+- Common root causes: missing OAuth credentials on the platform, external API rate limits, or integration-specific configuration issues that the agent can't resolve
+- Verify integrations are configured: `codika integration list`

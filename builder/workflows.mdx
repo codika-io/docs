@@ -1,0 +1,109 @@
+---
+title: "Usage Patterns"
+description: "Common workflows for using the Builder System — from creating use cases to testing and iterating"
+---
+
+## Creating a use case from scratch
+
+The most common workflow: describe a business goal, get a production-ready use case.
+
+**Your prompt:**
+```
+I need an automation that monitors our Gmail inbox for emails from clients,
+extracts key information using AI, and logs everything in a Google Sheet.
+If the email contains an attachment, save it to Google Drive.
+```
+
+**What happens:**
+1. The `use-case-builder` agent reads the platform documentation
+2. It designs an architecture with the right triggers, workflows, and integrations
+3. It presents a plan: "I'll create 2 workflows — a Gmail service-event trigger for new emails, and a sub-workflow for AI extraction and file handling"
+4. After your approval, it creates the folder structure and delegates each workflow to `n8n-workflow-builder`
+5. It validates everything and shows you the complete use case
+
+**Tips for good prompts:**
+- Describe the **business goal**, not the implementation ("monitor Gmail" not "use a Gmail trigger node")
+- Mention the integrations you need (Gmail, Sheets, Drive, Slack, etc.)
+- Specify what should happen on success and on failure
+- Include any user-configurable settings ("the user should be able to choose which email label to monitor")
+
+## Modifying an existing use case
+
+When you need to add features, change triggers, or refactor.
+
+**Your prompt:**
+```
+Add a Slack notification to the invoice-processor use case.
+When an invoice is successfully processed, post a summary to a Slack channel.
+```
+
+**What happens:**
+1. The `use-case-modifier` reads the entire existing use case
+2. It identifies that a new workflow is needed (Slack notification) and that the main workflow needs to call it
+3. It presents a change plan: "I'll add a new sub-workflow for Slack posting, update the main workflow's success branch to call it, and add the Slack ORGCRED integration to config.ts"
+4. After approval, it makes targeted edits and delegates the new workflow to `n8n-workflow-builder`
+5. It validates to ensure nothing was broken
+
+## Building a single workflow
+
+For when you need one workflow, not a full use case.
+
+**Your prompt:**
+```
+Build an HTTP-triggered workflow that accepts a company name,
+searches for it using Tavily, and returns a structured summary.
+```
+
+**What happens:**
+1. The `n8n-workflow-builder` reads the HTTP trigger guide and integration guides
+2. It creates a complete workflow JSON with the correct trigger, Codika Init, business logic, and Submit Result/Report Error pattern
+3. It handles all placeholder usage, credential configuration, and node positioning
+
+## Testing and debugging
+
+After building (or when something breaks), use the tester.
+
+**Your prompt:**
+```
+Test the invoice-processor use case and fix any issues.
+```
+
+**What happens:**
+1. The `use-case-tester` verifies and deploys the use case
+2. It triggers each HTTP workflow with test data constructed from `inputSchema`
+3. On success, it verifies outputs match `outputSchema`
+4. On failure, it fetches the execution trace, diagnoses the error, fixes the workflow, and redeploys
+5. It repeats up to 5 times until all workflows pass
+
+## The full build-test cycle
+
+For maximum confidence, chain the agents together:
+
+```
+Step 1: use-case-builder creates the use case
+Step 2: use-case-tester deploys and tests it
+Step 3: use-case-modifier fixes any remaining issues
+Step 4: use-case-tester re-tests
+```
+
+You can do this in a single conversation:
+
+```
+"Create a use case that [business goal], then test it end-to-end and fix any issues."
+```
+
+## Writing effective prompts
+
+### Do
+
+- **Be specific about integrations:** "Use Gmail for email, Google Sheets for logging, and Slack for notifications"
+- **Describe the data flow:** "Extract the sender, subject, and key dates from each email"
+- **Mention edge cases:** "If the AI can't parse the email, log it as unprocessed and skip"
+- **Specify user settings:** "The user should configure their Slack channel and email filter criteria at install time"
+
+### Don't
+
+- **Don't specify implementation details:** "Use a FLEXCRED_ANTHROPIC placeholder" — the agent knows this
+- **Don't prescribe trigger types:** "Make it an HTTP POST webhook" — let the agent decide the best trigger
+- **Don't worry about Codika patterns:** Init nodes, Submit Result, Report Error — the agent handles these automatically
+- **Don't specify node positioning or IDs:** The agent follows standard conventions

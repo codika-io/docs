@@ -11,6 +11,10 @@ This guide walks you through adding agent skills to an existing use case. By the
 **New use cases get skills automatically.** When you run `codika init`, the scaffolded use case includes example skills for both the HTTP workflow and the scheduled workflow. This guide is for adding skills to existing use cases or customizing the defaults.
 </Info>
 
+<Tip>
+**Prefer automation?** The [Builder System](/builder/overview) agents create use cases with correctly configured agent skills out of the box. Use this guide when you need to add or customize skills manually.
+</Tip>
+
 ## Step 1: Identify triggerable workflows
 
 Open your `config.ts` and list all workflows with `http` or `schedule` trigger types. Skip sub-workflows, data ingestion, and service event workflows.

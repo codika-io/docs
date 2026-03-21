@@ -24,8 +24,10 @@ View at `http://localhost:3000`.
 
 - `index.mdx` — Platform overview
 - `quickstart.mdx` — Getting started guide
+- `why-codika/` — Value proposition (why Codika, comparison to n8n, agent integration)
 - `concepts/` — Core concepts (use cases, processes, workflows, placeholders, triggers, credentials, schemas)
-- `operations/` — Operations reference (all codika commands and platform operations)
+- `operations/` — CLI reference (all codika commands and platform operations)
+- `builder/` — Builder System (AI agents for automated use case creation)
 - `guides/` — Step-by-step tutorials
 - `examples/` — Real-world use case examples
 - `dashboard/` — Dashboard integration guides

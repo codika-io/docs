@@ -1,0 +1,350 @@
+---
+title: "Codika vs Alternatives"
+description: "How Codika compares to no-code tools like Zapier and Make, and what it adds on top of raw n8n — the execution engine it uses under the hood"
+---
+
+## Why not Zapier, Make, or other no-code tools?
+
+No-code workflow tools were built to solve a real problem: business users couldn't write code, so these platforms created visual interfaces to let them build automations by dragging and dropping blocks.
+
+That made sense in a world where code was expensive and hard to produce.
+
+That world is over.
+
+### The premise of no-code is obsolete
+
+No-code tools exist because humans struggle with code. They simplify workflows into visual canvases, abstract away API calls, and hide the complexity behind friendly UIs. Every design decision optimizes for **human readability and human interaction**.
+
+But AI agents don't struggle with code. They write it faster than any human, they don't make typos, and they don't need visual canvases to understand what a workflow does. An agent reading a JSON workflow file understands it instantly — the visual editor adds nothing.
+
+When agents are better coders than the best developers in the world, **simplifying code for humans is solving the wrong problem**.
+
+The future is a world where agents execute and humans orchestrate. Humans define what they want. Agents build it, deploy it, test it, fix it. The role of infrastructure is not to simplify things for humans — it's to give agents the guardrails, tooling, and deployment pipeline they need to iterate fast and reliably.
+
+### What no-code tools get wrong for an agent-first world
+
+| No-code assumption | Why it breaks with agents |
+|---|---|
+| **Visual editors help users build** | Agents don't use visual editors — they generate JSON, code, and API calls directly |
+| **Simplify integrations into drag-and-drop** | Agents can write any API call natively — simplification adds constraint without benefit |
+| **Pre-built connectors for common tools** | Agents can use any API with any authentication — they don't need pre-built wrappers |
+| **Human-readable execution logs** | Agents need structured, machine-readable execution data — not screenshots of colored blocks |
+| **Manual trigger and test buttons** | Agents need scriptable CLI commands: `codika trigger --poll`, not a "Run" button |
+| **Per-user pricing based on "tasks"** | Agents execute thousands of operations — task-based pricing becomes prohibitively expensive |
+| **Walled garden of supported integrations** | Agents can call any HTTP endpoint — they're not limited to a catalog |
+
+### What Codika gets right
+
+Codika doesn't simplify code. It provides **infrastructure for code**:
+
+- **Full n8n workflow JSON** — no abstraction layer, no visual-only editing. Agents read and write workflows directly.
+- **Programmatic CLI** — every operation is a scriptable command. Deploy, trigger, debug, manage integrations — all from the terminal or an agent's tool loop.
+- **30+ validation rules** — instead of hoping a visual editor prevents mistakes, Codika runs structural and semantic checks before deployment.
+- **Agent skills** — machine-readable documentation that describes what each endpoint does, what input it expects, what output it returns. No visual UI needed.
+- **The Builder System** — four autonomous agents that create, modify, test, and fix use cases. This isn't possible on platforms designed for human visual interaction.
+- **Self-healing** — when workflows fail, agents diagnose and fix them using business context. This requires programmatic access to execution traces, not a visual debugger.
+
+No-code tools made automation accessible to humans who couldn't code. Codika makes automation infrastructure accessible to agents who can code better than anyone — and to the humans who orchestrate them.
+
+### The real comparison
+
+| | Zapier / Make | Codika |
+|---|---|---|
+| **Designed for** | Humans who can't code | Agents who code better than humans + humans who orchestrate them |
+| **Workflow format** | Visual canvas (proprietary) | n8n workflow JSON (open, readable, writable) |
+| **Building interface** | Drag-and-drop editor | CLI + agents that generate code |
+| **Integration model** | Pre-built connectors (walled garden) | Any API via n8n nodes + custom integrations |
+| **Testing** | Manual "Run" button | `codika trigger --poll` (scriptable, automatable) |
+| **Debugging** | Visual execution viewer | `codika get execution --deep --slim` (structured, traversable) |
+| **Multi-tenancy** | Per-account isolation only | Org → Project → Instance hierarchy with 11 credential scopes |
+| **Versioning** | Limited or none | Semantic versioning with deployment history |
+| **Agent integration** | API access (generic) | Agent skills, Builder System, self-healing |
+| **Self-healing** | None | Agents fix failures using business context (PRD/BRD) |
+| **Pricing model** | Per-task (expensive at scale) | Credit-based (designed for high-volume agent usage) |
+| **Iteration speed** | Human-limited (click, configure, test) | Agent-speed (describe → build → deploy → test → fix → repeat) |
+
+---
+
+## We use n8n — we don't replace it
+
+Codika deploys workflows **to** n8n. n8n executes them. We handle everything around that: deployment, credential management, multi-tenancy, versioning, validation, monitoring, and agent integration.
+
+Think of it like Kubernetes and Docker. Docker runs containers. Kubernetes orchestrates them at scale — scheduling, networking, scaling, health checks, rolling updates. You wouldn't run Docker in production without an orchestration layer. The same principle applies here: you wouldn't run n8n workflows in production for multiple users without an infrastructure layer.
+
+n8n is the execution engine. Codika is the production infrastructure.
+
+## The full comparison
+
+| Capability | Raw n8n | Codika + n8n |
+|---|---|---|
+| **Workflow execution** | Direct | Via n8n (unchanged) |
+| **Use case packaging** | Individual workflow files | `config.ts` + `workflows/` as a deployable unit — multiple workflows work together |
+| **Multi-workflow coordination** | Manual sub-workflow management | Built-in: use cases are ensembles with automatic dependency ordering |
+| **Multi-tenancy** | Single tenant (DIY RBAC) | Org → Project → Instance hierarchy with per-user isolation |
+| **Credential isolation** | Shared credentials per instance | 11 scopes (FLEXCRED, USERCRED, ORGCRED, INSTCRED, etc.) |
+| **OAuth management** | Per-instance, manual setup | Auto-sync from Codika dashboard to n8n, 30+ integration handlers |
+| **Secret encryption** | n8n's built-in encryption | Hybrid RSA-OAEP + AES-GCM, private keys in Secret Manager |
+| **Deployment** | Export JSON, POST to n8n API | `codika deploy` — validates, encodes, versions, deploys, archives |
+| **Version management** | None | Semantic versioning (major.minor.patch) with deployment history |
+| **Dev/Prod environments** | Separate n8n instances | Built-in toggle per process instance, same n8n backend |
+| **Pre-deployment validation** | None (runtime errors) | 30+ rules across 4 layers, auto-fix for 8+ issues |
+| **Execution tracking** | n8n execution logs | Structured errors, UUID tracking, per-org error workflows, LLM cost calc |
+| **Agent integration** | MCP server (raw access) | Agent skills, API keys, trigger patterns, Builder System |
+| **Self-healing** | None | Agents diagnose and fix failures using PRD/BRD business context |
+| **Billing** | DIY | Credit-based with 4 plan types (Free → Enterprise) |
+| **Publishing / Marketplace** | None | Share automations across organizations with isolation |
+| **Data ingestion (RAG)** | Manual implementation | Built-in Pinecone integration, per-instance knowledge base |
+| **Scaffolding** | Empty workflow editor | `codika init` generates templates with mandatory patterns |
+| **Project stages** | None | AI-driven pipeline: requirements → architecture → implementation → docs |
+
+## Deep dive: use cases as workflow ensembles
+
+In raw n8n, you manage individual workflows. Each workflow is independent — it has its own trigger, its own credentials, its own configuration. If you have a business process that spans multiple workflows, you manually keep them in sync.
+
+In Codika, the deployment unit is the **use case** — a set of workflows that work together.
+
+```
+my-use-case/
+├── config.ts                  # Orchestration: triggers, integrations, schemas, parameters
+├── version.json               # Semantic version
+├── workflows/
+│   ├── main-workflow.json     # Gmail trigger → extract data → validate
+│   ├── extract-data.json      # Sub-workflow: PDF parsing with Claude
+│   └── validate-crm.json      # Sub-workflow: CRM lookup and validation
+└── skills/
+    └── process-invoice/
+        └── SKILL.md           # Agent-readable endpoint documentation
+```
+
+The `config.ts` file defines the orchestration:
+- Which workflows belong to this use case
+- Which triggers activate which workflows (HTTP, schedule, service event)
+- Which integrations are required (and which credential scope each uses)
+- What input/output schemas look like
+- What parameters users configure at installation time
+
+When you deploy, Codika:
+1. Resolves sub-workflow dependencies (deploys `extract-data` and `validate-crm` before `main-workflow`)
+2. Replaces all placeholders with real values per user (credentials, parameters, workflow IDs)
+3. Creates versioned deployment records
+4. Archives the configuration for audit and rollback
+
+This ensemble model is what makes agent-driven development possible. Agents think in terms of "what does this business process need?" not "what should this one workflow do?"
+
+## Deep dive: credential isolation
+
+Raw n8n runs a single credential store. Everyone sharing the instance sees every credential. There's no concept of "this Gmail connection belongs to User A" or "this Slack token belongs to Organization B."
+
+Codika introduces **11 different credential scopes**, each with specific isolation guarantees:
+
+### AI providers: FLEXCRED
+
+```
+{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}
+```
+
+AI provider credentials with automatic fallback. If the organization has configured their own Anthropic API key, it's used. If not, Codika's default key is used. This means:
+- New users can start building AI workflows immediately (using Codika's key)
+- Organizations can bring their own keys for cost control and rate limit management
+- The switch is transparent — no workflow changes needed
+
+### Per-user OAuth: USERCRED
+
+```
+{{USERCRED_GMAIL_ID_DERCRESU}}
+```
+
+Each user connects their own OAuth integrations (Gmail, Google Sheets, Google Drive, Microsoft Teams, Outlook). When a workflow runs for User A, it uses User A's Gmail token. User B's token is completely separate.
+
+Codika auto-syncs OAuth tokens from the dashboard to n8n credentials. When a user connects Gmail, the platform:
+1. Completes the OAuth flow
+2. Stores the token in Firestore (encrypted)
+3. Creates a corresponding n8n credential
+4. Maps the placeholder to the n8n credential ID
+
+Disconnecting removes everything — Firestore record, n8n credential, placeholder mapping.
+
+### Organization-wide: ORGCRED
+
+```
+{{ORGCRED_SLACK_ID_DERCGRO}}
+```
+
+Shared across all members of an organization. Typical for tools everyone uses: Slack workspace, CRM, project management. One admin connects it, everyone benefits.
+
+### Per-installation: INSTCRED
+
+```
+{{INSTCRED_SUPABASE_ID_DERCTSNI}}
+```
+
+Each installation of a use case can have different credentials. Deploy the same use case to two organizations — one points to their Supabase instance, the other to theirs. The workflow is identical; the credentials are isolated.
+
+### Deployment parameters: INSTPARM
+
+```
+{{INSTPARM_COMPANY_NAME_MRAPTSNI}}
+```
+
+User-provided values configured at installation time. Not credentials, but configuration: company name, Slack channel, email filter criteria, report frequency. Validated against a JSON schema defined in `config.ts`.
+
+### Placeholder replacement timing
+
+All placeholders are replaced **at deployment time**, not runtime. This means:
+- Faster workflow execution (no lookup delays)
+- No credential leakage in execution logs
+- Deterministic behavior — what you deployed is what runs
+
+Credential naming uses SHA-256 hashes to ensure uniqueness and avoid collisions across users and organizations.
+
+## Deep dive: validation before deployment
+
+In raw n8n, you discover errors when workflows fail in production. A misconfigured credential, a missing node connection, a wrong placeholder suffix — you find out at runtime.
+
+Codika runs **30+ validation rules** before any HTTP request is made. Four layers, catching progressively deeper issues:
+
+### Layer 1: Flowlint graph analysis
+
+Structural validation of the workflow graph:
+- Every parent workflow must have a **Codika Init** node after the trigger
+- Every terminal path must end with **Submit Result** (success) or **Report Error** (failure)
+- Sub-workflows must not have Codika Init/Submit/Report nodes
+- Sub-workflows must declare at least one input parameter
+
+### Layer 2: Codika pattern rules
+
+Platform-specific patterns:
+- HTTP and schedule triggers must have matching webhook paths
+- Sub-workflow minimum parameter requirements
+
+### Layer 3: Workflow content scripts (13 checks)
+
+Content-level validation:
+- **Placeholder syntax** — all 11 types must use correct reversed suffixes (FLEXCRED → \_DERCXELF)
+- **Credential placeholders** — no hardcoded values
+- **Retry configuration** — API/HTTP nodes should have retry with backoff
+- **Instance parameter quoting** — correct string formatting
+- **LLM model IDs** — valid Claude/GPT model references
+- **Webhook IDs** — correct format
+- **Node connections** — no orphaned nodes, all IF branches connected
+- **AI credentials** — on the model node, not on chainLlm/agent
+- **Sub-workflow wait** — calls must use "Wait for completion"
+- **Database nodes** — must have "Always output data" enabled
+
+### Layer 4: Use-case folder scripts (12 checks)
+
+Folder-level consistency:
+- **Config exports** — `WORKFLOW_FILES` and `getConfiguration()` must exist
+- **Workflow imports** — all workflows in config must match actual files
+- **Sub-workflow references** — `SUBWKFL` placeholders must reference existing template IDs
+- **Integration inheritance** — workflows must declare all integrations they use (including sub-workflow dependencies)
+- **Trigger consistency** — types must be valid and consistent
+- **Schema validation** — input/output schemas must use valid field types
+- **Skill consistency** — skill files must match declared workflows
+- **Custom integration schemas** — `cstm_*` integrations must have valid schemas
+
+### Auto-fix
+
+Eight-plus common issues are automatically fixable:
+
+```bash
+codika verify use-case ./my-use-case --fix
+```
+
+Fixes include: placeholder syntax correction, retry configuration, JSON formatting, instance parameter quoting, integration inheritance propagation.
+
+For CI/CD pipelines: `codika verify use-case ./my-use-case --strict` treats warnings as errors.
+
+## Deep dive: deployment pipeline
+
+Raw n8n deployment: export a JSON file, POST it to the n8n API, manually map credentials, hope it works.
+
+Codika deployment with `codika deploy use-case ./my-use-case --patch`:
+
+```
+1. Read config.ts → validate exports
+2. Load all workflow JSON files → base64 encode
+3. Collect metadata documents (README, PRD)
+4. Discover and read agent skill files
+5. Run all 30+ validation rules
+6. Bump semantic version (patch: 1.0.0 → 1.0.1)
+7. POST to Codika platform API
+8. Platform creates:
+   - Process definition (published entity)
+   - Deployment configuration snapshot
+   - Process instance (per-user installation)
+9. Platform deploys to n8n:
+   - Resolve sub-workflow dependencies (deploy children first)
+   - Replace all placeholders with real values per user
+   - Create/update workflows in n8n
+   - Activate workflows
+10. Archive deployment locally:
+    - deployment-info.json (metadata, n8n IDs)
+    - config-snapshot.json (full configuration)
+    - workflows/*.json (copies of deployed files)
+11. Update project.json (instance IDs, version)
+```
+
+Every deployment is archived. Rollback means redeploying a previous version — the local archive has everything needed.
+
+## Deep dive: execution tracking
+
+Raw n8n gives you execution logs in the n8n UI. Codika adds structured tracking:
+
+**Per-execution records:**
+- Time-sortable UUID v7 identifiers
+- Execution status: pending → running → success/failed
+- Structured error details: error type, failed node, last successful node, HTTP status, stack trace
+- Error classification: `node_failure`, `timeout`, `validation_error`, `external_api_error`, `unknown`
+
+**Execution metadata injected into workflows:**
+- Execution ID + secret (for result validation)
+- Callback URL (workflows report results back to the platform)
+- Full context: workflowId, processId, processInstanceId, userId, organizationId
+
+**Per-org error workflows:**
+- Every organization gets a dedicated error workflow in n8n
+- All execution failures are routed to this workflow
+- Enables org-specific error handling, alerting, and escalation
+
+**CLI debugging:**
+```bash
+# List recent executions
+codika list executions <instanceId> --failed-only --limit 10
+
+# Deep inspection with sub-workflow traversal
+codika get execution <executionId> --deep --slim
+```
+
+The `--deep` flag recursively fetches sub-workflow executions, giving you the full execution tree. The `--slim` flag strips noise for readability. No need to log into the n8n UI.
+
+## The analogy
+
+| Raw n8n | Codika + n8n |
+|---------|-------------|
+| Docker | Kubernetes |
+| A web server | A hosting platform |
+| A database engine | A managed database service |
+| Writing assembly | Writing in a high-level language with a compiler |
+
+The pattern is the same: take a powerful low-level tool and add the infrastructure that makes it production-ready at scale. n8n runs workflows. Codika makes them deployable, manageable, and maintainable.
+
+## When to use raw n8n vs Codika
+
+**Raw n8n is great when:**
+- You're the only user and you manage your own instance
+- You're prototyping a single workflow
+- You want full control over the n8n instance
+- You don't need multi-tenancy, versioning, or agent integration
+
+**Codika adds value when:**
+- Multiple users or organizations need the same automation with isolated credentials
+- You want agents to build, deploy, and maintain workflows
+- You need version management, dev/prod environments, and deployment history
+- You want pre-deployment validation (30+ rules) instead of runtime errors
+- You need structured execution tracking and error diagnosis
+- You want to publish and share automations across organizations
+- You want self-healing: agents that fix failed workflows using business context
+- You need billing, credit tracking, and usage analytics
+
+They're not competing tools. n8n is the engine. Codika is the infrastructure that makes it production-ready.
