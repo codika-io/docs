@@ -25,10 +25,10 @@ View at `http://localhost:3000`.
 - `index.mdx` — Platform overview
 - `quickstart.mdx` — Getting started guide
 - `concepts/` — Core concepts (use cases, processes, workflows, placeholders, triggers, credentials, schemas)
-- `cli/` — CLI reference (all codika commands)
+- `operations/` — Operations reference (all codika commands and platform operations)
 - `guides/` — Step-by-step tutorials
 - `examples/` — Real-world use case examples
-- `skills/` — Agent skill reference
+- `dashboard/` — Dashboard integration guides
 - `docs.json` — Mintlify configuration
 
 ## Checking links

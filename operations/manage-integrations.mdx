@@ -1,9 +1,19 @@
 ---
-title: "integration"
-description: "Manage integrations (API keys, credentials) for organizations and process instances"
+title: "Manage Integrations"
+description: "Configure, list, and delete integrations (API keys, credentials) for organizations and process instances via the CLI"
 ---
 
-The `integration` command manages integrations from the CLI. It supports creating, listing, and deleting integrations for organizations and process instances.
+## When to use
+
+- After deploying a use case that requires integrations (OpenAI, Supabase, etc.)
+- When setting up a new organization with required API keys
+- When rotating or updating integration credentials
+- When checking which integrations are connected
+
+## Prerequisites
+
+- API key with `integrations:manage` scope
+- For process instance integrations: `project.json` with `devProcessInstanceId`
 
 ## Subcommands
 
@@ -48,7 +58,7 @@ codika integration set <integrationId> [options]
 | `--api-key <key>` | Override API key | — |
 | `--json` | Output as JSON | `false` |
 
-### Secret Input Priority
+### Secret input priority
 
 Secrets are merged with this priority (highest wins):
 1. `--secret KEY=VALUE` flags
@@ -78,7 +88,7 @@ codika integration set openai \
   --force
 ```
 
-### OAuth Integrations
+### OAuth integrations
 
 OAuth-based integrations (Gmail, Teams, Slack, etc.) cannot be configured from the CLI. The command will display the dashboard URL instead:
 
@@ -170,6 +180,36 @@ codika integration delete supabase \
 
 ---
 
+## Common recipes
+
+### Set up AI provider for an organization
+
+```bash
+codika integration set openai \
+  --secrets '{"OPENAI_API_KEY":"sk-proj-xxx"}' \
+  --json
+```
+
+### Set up Supabase for a process instance
+
+```bash
+codika integration set supabase \
+  --secrets '{"SUPABASE_HOST":"https://abc.supabase.co","SUPABASE_SERVICE_ROLE_KEY":"eyJ..."}' \
+  --path ./my-use-case \
+  --json
+```
+
+### Full deployment + integration flow
+
+```bash
+codika deploy use-case ./my-use-case --json
+codika integration set openai --secrets '{"OPENAI_API_KEY":"sk-xxx"}' --json
+codika integration set supabase \
+  --secrets '{"SUPABASE_HOST":"...","SUPABASE_SERVICE_ROLE_KEY":"..."}' \
+  --path ./my-use-case --json
+codika redeploy --path ./my-use-case --force --json
+```
+
 ## Authentication
 
 All integration commands require an API key with the `integrations:manage` scope. The standard authentication chain applies:
@@ -178,7 +218,7 @@ All integration commands require an API key with the `integrations:manage` scope
 2. `CODIKA_API_KEY` environment variable
 3. Active profile from `codika login`
 
-## Exit Codes
+## Exit codes
 
 | Code | Meaning |
 |------|---------|

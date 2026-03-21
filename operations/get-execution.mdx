@@ -1,6 +1,6 @@
 ---
-title: "get-execution"
-description: "Skill for fetching full n8n workflow execution details for debugging, with recursive sub-workflow support"
+title: "Get Execution"
+description: "Fetch full n8n workflow execution details for debugging, with recursive sub-workflow traversal and slim output"
 ---
 
 ## When to use
@@ -41,17 +41,21 @@ codika get execution <executionId> [options]
 
 | Argument | Description |
 |----------|-------------|
-| `<executionId>` | Codika execution ID from trigger response |
+| `<executionId>` | Codika execution ID (from trigger response) |
 
 ## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--process-instance-id <id>` | Explicit process instance ID | Auto from project.json |
-| `--path <path>` | Path to folder with project.json | Current directory |
+| `--process-instance-id <id>` | Explicit process instance ID | Auto-resolved from project.json |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
+| `--path <path>` | Path to use case folder with `project.json` | Current directory |
 | `--deep` | Recursively fetch sub-workflow executions | Off |
-| `--slim` | Strip noise (pairedItem, workflowData) | Off |
+| `--slim` | Strip noise (`pairedItem`, `workflowData`) for readability | Off |
 | `-o, --output <path>` | Save to file instead of stdout | stdout |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
 
 ## Recommended flags
@@ -65,30 +69,52 @@ codika get execution <id> --deep --slim
 - `--deep` gives you the complete execution tree including sub-workflows
 - `--slim` removes noisy metadata for cleaner, more readable output
 
+## Process instance ID resolution
+
+1. `--process-instance-id` flag
+2. `devProcessInstanceId` in `--project-file` (if provided)
+3. `devProcessInstanceId` in `project.json` at `--path`
+4. `devProcessInstanceId` in `project.json` in current directory
+
+## Deep mode
+
+When `--deep` is used, the CLI recursively fetches sub-workflow executions and attaches them as `_subExecutions` on the parent node that triggered them. This gives you the complete execution tree.
+
+### How it works
+
+1. Fetches the main execution
+2. Identifies nodes that called sub-workflows (Execute Workflow nodes)
+3. Recursively fetches each sub-workflow execution
+4. Attaches results as `_subExecutions` on the parent node
+
+This builds a complete execution tree for multi-workflow use cases.
+
+## Slim mode
+
+Strips noisy fields for cleaner output:
+- Removes `pairedItem` from all nodes
+- Removes `workflowData` from execution metadata
+
+Best used with `--deep` for debugging: `--deep --slim`
+
 ## Examples
 
 ```bash
-# Basic details
+# Basic execution details
 codika get execution exec_abc123
 
-# Full recursive + clean output
+# Full recursive details, clean output
 codika get execution exec_abc123 --deep --slim
 
 # Save to file for analysis
 codika get execution exec_abc123 --deep --slim -o debug.json
 
+# Explicit process instance ID
+codika get execution exec_abc123 --process-instance-id pi_def456
+
 # From a specific use case directory
 codika get execution exec_abc123 --path ./my-use-case
-
-# Explicit process instance
-codika get execution exec_abc123 --process-instance-id pi_def456
 ```
-
-## Process instance ID resolution
-
-1. `--process-instance-id` flag
-2. `devProcessInstanceId` in project.json at `--path`
-3. `devProcessInstanceId` in project.json in current directory
 
 ## Output
 
@@ -112,16 +138,6 @@ Nodes:     8
   ✓ IF Success             (0.0s)
   ✓ Codika Submit Result   (0.1s)
 ```
-
-## Deep mode details
-
-When `--deep` is enabled, the CLI:
-1. Fetches the main execution
-2. Identifies nodes that called sub-workflows (Execute Workflow nodes)
-3. Recursively fetches each sub-workflow execution
-4. Attaches results as `_subExecutions` on the parent node
-
-This builds a complete execution tree for multi-workflow use cases.
 
 ## Exit codes
 

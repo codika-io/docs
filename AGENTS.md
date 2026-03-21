@@ -23,37 +23,41 @@ For understanding how Codika works. Start here.
 | **Guides** | 6 pages in `guides/` | When building something specific (first use case, AI workflows, sub-workflows, deployment parameters, file uploads, agent skills) |
 | **Examples** | 5 pages in `examples/` | When you need real-world reference code (minimal search tool, email automation, CRM reporter, RAG proposal generator) |
 
-### Tab 2: CLI Reference
+### Tab 2: Operations Reference
 
-For looking up specific CLI commands, flags, and options.
+Complete reference for every platform operation — authentication, scaffolding, validation, deployment, execution, and debugging. Each page covers one capability with all CLI flags, usage guidance, examples, and error handling.
 
-| Page | CLI command | What it covers |
-|------|------------|---------------|
-| `cli/overview.mdx` | — | Installation, command hierarchy, resolution chains, configuration |
-| `cli/login.mdx` | `login`, `whoami`, `use`, `logout`, `config` | Authentication and profile management |
-| `cli/init.mdx` | `init <path>` | Scaffold a new use case folder |
-| `cli/verify.mdx` | `verify use-case`, `verify workflow` | Validation rules, --fix, --strict |
-| `cli/deploy.mdx` | `deploy use-case`, `deploy process-data-ingestion` | Deployment with version management |
-| `cli/trigger.mdx` | `trigger <workflowId>` | Execute workflows, poll for results |
-| `cli/get.mdx` | `get use-case`, `get execution`, `get skills` | Download use cases, debug executions, fetch agent skills |
-| `cli/project.mdx` | `project create` | Create platform projects |
-| `cli/status.mdx` | `status [path]` | Check identity and deployment readiness |
+| Page | CLI command(s) | What it covers |
+|------|---------------|---------------|
+| `operations/overview.mdx` | — | All operations, resolution chains, global options, typical workflow |
+| `operations/authentication.mdx` | `login`, `whoami`, `use`, `logout`, `config` | CLI install, authentication, profile management |
+| `operations/create-project.mdx` | `project create` | Platform project creation with org-aware metadata |
+| `operations/init-use-case.mdx` | `init <path>` | Scaffold use case with template workflows and agent skills |
+| `operations/verify-use-case.mdx` | `verify use-case`, `verify workflow` | Validation rules (4 layers), --fix, --strict, --rules filtering |
+| `operations/deploy-use-case.mdx` | `deploy use-case <path>` | Version management, deployment archival, org-aware key resolution |
+| `operations/deploy-data-ingestion.mdx` | `deploy process-data-ingestion <path>` | RAG/embedding pipeline with independent versioning |
+| `operations/deploy-documents.mdx` | `deploy documents <path>` | Stage markdown documentation upload |
+| `operations/publish-use-case.mdx` | `publish <templateId>` | Promote dev to production, visibility, sharing, dev/prod toggle |
+| `operations/redeploy-use-case.mdx` | `redeploy` | Update parameters without new version, force flag, parameter merge |
+| `operations/trigger-workflow.mdx` | `trigger <workflowId>` | Execute workflows with payload, poll for results, heredoc stdin |
+| `operations/fetch-use-case.mdx` | `get use-case <projectId>` | Download deployed use cases, list mode, version selection |
+| `operations/get-execution.mdx` | `get execution <executionId>` | Debug with --deep (recursive sub-workflows) and --slim (clean output) |
+| `operations/list-executions.mdx` | `list executions <instanceId>` | Recent executions, filter by workflow/status, dev vs prod |
+| `operations/get-skills.mdx` | `get skills [instanceId]` | Download agent skills, Claude Code integration, Claude API usage |
+| `operations/manage-integrations.mdx` | `integration set/list/delete` | Configure API keys/credentials, common recipes, OAuth notice |
+| `operations/status.mdx` | `status [path]` | Identity, context detection, profile match, deployment readiness |
 
-### Tab 3: Skills
+### Tab 3: Dashboard Integration
 
-For AI agents using the Codika plugin. Each skill teaches agents how to use a specific CLI command.
+For building custom frontends on top of deployed workflows.
 
-| Page | Skill name | Maps to |
-|------|-----------|---------|
-| `skills/overview.mdx` | — | What skills are, how to install the plugin |
-| `skills/setup-codika.mdx` | `setup-codika` | CLI install + auth |
-| `skills/create-project.mdx` | `create-project` | `project create` |
-| `skills/init-use-case.mdx` | `init-use-case` | `init` |
-| `skills/verify-use-case.mdx` | `verify-use-case` | `verify` |
-| `skills/deploy-use-case.mdx` | `deploy-use-case` | `deploy use-case` |
-| `skills/fetch-use-case.mdx` | `fetch-use-case` | `get use-case` |
-| `skills/trigger-workflow.mdx` | `trigger-workflow` | `trigger` |
-| `skills/get-execution.mdx` | `get-execution` | `get execution` |
+| Page | What it covers |
+|------|---------------|
+| `dashboard/overview.mdx` | Architecture, what Codika provides vs what you build |
+| `dashboard/authentication.mdx` | Two key types (ck_ instance keys, cko_ org keys), framework examples |
+| `dashboard/triggering-workflows.mdx` | Trigger + poll pattern, TypeScript implementation |
+| `dashboard/environments.mdx` | Dev/prod switching with separate instance IDs |
+| `dashboard/patterns.mdx` | Error handling, retry logic, security best practices |
 
 ## Quick reference: where to find things
 
@@ -77,11 +81,11 @@ For AI agents using the Codika plugin. Each skill teaches agents how to use a sp
 | See a complex example (RAG + multi-workflow) | `examples/complex-rag.mdx` |
 | Make workflows accessible to agents | `concepts/agent-skills.mdx` |
 | Create agent skills for a use case | `guides/agent-skills.mdx` |
-| Download skills from a deployed process | `skills/get-skills.mdx` or `cli/get.mdx` |
+| Look up any CLI command or operation | `operations/<operation>.mdx` |
+| Check all validation rules | `operations/verify-use-case.mdx` |
+| Download skills from a deployed process | `operations/get-skills.mdx` |
 | Build a custom dashboard on a use case | `dashboard/overview.mdx` |
 | Understand the trigger + poll API | `dashboard/triggering-workflows.mdx` |
-| Look up CLI command flags | `cli/<command>.mdx` |
-| Check all validation rules | `cli/verify.mdx` |
 | Pick the right API key for a project | Read `project.json` for `organizationId`, run `codika use --json` to list profiles with org IDs, then pass `--profile <name>` |
 
 ## Critical rules for building use cases

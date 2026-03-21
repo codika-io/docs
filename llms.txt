@@ -36,20 +36,25 @@ When helping users build Codika use cases:
 - [Input & Output Schemas](https://docs.codika.io/concepts/schemas): Form field types (string, text, number, boolean, date, select, file, array, object), section structure, output field types
 - [Agent Skills](https://docs.codika.io/concepts/agent-skills): Making workflows agent-accessible — SKILL.md format, frontmatter spec (name/description/workflowTemplateId), deployment lifecycle, credential decoupling, Claude compatibility
 
-## CLI Reference
+## Operations Reference
 
-- [CLI Overview](https://docs.codika.io/cli/overview): Installation, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), `--profile <name>` flag for per-command profile override, exit codes, configuration
-- [login](https://docs.codika.io/cli/login): Login, whoami, use (switch profile, `--json` for machine-readable profile list with organizationId), logout, config set/show/clear — multi-profile management
-- [init](https://docs.codika.io/cli/init): Scaffold new use case with config.ts, 3 template workflows, 2 agent skills, version.json, optional project creation
-- [verify](https://docs.codika.io/cli/verify): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering
-- [deploy](https://docs.codika.io/cli/deploy): Deploy use cases (version bumping, encoding, API call, archival) and data ingestion configs — --patch/--minor/--major/--version, --dry-run
-- [publish](https://docs.codika.io/cli/publish): Publish a deployment to production — visibility, shared-with, auto-toggle dev/prod, saves prodProcessInstanceId to project.json
-- [integration](https://docs.codika.io/cli/integration): Manage integrations (set, list, delete) — encrypt secrets client-side, supports all 42+ built-in and custom cstm_* integrations, requires `integrations:manage` API key scope
-- [trigger](https://docs.codika.io/cli/trigger): Execute HTTP-triggered workflows with --payload-file (or - for stdin), --poll for results, --timeout, process instance ID resolution
-- [get](https://docs.codika.io/cli/get): Fetch deployed use cases (download or list), execution details (--deep for sub-workflows, --slim for clean output), and agent skills (`get skills` downloads Claude-compatible SKILL.md files)
-- [list](https://docs.codika.io/cli/list): List recent executions for a process instance — filter by workflow ID, --failed-only, --limit
-- [project](https://docs.codika.io/cli/project): Create platform projects with --path to write project.json for org-aware deployment
-- [status](https://docs.codika.io/cli/status): Identity check, use case context detection, profile match status, deployment readiness assessment
+- [Operations Overview](https://docs.codika.io/operations/overview): All operations, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), global options, exit codes, typical workflow
+- [Authentication](https://docs.codika.io/operations/authentication): Install CLI, login, whoami, use (switch profile, `--json` for machine-readable profile list with organizationId), logout, config set/show/clear — multi-profile management
+- [Create Project](https://docs.codika.io/operations/create-project): Create platform projects with --path to write project.json for org-aware deployment
+- [Initialize Use Case](https://docs.codika.io/operations/init-use-case): Scaffold new use case with config.ts, 3 template workflows, 2 agent skills, version.json, optional project creation, shared workspace detection
+- [Verify Use Case](https://docs.codika.io/operations/verify-use-case): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering
+- [Deploy Use Case](https://docs.codika.io/operations/deploy-use-case): Deploy with version bumping (--patch/--minor/--major/--version), org-aware key resolution, deployment archival, agent skill collection, --dry-run
+- [Deploy Data Ingestion](https://docs.codika.io/operations/deploy-data-ingestion): Deploy RAG/embedding pipeline config with independent versioning (--version-strategy), auto-discovery of workflow file
+- [Deploy Documents](https://docs.codika.io/operations/deploy-documents): Upload stage markdown documentation (1-4) to the platform with automatic versioning
+- [Publish Use Case](https://docs.codika.io/operations/publish-use-case): Publish a deployment to production — visibility (private/organizational/public), shared-with, auto-toggle dev/prod, saves prodProcessInstanceId to project.json
+- [Redeploy Use Case](https://docs.codika.io/operations/redeploy-use-case): Redeploy instances with updated parameters (no new version) — parameter merge behavior, --force flag, three input methods (--param, --params, --params-file)
+- [Trigger Workflow](https://docs.codika.io/operations/trigger-workflow): Execute HTTP-triggered workflows with --payload-file (or - for stdin heredoc), --poll for results, --timeout, process instance ID resolution
+- [Fetch Use Case](https://docs.codika.io/operations/fetch-use-case): Download deployed use cases from the platform — version selection, data ingestion inclusion, list mode, project ID resolution
+- [Get Execution](https://docs.codika.io/operations/get-execution): Debug executions with --deep for recursive sub-workflow fetching and --slim for clean output
+- [List Executions](https://docs.codika.io/operations/list-executions): List recent executions for a process instance — filter by workflow ID, --failed-only, --limit, dev vs prod
+- [Get Skills](https://docs.codika.io/operations/get-skills): Download agent skill documents from a deployed process instance — Claude Code integration, Claude API usage, --stdout, --output
+- [Manage Integrations](https://docs.codika.io/operations/manage-integrations): Configure, list, and delete integrations (API keys, credentials) — encrypt secrets client-side, supports built-in and custom cstm_* integrations, requires `integrations:manage` scope
+- [Status](https://docs.codika.io/operations/status): Identity check, use case context detection, profile match status, deployment readiness assessment
 
 ## Guides
 
@@ -76,24 +81,8 @@ When helping users build Codika use cases:
 - [Environments](https://docs.codika.io/dashboard/environments): Dev/prod switching with separate process instance IDs and API keys, mode-based config pattern
 - [Common Patterns](https://docs.codika.io/dashboard/patterns): Error handling (trigger failures, polling, execution errors), retry logic, audit trails, input validation, rate limiting, security best practices
 
-## Agent Skills
-
-- [Skills Overview](https://docs.codika.io/skills/overview): What Codika skills are, plugin installation, available skills, typical agent workflow
-- [setup-codika](https://docs.codika.io/skills/setup-codika): CLI installation, authentication, profile management, org-aware selection
-- [create-project](https://docs.codika.io/skills/create-project): Platform project creation with --path for project.json linking
-- [init-use-case](https://docs.codika.io/skills/init-use-case): Scaffold use case folders with template workflows
-- [verify-use-case](https://docs.codika.io/skills/verify-use-case): Validation rules, --fix auto-repair, --strict mode
-- [deploy-use-case](https://docs.codika.io/skills/deploy-use-case): Version management, deployment archival, org-aware key resolution
-- [publish-use-case](https://docs.codika.io/skills/publish-use-case): Publish deployments to production with visibility and sharing controls
-- [fetch-use-case](https://docs.codika.io/skills/fetch-use-case): Download deployed use cases and metadata documents
-- [trigger-workflow](https://docs.codika.io/skills/trigger-workflow): Execute workflows with payload, poll for results, error reference
-- [get-execution](https://docs.codika.io/skills/get-execution): Debug executions with --deep recursive sub-workflow fetching
-- [list-executions](https://docs.codika.io/skills/list-executions): List recent executions for a process instance, filter by workflow or status
-- [get-skills](https://docs.codika.io/skills/get-skills): Download agent skill documents from a deployed process instance — discover endpoints and their documentation
-- [manage-integrations](https://docs.codika.io/skills/manage-integrations): Configure, list, and delete integrations (API keys, credentials) for organizations and process instances via CLI
-
 ## Optional
 
 - [Placeholder Reference](https://docs.codika.io/concepts/placeholders): Detailed table of all 11 placeholder types with suffix patterns
-- [Validation Rules Reference](https://docs.codika.io/cli/verify): Complete list of all validation rules across 4 layers
+- [Validation Rules Reference](https://docs.codika.io/operations/verify-use-case): Complete list of all validation rules across 4 layers
 - [Schema Field Types](https://docs.codika.io/concepts/schemas): All input/output field types with properties

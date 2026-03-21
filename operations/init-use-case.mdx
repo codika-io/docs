@@ -1,9 +1,20 @@
 ---
-title: "init"
-description: "Scaffold a new use case folder with config, workflows, version tracking, and optional platform project creation"
+title: "Initialize Use Case"
+description: "Scaffold a new use case folder with config, template workflows, agent skills, version tracking, and optional platform project creation"
 ---
 
-## Usage
+## When to use
+
+- Start a new use case from scratch
+- Create the initial folder structure for an n8n workflow project
+- Bootstrap a new automation with correct Codika patterns
+
+## Prerequisites
+
+- `codika` CLI installed
+- For project creation: authenticated via `codika login` (optional — scaffolding works without auth)
+
+## Command
 
 ```bash
 codika init <path> [options]
@@ -80,6 +91,18 @@ The scaffold generates three workflows that demonstrate different patterns:
 - Execute Workflow Trigger (receives data from parent)
 - No Codika Init node
 - Processes data and returns result to parent
+
+| Feature | Where |
+|---------|-------|
+| HTTP trigger with input validation | `main-workflow.json` |
+| Schedule trigger (Monday 9 AM) | `scheduled-report.json` |
+| Manual webhook fallback | `scheduled-report.json` |
+| Sub-workflow pattern | `text-processor.json` |
+| SUBWKFL placeholder | `main-workflow.json` calls `text-processor` |
+| Codika Init (HTTP mode) | `main-workflow.json` |
+| Codika Init (schedule mode) | `scheduled-report.json` |
+| Submit Result / Report Error | All parent workflows |
+| Placeholder usage | All workflows |
 
 ## Behavior
 

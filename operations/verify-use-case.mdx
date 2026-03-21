@@ -1,9 +1,20 @@
 ---
-title: "verify"
-description: "Validate use case folders and individual workflow files against structural and semantic rules"
+title: "Verify Use Case"
+description: "Validate use case folders and individual workflow files against structural and semantic rules, with auto-fix support"
 ---
 
-## Usage
+## When to use
+
+- Before deploying to catch issues early
+- After modifying workflow JSON files
+- When the user asks to lint, validate, or check a use case
+- As part of a CI pipeline
+
+## Prerequisites
+
+- `codika` CLI installed (**no authentication needed** — validation runs entirely locally)
+
+## Commands
 
 ```bash
 # Validate an entire use case folder
@@ -12,8 +23,6 @@ codika verify use-case <path> [options]
 # Validate a single workflow file
 codika verify workflow <path> [options]
 ```
-
-**No authentication required.** Validation runs entirely locally.
 
 ## Options
 

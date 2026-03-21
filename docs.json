@@ -79,27 +79,46 @@
         ]
       },
       {
-        "tab": "CLI Reference",
+        "tab": "Operations Reference",
         "groups": [
           {
             "group": "Overview",
-            "pages": ["cli/overview"]
+            "pages": ["operations/overview"]
           },
           {
-            "group": "Commands",
+            "group": "Setup",
             "pages": [
-              "cli/login",
-              "cli/init",
-              "cli/verify",
-              "cli/deploy",
-              "cli/publish",
-              "cli/redeploy",
-              "cli/integration",
-              "cli/trigger",
-              "cli/get",
-              "cli/list",
-              "cli/project",
-              "cli/status"
+              "operations/authentication",
+              "operations/create-project"
+            ]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "operations/init-use-case",
+              "operations/verify-use-case"
+            ]
+          },
+          {
+            "group": "Deploy",
+            "pages": [
+              "operations/deploy-use-case",
+              "operations/deploy-data-ingestion",
+              "operations/deploy-documents",
+              "operations/publish-use-case",
+              "operations/redeploy-use-case"
+            ]
+          },
+          {
+            "group": "Operate",
+            "pages": [
+              "operations/trigger-workflow",
+              "operations/fetch-use-case",
+              "operations/get-execution",
+              "operations/list-executions",
+              "operations/get-skills",
+              "operations/manage-integrations",
+              "operations/status"
             ]
           }
         ]
@@ -118,35 +137,6 @@
               "dashboard/triggering-workflows",
               "dashboard/environments",
               "dashboard/patterns"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Agent Skills",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["skills/overview"]
-          },
-          {
-            "group": "Skills",
-            "pages": [
-              "skills/setup-codika",
-              "skills/create-project",
-              "skills/init-use-case",
-              "skills/verify-use-case",
-              "skills/deploy-use-case",
-              "skills/deploy-data-ingestion",
-              "skills/deploy-documents",
-              "skills/publish-use-case",
-              "skills/redeploy-use-case",
-              "skills/fetch-use-case",
-              "skills/trigger-workflow",
-              "skills/get-execution",
-              "skills/list-executions",
-              "skills/get-skills",
-              "skills/manage-integrations"
             ]
           }
         ]

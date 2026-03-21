@@ -1,9 +1,20 @@
 ---
-title: "status"
-description: "Check identity, use case context detection, profile match status, and deployment readiness with `codika status`"
+title: "Status"
+description: "Check identity, use case context detection, profile match status, and deployment readiness"
 ---
 
-## Usage
+## When to use
+
+- Quick health check before deploying
+- Verify you're authenticated to the right organization
+- Check if a use case folder is ready to deploy
+- Diagnose profile mismatches between your active profile and the project's org
+
+## Prerequisites
+
+- `codika` CLI installed (authentication is checked but not required)
+
+## Command
 
 ```bash
 codika status [path] [options]

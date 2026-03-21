@@ -1,48 +1,65 @@
 ---
-title: "list"
-description: "List recent executions for a process instance with `list executions` — filter by workflow, status, or limit results"
+title: "List Executions"
+description: "List recent executions for a process instance with filtering by workflow, status, and result count"
 ---
 
-## list executions
+## When to use
 
-List recent executions for a process instance.
+- Check the status of recent workflow runs at a glance
+- Find failed executions to investigate further
+- Monitor how often a workflow is triggered
+- Get an execution ID to pass to `get-execution` for node-level debugging
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- A deployed process instance (`devProcessInstanceId` or `prodProcessInstanceId` in `project.json`)
+- API key with `executions:read` scope
+
+## Command
 
 ```bash
 codika list executions <processInstanceId> [options]
 ```
 
-### Arguments
+## Arguments
 
 | Argument | Description |
 |----------|-------------|
-| `<processInstanceId>` | Process instance ID (dev or prod) |
+| `<processInstanceId>` | Process instance ID (dev or prod) from `project.json` |
 
-### Options
+## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--workflow-id <id>` | Filter by workflow ID | All workflows |
-| `--failed-only` | Only show failed executions | — |
-| `--limit <n>` | Number of results (1-100) | 20 |
+| `--workflow-id <id>` | Filter results to a specific workflow | All workflows |
+| `--failed-only` | Return only failed executions | Off |
+| `--limit <n>` | Number of executions to return (1–100) | `20` |
 | `--api-url <url>` | Override API URL | — |
 | `--api-key <key>` | Override API key | — |
 | `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
 
-### Behavior
+## Behavior
 
 1. Fetches recent executions from the platform API
 2. Returns lightweight summaries (no full result data — use `get execution` for that)
 3. Sorted by creation time, newest first
 
-### Dev vs prod executions
+## Dev vs Prod executions
 
-| Instance type | Where to find the ID |
-|---------------|---------------------|
-| Dev | `devProcessInstanceId` in `project.json` — set after `codika deploy` |
-| Prod | `prodProcessInstanceId` in `project.json` — set after `codika publish` |
+After deploying and publishing, `project.json` contains both instance IDs:
 
-### Examples
+```json
+{
+  "devProcessInstanceId": "pi-dev-789",
+  "prodProcessInstanceId": "pi-prod-999"
+}
+```
+
+Use `devProcessInstanceId` to list dev executions and `prodProcessInstanceId` to list prod executions.
+
+## Examples
 
 ```bash
 # List recent executions for dev instance
@@ -64,7 +81,7 @@ codika list executions pi_dev_456 --json
 codika list executions pi_prod_789
 ```
 
-### Output
+## Output
 
 ```
 ● Recent Executions (pi_dev_456...)
@@ -81,9 +98,11 @@ codika list executions pi_prod_789
 
 Each row shows the execution ID (truncated), workflow ID, status with icon, duration, and creation timestamp. Failed executions show the error message and failed node name on the next line.
 
-To inspect the full result data for a specific execution, use [`get execution`](/cli/get#get-execution).
+Pass any execution ID to [`codika get execution <id>`](/operations/get-execution) for full node-level details.
 
-### Error reference
+Note: Zero executions is not an error — the CLI prints "No executions found." and exits with code 0.
+
+## Error reference
 
 | HTTP | Error | Fix |
 |------|-------|-----|
@@ -92,7 +111,7 @@ To inspect the full result data for a specific execution, use [`get execution`](
 | 403 | No access | Process instance in different org |
 | 404 | Instance not found | Check process instance ID |
 
-### Exit codes
+## Exit codes
 
 | Code | Meaning |
 |------|---------|

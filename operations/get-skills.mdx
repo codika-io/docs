@@ -1,6 +1,6 @@
 ---
-title: "get-skills"
-description: "Download agent skill documents from a deployed process instance — discover available workflow endpoints and their documentation"
+title: "Get Skills"
+description: "Download agent skill documents from a deployed process instance to discover available workflow endpoints and their documentation"
 ---
 
 ## When to use
@@ -21,24 +21,41 @@ description: "Download agent skill documents from a deployed process instance �
 codika get skills [processInstanceId] [options]
 ```
 
-### Arguments
+## Arguments
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `processInstanceId` | No | Process instance ID. If omitted, resolves from project.json. |
+| `[processInstanceId]` | No | Process instance ID. If omitted, resolves from project.json. |
 
-### Options
+## Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--process-instance-id <id>` | — | Alternative to positional argument |
-| `--path <path>` | — | Path to use case folder (to resolve from project.json) |
+| `--path <path>` | Current directory | Path to use case folder (to resolve from project.json) |
 | `--project-file <path>` | `project.json` | Custom project file name |
 | `-o, --output <dir>` | `./skills` | Output directory for skill files |
 | `--stdout` | `false` | Print to stdout instead of writing files |
 | `--api-url <url>` | Production | Override API URL |
 | `--api-key <key>` | Active profile | Override API key |
+| `--profile <name>` | — | Use a specific profile instead of the active one |
 | `--json` | `false` | Structured JSON output |
+
+## Process instance ID resolution
+
+Priority order:
+
+1. Positional argument (highest)
+2. `--process-instance-id` flag
+3. `devProcessInstanceId` from project.json in `--path` directory
+4. `devProcessInstanceId` from project.json in current directory
+
+## How it works
+
+1. Resolves process instance ID from flag, argument, or project.json
+2. Calls `getProcessSkillsPublic` cloud function with API key auth
+3. Reads skills from the process's active deployment instance
+4. Writes each skill as a Claude-compatible directory: `{name}/SKILL.md`
 
 ## Examples
 
@@ -76,7 +93,7 @@ codika get skills --json
 codika get skills --stdout
 ```
 
-## Expected output
+## Output
 
 ### Human-readable (default)
 
@@ -117,22 +134,6 @@ To use with Claude Code, copy to .claude/skills/
 }
 ```
 
-## Process instance ID resolution
-
-Priority order:
-
-1. Positional argument (highest)
-2. `--process-instance-id` flag
-3. `devProcessInstanceId` from project.json in `--path` directory
-4. `devProcessInstanceId` from project.json in current directory
-
-## How it works
-
-1. Resolves process instance ID from flag, argument, or project.json
-2. Calls `getProcessSkillsPublic` cloud function with API key auth
-3. Reads skills from the process's active deployment instance
-4. Writes each skill as a Claude-compatible directory: `{name}/SKILL.md`
-
 ## Using downloaded skills
 
 ### With Claude Code
@@ -163,7 +164,7 @@ After reading a skill, trigger the workflow it describes:
 codika trigger http-direct-messaging --payload-file input.json --poll
 ```
 
-## Error handling
+## Error reference
 
 | Error | Cause | Fix |
 |-------|-------|-----|
@@ -176,5 +177,5 @@ codika trigger http-direct-messaging --payload-file input.json --poll
 
 | Code | Meaning |
 |------|---------|
-| 0 | Success |
-| 1 | Error (API failure, auth failure) |
+| `0` | Success |
+| `1` | Error (API failure, auth failure) |

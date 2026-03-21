@@ -1,9 +1,25 @@
 ---
-title: "trigger"
-description: "Execute a deployed workflow via its HTTP webhook, optionally polling for results"
+title: "Trigger Workflow"
+description: "Execute a deployed workflow via its HTTP webhook, with payload support, polling for results, and process instance ID resolution"
 ---
 
-## Usage
+## When to use
+
+- Test a deployed workflow
+- Execute a workflow via the CLI instead of the platform UI
+- Automate workflow execution in scripts or CI
+
+## Prerequisites
+
+- Use case deployed (`project.json` contains `devProcessInstanceId`)
+- Authenticated via `codika login` or `CODIKA_API_KEY` env var
+- API key with `workflows:trigger` scope
+
+## Resolving the workflow ID
+
+The `workflowId` is the `workflowTemplateId` from `config.ts`. If the user provides a use case folder path, read `config.ts` to find the available workflow IDs and their trigger types. Only workflows with `trigger.type === 'http'` can be triggered with this command.
+
+## Command
 
 ```bash
 codika trigger <workflowId> [options]
@@ -111,6 +127,14 @@ codika trigger main-workflow --poll -o ./result.json --payload-file - <<'EOF'
 EOF
 ```
 
+## Result statuses
+
+| Status | Meaning | Data field |
+|--------|---------|-----------|
+| `success` | Workflow completed successfully | `resultData` contains output |
+| `failed` | Workflow encountered an error | `errorDetails.message` describes failure |
+| `pending` | Still running (only seen during polling) | — |
+
 ## Examples
 
 ```bash
@@ -148,14 +172,6 @@ codika trigger main-workflow \
 EOF
 ```
 
-## Result interpretation
-
-| Status | Meaning | Data field |
-|--------|---------|-----------|
-| `success` | Workflow completed successfully | `resultData` contains output |
-| `failed` | Workflow encountered an error | `errorDetails.message` describes failure |
-| `pending` | Still running (only seen during polling) | — |
-
 ## Error reference
 
 | HTTP | Error | Cause | Fix |
@@ -172,3 +188,4 @@ EOF
 - The `workflowId` is the `workflowTemplateId` from config.ts, not the n8n workflow ID
 - The request wraps your payload in `{"payload": {...}}`
 - Execution is asynchronous — the trigger returns immediately unless `--poll` is used
+- File uploads are not supported via CLI — use the platform UI

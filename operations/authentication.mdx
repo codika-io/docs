@@ -1,6 +1,30 @@
 ---
-title: "login"
-description: "Login, manage profiles, switch organizations, and verify identity with the codika CLI"
+title: "Authentication"
+description: "Install the codika CLI, authenticate with API keys, manage multiple profiles, and switch between organizations"
+---
+
+## When to use
+
+- First-time environment setup
+- When deploy or project commands fail with "API key is required"
+- To check current identity or switch between organizations
+- When the user needs to authenticate with a different org
+
+## Prerequisites
+
+- Node.js 22+ installed
+- npm available
+
+## Install the CLI
+
+```bash
+# Install globally
+npm install -g codika
+
+# Verify installation
+codika --version
+```
+
 ---
 
 ## login
@@ -43,6 +67,8 @@ codika login --api-key cko_abc123def456 --name staging
 codika login --api-key cko_abc123def456 --base-url https://custom.api.example.com
 ```
 
+---
+
 ## whoami
 
 Show the current authenticated identity.
@@ -72,6 +98,8 @@ Expires:       2026-12-31
 Profile:       acme-corp
 ```
 
+---
+
 ## use
 
 Switch the active profile or list all profiles.
@@ -86,26 +114,16 @@ codika use [name]
 |----------|-------------|
 | `[name]` | Profile name to switch to (optional — lists profiles if omitted) |
 
-### Behavior
-
-- **No argument**: Lists all profiles with an active marker (bullet)
-- **With argument**: Switches the active profile
-
-### Examples
-
-```bash
-# List all profiles
-codika use
-
-# Switch to a specific profile
-codika use staging
-```
-
 ### Options
 
 | Option | Description |
 |--------|-------------|
 | `--json` | Output machine-readable JSON with profile details |
+
+### Behavior
+
+- **No argument**: Lists all profiles with an active marker (bullet)
+- **With argument**: Switches the active profile
 
 ### Output (list mode)
 
@@ -144,6 +162,18 @@ codika use --json
 ]
 ```
 
+### Examples
+
+```bash
+# List all profiles
+codika use
+
+# Switch to a specific profile
+codika use staging
+```
+
+---
+
 ## logout
 
 Remove a profile.
@@ -161,6 +191,8 @@ codika logout [name]
 ### Behavior
 
 Removes the specified profile. If it was the active profile, switches to the next available profile.
+
+---
 
 ## config set
 
@@ -213,3 +245,33 @@ codika config clear --profile staging
 # Clear all profiles and configuration
 codika config clear
 ```
+
+---
+
+## Configuration storage
+
+| Item | Location |
+|------|----------|
+| Config file | `~/.config/codika/config.json` |
+| Permissions | `0o600` (owner read/write only) |
+| Format | Multi-profile JSON with active profile pointer |
+
+## API key resolution priority
+
+1. `--api-key` / `--api-url` flag on any command
+2. `CODIKA_API_KEY` / `CODIKA_BASE_URL` environment variable
+3. Active profile in config file
+4. Production default (base URL only)
+
+## Organization-aware profile selection
+
+When `project.json` in a use case folder contains an `organizationId`, the CLI automatically selects the matching profile for deployment commands — even if a different profile is currently active.
+
+## Error reference
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "API key is required" | No key provided or found | Run `codika login` |
+| "Invalid API key" | Key is wrong or expired | Check with `codika whoami`, re-login |
+| "EACCES" on npm install | Permission denied | Use `sudo npm install -g` or fix npm permissions |
+| Wrong org on deploy | Active profile doesn't match project | Use `codika use <correct-profile>` |

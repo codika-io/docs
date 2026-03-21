@@ -1,6 +1,6 @@
 ---
-title: "deploy-data-ingestion"
-description: "Skill for deploying a process-level data ingestion configuration to the Codika platform with independent versioning"
+title: "Deploy Data Ingestion"
+description: "Deploy a process-level data ingestion configuration (RAG/embedding pipeline) to the Codika platform with independent versioning"
 ---
 
 ## When to use
@@ -31,33 +31,24 @@ my-use-case/
 codika deploy process-data-ingestion <path> [options]
 ```
 
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Path to use case folder (config.ts must export `getDataIngestionConfig()`, and `data-ingestion/` folder must contain exactly one workflow JSON file) |
+
 ## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
+| `--api-url <url>` | Data Ingestion API URL | `CODIKA_DATA_INGESTION_API_URL` env |
+| `--api-key <key>` | Codika API key | `CODIKA_API_KEY` env or profile |
+| `--project-id <id>` | Override project ID | `project.json` |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--version-strategy <strategy>` | `major_bump`, `minor_bump`, or `explicit` | `minor_bump` |
 | `--explicit-version <version>` | Required if strategy is `explicit` | — |
-| `--project-id <id>` | Override project ID | `project.json` |
-| `--project-file <path>` | Path to custom project file | `project.json` |
-| `--api-url <url>` | Override API URL | — |
-| `--api-key <key>` | Override API key | Profile |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
-
-## Examples
-
-```bash
-# Default deployment (minor bump)
-codika deploy process-data-ingestion ./my-use-case
-
-# Major version bump
-codika deploy process-data-ingestion ./my-use-case --version-strategy major_bump
-
-# Explicit version
-codika deploy process-data-ingestion ./my-use-case --version-strategy explicit --explicit-version 3.0
-
-# JSON output for CI
-codika deploy process-data-ingestion ./my-use-case --json
-```
 
 ## What happens on deploy
 
@@ -108,6 +99,22 @@ Data ingestion has its own version line, separate from use case deployments:
 | Versioning | Semantic (X.Y.Z) + API (X.Y) | Simple (X.Y) + local (X.Y.Z) |
 | Notifications | Triggers "update available" | Does NOT trigger notifications |
 | Version flag | `--patch`, `--minor`, `--major` | `--version-strategy` |
+
+## Examples
+
+```bash
+# Default deployment (minor bump)
+codika deploy process-data-ingestion ./my-use-case
+
+# Major version bump
+codika deploy process-data-ingestion ./my-use-case --version-strategy major_bump
+
+# Explicit version
+codika deploy process-data-ingestion ./my-use-case --version-strategy explicit --explicit-version 3.0
+
+# JSON output for CI
+codika deploy process-data-ingestion ./my-use-case --json
+```
 
 ## Output
 

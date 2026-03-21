@@ -1,0 +1,187 @@
+---
+title: "Operations Reference"
+description: "Complete reference for all Codika platform operations — authentication, scaffolding, validation, deployment, execution, and debugging"
+---
+
+## Overview
+
+This reference covers every operation available on the Codika platform. Each page documents the **what**, **when**, **how** (CLI command + all flags), and **why** for a single capability. Operations are grouped by lifecycle phase.
+
+The `codika` CLI (`npm install -g codika`) is the primary interface for all operations. Requires Node.js 22+.
+
+## Operations by lifecycle phase
+
+### Setup
+
+| Operation | CLI command | What it does |
+|-----------|------------|--------------|
+| [Authentication](/operations/authentication) | `login`, `whoami`, `use`, `logout`, `config` | Install CLI, authenticate, manage profiles, switch organizations |
+| [Create Project](/operations/create-project) | `project create` | Create a platform project and link it to a use case folder |
+
+### Build
+
+| Operation | CLI command | What it does |
+|-----------|------------|--------------|
+| [Initialize Use Case](/operations/init-use-case) | `init <path>` | Scaffold a new use case folder with template workflows and agent skills |
+| [Verify Use Case](/operations/verify-use-case) | `verify use-case`, `verify workflow` | Validate use cases against structural and semantic rules |
+
+### Deploy
+
+| Operation | CLI command | What it does |
+|-----------|------------|--------------|
+| [Deploy Use Case](/operations/deploy-use-case) | `deploy use-case <path>` | Deploy workflows to the platform with version management |
+| [Deploy Data Ingestion](/operations/deploy-data-ingestion) | `deploy process-data-ingestion <path>` | Deploy RAG/embedding pipeline configuration |
+| [Deploy Documents](/operations/deploy-documents) | `deploy documents <path>` | Upload stage documentation to the platform |
+| [Publish Use Case](/operations/publish-use-case) | `publish <templateId>` | Promote a deployment from dev to production |
+| [Redeploy Use Case](/operations/redeploy-use-case) | `redeploy` | Update parameters on an existing instance without a new version |
+
+### Operate
+
+| Operation | CLI command | What it does |
+|-----------|------------|--------------|
+| [Trigger Workflow](/operations/trigger-workflow) | `trigger <workflowId>` | Execute a deployed workflow via HTTP |
+| [Fetch Use Case](/operations/fetch-use-case) | `get use-case <projectId>` | Download a deployed use case from the platform |
+| [Get Execution](/operations/get-execution) | `get execution <executionId>` | Debug executions with node-level details |
+| [List Executions](/operations/list-executions) | `list executions <instanceId>` | List recent executions for a process instance |
+| [Get Skills](/operations/get-skills) | `get skills [instanceId]` | Download agent skill documents from a deployed process |
+| [Manage Integrations](/operations/manage-integrations) | `integration set/list/delete` | Configure API keys and credentials for organizations |
+| [Status](/operations/status) | `status [path]` | Check identity, context, and deployment readiness |
+
+## CLI global configuration
+
+Configuration is stored at `~/.config/codika/config.json` (XDG-compliant, permissions `0o600`).
+
+The CLI supports **multiple named profiles**, each containing:
+
+| Field | Description |
+|-------|-------------|
+| `apiKey` | The Codika API key (prefix `cko_`) |
+| `baseUrl` | Platform API URL |
+| `orgId` | Organization ID |
+| `orgName` | Organization display name |
+| `keyName` | API key display name |
+| `scopes` | Permission scopes (e.g., `deploy:use-case`, `workflows:trigger`) |
+| `createdAt` | When the key was created |
+| `expiresAt` | When the key expires |
+
+## Resolution chains
+
+The CLI resolves values in a predictable priority order. Higher-priority sources override lower ones.
+
+### API key resolution
+
+1. `--api-key` flag (highest priority)
+2. `CODIKA_API_KEY` environment variable
+3. Active profile in config file
+4. Error if none found
+
+### Base URL resolution
+
+1. `--api-url` flag
+2. `CODIKA_API_URL` environment variable (or per-endpoint vars like `CODIKA_DEPLOY_API_URL`)
+3. Active profile base URL
+4. Production default
+
+### Project ID resolution
+
+1. `--project-id` flag
+2. `project.json` at `--project-file` path (if provided)
+3. `project.json` in use case folder
+4. `PROJECT_ID` export in `config.ts`
+
+### Organization-aware profile selection
+
+When `project.json` contains an `organizationId`, the CLI automatically selects the profile that matches that organization — even if a different profile is currently active. This is especially important for deployment commands.
+
+The selection order:
+1. `--api-key` flag (always wins)
+2. `CODIKA_API_KEY` environment variable
+3. Profile matching `organizationId` from `project.json`
+4. Active profile
+
+## Global options
+
+These options work across most commands:
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as machine-readable JSON |
+| `--api-key <key>` | Override API key |
+| `--api-url <url>` | Override API base URL |
+| `--project-file <path>` | Path to custom project file (default: `project.json`) |
+| `--profile <name>` | Use a specific profile instead of the active one |
+
+## Global exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime error (API failure, missing files, etc.) |
+| `2` | CLI validation error (invalid arguments, missing required options) |
+
+## Profile expiry warnings
+
+On every command, the CLI checks the active profile's key expiry:
+- **< 7 days until expiry**: Displays a warning
+- **Expired**: Displays an error
+- **No expiry data**: No warning
+
+## Typical workflow
+
+An agent or human orchestrating a full deployment uses operations in this order:
+
+```
+1. authentication       → Verify CLI installed and authenticated
+2. create-project       → Create platform project (if needed)
+3. init-use-case        → Scaffold the use case folder
+4. (Build config.ts and workflows)
+5. verify-use-case      → Validate before deploying
+6. deploy-use-case      → Deploy to platform (dev)
+6b. deploy-data-ingestion → Deploy DI config (if RAG use case)
+6c. deploy-documents    → Upload stage documents
+7. trigger-workflow     → Test the deployment
+8. get-execution        → Debug if needed
+9. list-executions      → Review recent execution history
+10. publish-use-case    → Publish to production when ready
+11. redeploy-use-case   → Update parameters without new version
+12. manage-integrations → Configure required API keys/credentials
+```
+
+## Command hierarchy
+
+```
+codika
+  ├── login                      # Save API key (alias for config set)
+  ├── logout [name]              # Remove a profile
+  ├── whoami                     # Show current identity
+  ├── use [name]                 # Switch active profile or list profiles
+  ├── status [path]              # Show identity and use case context
+  ├── init <path>                # Scaffold a new use case
+  ├── config
+  │   ├── set                    # Save API key and base URL
+  │   ├── show                   # Display all profiles
+  │   └── clear                  # Remove configuration
+  ├── verify
+  │   ├── use-case <path>        # Validate entire use case folder
+  │   └── workflow <path>        # Validate single workflow file
+  ├── deploy
+  │   ├── use-case <path>        # Deploy use case to platform
+  │   ├── process-data-ingestion <path>  # Deploy data ingestion config
+  │   └── documents <path>       # Upload stage documentation
+  ├── publish <templateId>       # Publish deployment to production
+  ├── redeploy                   # Redeploy instance with updated parameters
+  ├── integration
+  │   ├── set <integrationId>    # Create or update an integration
+  │   ├── list                   # List integrations and connection status
+  │   └── delete <integrationId> # Delete an integration
+  ├── trigger <workflowId>       # Trigger a deployed workflow
+  ├── get
+  │   ├── use-case <projectId>   # Fetch deployed use case
+  │   ├── execution <executionId> # Fetch execution details
+  │   └── skills [instanceId]    # Fetch agent skill documents
+  ├── list
+  │   └── executions <instanceId> # List recent executions
+  ├── project
+  │   └── create                 # Create a new project
+  └── completion [shell]         # Generate shell completions
+```

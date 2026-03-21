@@ -1,17 +1,27 @@
 ---
-title: "redeploy"
-description: "Redeploy an existing process instance with different parameters without creating a new template version"
+title: "Redeploy Use Case"
+description: "Redeploy an existing process instance with updated parameters without creating a new template version"
 ---
 
-## redeploy
+## When to use
 
-Redeploy an existing process instance with updated parameters. Parameters are **merged** with the existing ones — you only pass what you want to change.
+- Change deployment parameters on a running instance (e.g., company name, language, timezone)
+- Retry a failed deployment without redeploying the entire use case
+- Apply configuration changes after publishing without creating a new version
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- An existing deployment with `project.json` containing `devProcessInstanceId` or `prodProcessInstanceId`
+- API key with `deploy:use-case` scope
+
+## Command
 
 ```bash
 codika redeploy [options]
 ```
 
-### Options
+## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -28,7 +38,7 @@ codika redeploy [options]
 | `--api-key <key>` | Override API key | — |
 | `--json` | JSON output | `false` |
 
-### Process instance resolution
+## Process instance resolution
 
 The CLI resolves which process instance to redeploy using this priority:
 
@@ -39,7 +49,7 @@ The CLI resolves which process instance to redeploy using this priority:
 
 If neither is found, the command exits with an error.
 
-### Parameter input methods
+## Parameter input methods
 
 You can provide parameters in three ways. When multiple methods are used, they are merged with this priority (highest wins):
 
@@ -51,7 +61,7 @@ You can provide parameters in three ways. When multiple methods are used, they a
 **Parameters are merged, not replaced.** The CLI sends only the parameters you provide. The platform merges them with the instance's existing parameters. If the instance has `COMPANY_NAME=Acme` and `LANGUAGE=en`, and you pass `--param LANGUAGE=fr`, the result is `COMPANY_NAME=Acme` and `LANGUAGE=fr`. Omitted parameters keep their current values.
 </Info>
 
-### What happens on redeploy
+## What happens on redeploy
 
 1. **Load** the target process instance from the platform
 2. **Load** the deployment template currently associated with the instance
@@ -62,10 +72,10 @@ You can provide parameters in three ways. When multiple methods are used, they a
 The instance owner's credentials are used for deployment, not the API key user's. This ensures workflows are deployed with the correct integration bindings.
 
 <Warning>
-Redeploying does **not** create a new template version. The instance continues to run the same template — only the runtime parameters change. To deploy new workflow logic, use `codika deploy use-case` instead.
+Redeploying does **not** create a new template version. The instance continues to run the same template — only the runtime parameters change. To deploy new workflow logic, use [`codika deploy use-case`](/operations/deploy-use-case) instead.
 </Warning>
 
-### Force flag
+## Force flag
 
 | Instance status | `--force` required? |
 |----------------|---------------------|
@@ -74,7 +84,17 @@ Redeploying does **not** create a new template version. The instance continues t
 | `deploying` | Yes |
 | `user_paused` | Yes |
 
-### Examples
+## Agent usage
+
+When automating redeploy, prefer `--params` with JSON and `--json` for structured output:
+
+```bash
+codika redeploy --params '{"COMPANY_NAME":"New Corp","LANGUAGE":"fr"}' --json
+```
+
+This avoids shell escaping issues with `--param` and provides machine-readable output.
+
+## Examples
 
 ```bash
 # Change a single parameter
@@ -108,7 +128,7 @@ codika redeploy --process-instance-id pi_abc123 --param LANGUAGE=fr --force
 codika redeploy --params '{"LANGUAGE":"fr"}' --json
 ```
 
-### Output
+## Output
 
 ```
 ✓ Redeployed successfully
@@ -134,14 +154,7 @@ JSON output (`--json`):
 }
 ```
 
-### Exit codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Redeploy successful |
-| `1` | Deployment failed or API error |
-
-### Error reference
+## Error reference
 
 | HTTP | Error | Fix |
 |------|-------|-----|
@@ -150,3 +163,10 @@ JSON output (`--json`):
 | 404 | Instance not found | Check instance ID in `project.json` or pass `--process-instance-id` |
 | 409 | Instance not in failed state | Add `--force` to redeploy non-failed instances |
 | 400 | Invalid parameters | Check parameter names match `INSTPARM` placeholders in the template |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Redeploy successful |
+| `1` | Deployment failed or API error |

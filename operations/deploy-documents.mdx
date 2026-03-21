@@ -1,6 +1,6 @@
 ---
-title: "deploy-documents"
-description: "Skill for uploading use case documentation (stage markdown files) to the Codika platform"
+title: "Deploy Documents"
+description: "Upload use case documentation (stage 1-4 markdown files) to the Codika platform with automatic versioning"
 ---
 
 ## When to use
@@ -44,6 +44,12 @@ Not all stages are required — the CLI uploads whichever stages exist.
 codika deploy documents <path> [options]
 ```
 
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<path>` | Path to use case folder (must contain a `documents/` folder with stage markdown files) |
+
 ## Options
 
 | Option | Description | Default |
@@ -52,26 +58,8 @@ codika deploy documents <path> [options]
 | `--project-file <path>` | Path to custom project file | `project.json` |
 | `--api-url <url>` | Override API URL | — |
 | `--api-key <key>` | Override API key | Profile |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
-
-### Project ID resolution
-
-1. `--project-id` flag (highest priority)
-2. `project.json` file (default or `--project-file`)
-3. `PROJECT_ID` export in `config.ts` (fallback)
-
-## Examples
-
-```bash
-# Deploy documents
-codika deploy documents ./my-use-case
-
-# With explicit project ID
-codika deploy documents ./my-use-case --project-id abc123
-
-# JSON output for CI
-codika deploy documents ./my-use-case --json
-```
 
 ## What happens on deploy
 
@@ -87,6 +75,19 @@ Documents are versioned on the platform:
 - First upload for a stage creates version `1.0.0`
 - Subsequent uploads increment the minor version (e.g., `1.0.0` -> `1.1.0`)
 - Each document version is tracked in the platform's `version_history` collection
+
+## Examples
+
+```bash
+# Deploy documents
+codika deploy documents ./my-use-case
+
+# With explicit project ID
+codika deploy documents ./my-use-case --project-id abc123
+
+# JSON output for CI
+codika deploy documents ./my-use-case --json
+```
 
 ## Output
 

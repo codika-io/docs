@@ -1,23 +1,34 @@
 ---
-title: "publish"
-description: "Promote a deployed use case from dev to production, set visibility, configure sharing, and manage dev/prod instance toggling"
+title: "Publish Use Case"
+description: "Promote a deployed use case from dev to production, set visibility and sharing, and manage dev/prod instance toggling"
 ---
 
-## publish
+## When to use
 
-Promote a deployed use case to production.
+- Promote a deployed use case from dev to production
+- Make a process available to end users for the first time
+- Configure visibility (private, organizational, public) on first publish
+- Enable dev/prod auto-toggle to pause dev when prod is running
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- A deployed use case with `project.json` containing a `deployments` map (run `deploy use-case` first)
+- API key with `deploy:use-case` scope
+
+## Command
 
 ```bash
 codika publish <templateId> [options]
 ```
 
-### Arguments
+## Arguments
 
 | Argument | Description |
 |----------|-------------|
 | `<templateId>` | Deployment template ID (from `project.json` deployments map) |
 
-### Options
+## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -33,7 +44,7 @@ codika publish <templateId> [options]
 | `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
 
-### Finding the template ID
+## Finding the template ID
 
 After each deploy, `project.json` stores a `deployments` map keyed by version:
 
@@ -50,7 +61,7 @@ After each deploy, `project.json` stores a `deployments` map keyed by version:
 
 Use the `templateId` from the version you want to publish.
 
-### What happens on publish
+## What happens on publish
 
 1. **Resolve** project ID: `--project-id` > `--project-file` > `project.json`
 2. **Resolve** API key: `--api-key` > env > active profile
@@ -61,7 +72,7 @@ Use the `templateId` from the version you want to publish.
 7. If `--auto-toggle-dev-prod`, deactivates dev instance
 8. **On success:** saves `prodProcessInstanceId` to `project.json`
 
-### Visibility
+## Visibility
 
 Set on first publish only. Subsequent publishes inherit the existing visibility.
 
@@ -71,7 +82,7 @@ Set on first publish only. Subsequent publishes inherit the existing visibility.
 | `organizational` | All org members |
 | `public` | Anyone on the platform |
 
-### Shared with
+## Shared with
 
 Controls who can use the prod instance. Applies to organizational processes only.
 
@@ -81,7 +92,7 @@ Controls who can use the prod instance. Applies to organizational processes only
 | `admins` | Organization admins (default for org processes) |
 | `everyone` | All organization members |
 
-### Dev/Prod toggle
+## Dev/Prod toggle
 
 By default, both dev and prod instances run simultaneously. Use `--auto-toggle-dev-prod` to pause the dev instance when production becomes active:
 
@@ -91,7 +102,9 @@ codika publish tmpl_abc123 --auto-toggle-dev-prod
 
 This keeps production as the single active instance, avoiding duplicate executions from scheduled or webhook triggers.
 
-### Examples
+To disable the toggle after publishing, re-publish without the flag or update the setting in the platform UI.
+
+## Examples
 
 ```bash
 # Publish the latest deployment
@@ -110,7 +123,7 @@ codika publish tmpl_abc123 --json
 codika publish tmpl_abc123 --auto-toggle-dev-prod
 ```
 
-### Output
+## Output
 
 ```
 ✓ Published successfully!
@@ -122,18 +135,10 @@ codika publish tmpl_abc123 --auto-toggle-dev-prod
 ```
 
 <Info>
-**Need to change parameters without a new version?** After publishing, use [`codika redeploy`](/cli/redeploy) to update deployment parameters on the prod instance without creating a new template version. Only the parameters you specify are changed — everything else stays the same.
+**Need to change parameters without a new version?** After publishing, use [`codika redeploy`](/operations/redeploy-use-case) to update deployment parameters on the prod instance without creating a new template version. Only the parameters you specify are changed — everything else stays the same.
 </Info>
 
-### Exit codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Publish successful |
-| `1` | API error |
-| `2` | CLI validation error (missing templateId, no project ID) |
-
-### Error reference
+## Error reference
 
 | HTTP | Error | Fix |
 |------|-------|-----|
@@ -141,3 +146,11 @@ codika publish tmpl_abc123 --auto-toggle-dev-prod
 | 403 | Missing scope | Create key with `deploy:use-case` scope |
 | 404 | Template not found | Check templateId in project.json deployments |
 | 400 | Invalid status | Template already published or not in inactive state |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Publish successful |
+| `1` | API error |
+| `2` | CLI validation error (missing templateId, no project ID) |
