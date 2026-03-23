@@ -1,0 +1,209 @@
+---
+title: "Claude Code Plugin"
+description: "Add Codika skills and builder agents to Claude Code — deploy, test, and manage use cases directly from your terminal"
+---
+
+## Overview
+
+The Codika [Claude Code](https://claude.ai/claude-code) plugins give Claude direct access to the Codika platform. Once installed, Claude can scaffold use cases, validate workflows, deploy to production, trigger executions, debug failures, and even autonomously build entire use cases from your business requirements.
+
+Two plugins work together:
+
+| Plugin | What it adds |
+|--------|-------------|
+| **codika** | 14 CLI skills — deploy, verify, trigger, fetch, manage integrations, and more |
+| **use-case-builder** | 4 autonomous agents that design, build, modify, and test use cases + bundled platform documentation |
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/claude-code) installed and running
+- Node.js 22+
+- The `codika` CLI installed (`npm install -g codika`)
+- A Codika API key (from the dashboard under **Organization Settings > API Keys**)
+
+If you haven't set up the CLI yet, Claude will guide you through it automatically using the `setup-codika` skill after installing the plugins.
+
+## Install the plugins
+
+<Steps>
+
+### Add the Codika marketplace
+
+In Claude Code, run:
+
+```
+/plugin marketplace add codika-io/codika-marketplace
+```
+
+This registers the Codika marketplace so Claude Code can discover available plugins.
+
+### Install the codika plugin
+
+```
+/plugin install codika@codika-marketplace
+```
+
+This adds 14 CLI skills that let Claude run `codika` commands on your behalf — deploying use cases, triggering workflows, fetching execution traces, and more.
+
+### Install the use-case-builder plugin
+
+```
+/plugin install use-case-builder@codika-marketplace
+```
+
+This adds 4 autonomous builder agents and the bundled platform documentation. The builder agents depend on the `codika` plugin for all platform operations.
+
+### Verify the installation
+
+Ask Claude:
+
+```
+Which skills and agents do you have access to?
+```
+
+You should see skills prefixed with `codika:` (e.g., `codika:deploy-use-case`, `codika:trigger-workflow`) and the builder agents (`use-case-builder`, `use-case-modifier`, `n8n-workflow-builder`, `use-case-tester`).
+
+You can also reload plugins at any time with:
+
+```
+/reload-plugins
+```
+
+</Steps>
+
+## Authenticate
+
+Before using any platform operations, authenticate the CLI:
+
+```bash
+codika login
+```
+
+Or pass the key directly:
+
+```bash
+codika login --api-key cko_your_api_key_here
+```
+
+Verify with:
+
+```bash
+codika whoami
+```
+
+If you skip this step, Claude will automatically prompt you to authenticate when a command fails.
+
+## What you can do
+
+### CLI skills (codika plugin)
+
+Use these by asking Claude naturally — it picks the right skill automatically.
+
+| Ask Claude to... | Skill used |
+|-----------------|------------|
+| "Scaffold a new use case" | `codika:init-use-case` |
+| "Validate my use case" | `codika:verify-use-case` |
+| "Deploy this use case" | `codika:deploy-use-case` |
+| "Trigger the main workflow" | `codika:trigger-workflow` |
+| "Show me the last execution" | `codika:get-execution` |
+| "List recent executions" | `codika:list-executions` |
+| "Publish to production" | `codika:publish-use-case` |
+| "Download the deployed use case" | `codika:fetch-use-case` |
+| "Set up the Slack integration" | `codika:manage-integrations` |
+
+### Builder agents (use-case-builder plugin)
+
+For more complex tasks, Claude delegates to specialized agents:
+
+| Ask Claude to... | Agent used |
+|-----------------|-----------|
+| "Build a use case that processes invoices from email" | `use-case-builder` |
+| "Add Slack notifications to this use case" | `use-case-modifier` |
+| "Build a workflow that calls the Tavily API" | `n8n-workflow-builder` |
+| "Deploy and test this use case, fix any issues" | `use-case-tester` |
+
+The builder agents read Codika's platform documentation at runtime, so they always follow current patterns for triggers, placeholders, credentials, and mandatory nodes.
+
+## Example session
+
+```
+You: Build a use case that monitors Gmail for invoices,
+     extracts data with Claude, and saves results to Google Sheets
+
+Claude: I'll use the use-case-builder agent to design and create this.
+        [reads platform docs, designs architecture]
+        [creates config.ts with Gmail trigger, FLEXCRED_ANTHROPIC, USERCRED_GOOGLE]
+        [builds 2 workflows: gmail-trigger.json + invoice-parser.json (sub-workflow)]
+        [runs codika verify to validate]
+
+        ✓ Use case created at ./invoice-processor/
+        Want me to deploy and test it?
+
+You: Yes, deploy and test it
+
+Claude: [deploys via codika:deploy-use-case]
+        [triggers via codika:trigger-workflow]
+        [inspects execution via codika:get-execution]
+
+        ✓ Deployed and tested successfully
+        Version: 1.0.1 | Instance: abc123
+```
+
+## Updating plugins
+
+To get the latest skills and agents:
+
+```
+/plugin update codika@codika-marketplace
+/plugin update use-case-builder@codika-marketplace
+```
+
+## Uninstalling
+
+```
+/plugin uninstall codika@codika-marketplace
+/plugin uninstall use-case-builder@codika-marketplace
+```
+
+To remove the marketplace entirely:
+
+```
+/plugin marketplace remove codika-marketplace
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Plugins don't appear after installation">
+    Run `/reload-plugins` to force Claude Code to rediscover installed plugins. You should see a count of plugins, skills, and agents in the output.
+  </Accordion>
+
+  <Accordion title="Authentication errors">
+    Run `codika login` followed by `codika whoami` to verify your credentials. If using multiple organizations, make sure the correct profile is active.
+  </Accordion>
+
+  <Accordion title="Builder agents can't find documentation">
+    The `discover-codika-guides` skill must be available. Verify the `use-case-builder` plugin is installed by asking Claude "which skills do you have?". The skill should appear as `use-case-builder:discover-codika-guides`.
+  </Accordion>
+
+  <Accordion title="Deploy or verify commands fail">
+    Ensure the `codika` plugin is installed — the builder agents depend on it for all CLI operations. Also check that `codika` CLI is installed globally (`npm install -g codika`).
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install the CLI and deploy your first use case.
+  </Card>
+  <Card title="Builder System" icon="wand-magic-sparkles" href="/builder/overview">
+    Deep dive into the autonomous builder agents.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/operations/overview">
+    Complete reference for all codika CLI commands.
+  </Card>
+  <Card title="Agent Skills" icon="bot" href="/concepts/agent-skills">
+    Make your workflows discoverable by AI agents.
+  </Card>
+</CardGroup>
