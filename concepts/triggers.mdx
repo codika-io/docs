@@ -193,10 +193,10 @@ import type { SubworkflowTrigger } from 'codika';
   title: 'Process Text',
   description: 'Called by parent workflow to process text chunks',
   inputSchema: [
-    { name: 'text', type: 'string' },
-    { name: 'maxLength', type: 'number' },
-    { name: 'executionId', type: 'string' },
-    { name: 'executionSecret', type: 'string' },
+    { key: 'text', type: 'string' },
+    { key: 'maxLength', type: 'number' },
+    { key: 'executionId', type: 'string' },
+    { key: 'executionSecret', type: 'string' },
   ],
   calledBy: ['main-workflow'],
 } satisfies SubworkflowTrigger

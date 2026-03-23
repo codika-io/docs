@@ -133,10 +133,10 @@ Sub-workflows do not have their own Codika Init node, so the Upload File node ne
 {
   type: 'subworkflow' as const,
   inputSchema: [
-    { name: 'markdownContent', type: 'string' },
-    { name: 'fileName', type: 'string' },
-    { name: 'executionId', type: 'string' },
-    { name: 'executionSecret', type: 'string' },
+    { key: 'markdownContent', type: 'string' },
+    { key: 'fileName', type: 'string' },
+    { key: 'executionId', type: 'string' },
+    { key: 'executionSecret', type: 'string' },
   ],
   calledBy: ['main-workflow'],
 }
