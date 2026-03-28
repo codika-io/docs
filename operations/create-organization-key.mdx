@@ -1,0 +1,92 @@
+---
+title: "Create Organization Key"
+description: "Create an API key for a Codika organization to enable deployments, workflow triggers, and management via CLI or API"
+---
+
+## When to use
+
+- User needs an API key scoped to a specific organization for deployments or automation
+- Setting up CI/CD credentials for a team or client workspace
+- Creating keys for agents or scripts that trigger workflows within an org
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- Personal key (`ckp_`) or admin key (`cka_`) with `api-keys:manage` scope
+- Target organization must already exist (see [Create Organization](/operations/create-organization))
+
+## Command
+
+```bash
+codika organization create-key [options]
+```
+
+## Options
+
+| Option | Required | Description | Default |
+|--------|----------|-------------|---------|
+| `--organization-id <id>` | Yes | Organization ID to create the key for | — |
+| `--name <name>` | Yes | Key name (for identification) | — |
+| `--scopes <scopes>` | Yes | Comma-separated list of scopes | — |
+| `--description <desc>` | No | Key description | — |
+| `--expires-in-days <days>` | No | Number of days until the key expires | No expiry |
+| `--api-url <url>` | No | Override API URL | — |
+| `--api-key <key>` | No | Override API key | — |
+| `--profile <name>` | No | Use a specific profile instead of the active one | — |
+| `--json` | No | JSON output | — |
+
+## Behavior
+
+1. Validates that the authenticated key has the `api-keys:manage` scope
+2. Verifies the user is a member or owner of the target organization
+3. Creates a new organization key (`cko_`) with the specified scopes
+4. Returns the raw key once — it cannot be retrieved again after creation
+
+## Examples
+
+```bash
+# Basic key creation
+codika organization create-key \
+  --organization-id "xwk9CcT440Vupa8soIhY" \
+  --name "CI Deploy Key" \
+  --scopes "deploy,trigger"
+
+# With description and expiry
+codika organization create-key \
+  --organization-id "xwk9CcT440Vupa8soIhY" \
+  --name "Agent Key" \
+  --scopes "deploy,trigger,integrations:manage" \
+  --description "Key for autonomous agent deployments" \
+  --expires-in-days 90
+
+# JSON output for scripting
+codika organization create-key \
+  --organization-id "xwk9CcT440Vupa8soIhY" \
+  --name "Script Key" \
+  --scopes "deploy,trigger" \
+  --json
+```
+
+## Output
+
+```
+✓ Organization Key Created Successfully
+
+  Key:          cko_xxxxxxxxxxxxxxxxxxxx (shown once — save it now)
+  Key Prefix:   cko_xxxxxxxx
+  Name:         CI Deploy Key
+  Scopes:       deploy, trigger
+  Request ID:   req-789
+```
+
+<Warning>
+The raw key is displayed only once at creation time. Store it securely — it cannot be retrieved later.
+</Warning>
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error (auth, network, server) |
+| `2` | CLI validation error (e.g., missing `--organization-id`, `--name`, or `--scopes`) |

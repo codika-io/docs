@@ -1,0 +1,85 @@
+---
+title: "Create Organization"
+description: "Create a new organization on the Codika platform with optional self-hosted n8n configuration"
+---
+
+## When to use
+
+- User wants to create a new organization for a team or client
+- Setting up a new workspace before creating projects and deploying use cases
+- Automating org provisioning via scripts or agents
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- Personal key (`ckp_`) or admin key (`cka_`) with `organizations:create` scope
+
+## Command
+
+```bash
+codika organization create [options]
+```
+
+## Options
+
+| Option | Required | Description | Default |
+|--------|----------|-------------|---------|
+| `--name <name>` | Yes | Organization name (2-100 characters) | — |
+| `--description <desc>` | No | Organization description | — |
+| `--size <size>` | No | Organization size | — |
+| `--n8n-base-url <url>` | No | Self-hosted n8n instance URL (admin only) | Platform default |
+| `--n8n-api-key <key>` | No | Self-hosted n8n API key (admin only) | Platform default |
+| `--api-url <url>` | No | Override API URL | — |
+| `--api-key <key>` | No | Override API key | — |
+| `--profile <name>` | No | Use a specific profile instead of the active one | — |
+| `--json` | No | JSON output | — |
+
+### Size values
+
+`solo`, `2-10`, `11-50`, `51-200`, `201-1000`, `1000+`
+
+## Behavior
+
+1. Calls the Codika platform API to create the organization
+2. The authenticated user becomes the organization owner
+3. Initializes free plan credits and n8n secrets
+4. If self-hosted n8n flags are provided, validates the credentials before creating
+
+## Examples
+
+```bash
+# Basic creation
+codika organization create --name "Acme Corp"
+
+# With description and size
+codika organization create \
+  --name "Acme Corp" \
+  --description "Main workspace for Acme team" \
+  --size "11-50"
+
+# With self-hosted n8n (admin only)
+codika organization create \
+  --name "Enterprise Client" \
+  --n8n-base-url "https://n8n.enterprise.com" \
+  --n8n-api-key "n8n_api_xxxxx"
+
+# JSON output for scripting
+codika organization create --name "Test Org" --json
+```
+
+## Output
+
+```
+✓ Organization Created Successfully
+
+  Organization ID: abc123-def456
+  Request ID:      req-789
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error (auth, network, server) |
+| `2` | CLI validation error (e.g., missing `--name`) |

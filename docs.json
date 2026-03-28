@@ -106,7 +106,9 @@
             "group": "Setup",
             "pages": [
               "operations/authentication",
-              "operations/create-project"
+              "operations/create-project",
+              "operations/create-organization",
+              "operations/create-organization-key"
             ]
           },
           {
