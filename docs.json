@@ -134,6 +134,7 @@
               "operations/trigger-workflow",
               "operations/fetch-use-case",
               "operations/get-execution",
+              "operations/get-instance",
               "operations/list-executions",
               "operations/get-skills",
               "operations/manage-integrations",

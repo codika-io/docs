@@ -1,0 +1,166 @@
+---
+title: "Get Instance"
+description: "Fetch process instance details — deployment parameters, status, version, and active workflows"
+---
+
+## When to use
+
+- Check what deployment parameters (INSTPARM values) are set on a live instance
+- Verify the deployment status and version of an instance
+- See which workflows are deployed and their n8n workflow IDs
+- Confirm an instance is active before triggering workflows
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- A deployed process instance (via `deploy use-case` or the dashboard)
+- API key with `executions:read` scope
+
+## Typical workflow
+
+```bash
+# 1. Deploy a use case
+codika deploy use-case .
+
+# 2. Redeploy with parameters
+codika redeploy --param TO_EMAILS='["ops@acme.com"]'
+
+# 3. Verify the parameters are set correctly
+codika get instance --environment prod
+
+# 4. If wrong, redeploy with corrected parameters
+codika redeploy --environment prod --param TO_EMAILS='["correct@acme.com"]'
+```
+
+## Command
+
+```bash
+codika get instance [processInstanceId] [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `[processInstanceId]` | Process instance ID (optional — auto-resolved from project.json) |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--path <path>` | Path to use case folder with `project.json` | Current directory |
+| `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
+| `--environment <env>` | Environment: `dev` or `prod` | `dev` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | Output as JSON | — |
+
+## Process instance ID resolution
+
+The instance ID is resolved in this order:
+
+1. Positional argument (explicit ID)
+2. `project.json` in `--path` directory — uses `devProcessInstanceId` or `prodProcessInstanceId` based on `--environment`
+3. `project.json` in current directory — same environment-aware selection
+
+Use `--environment prod` to target the production instance from project.json.
+
+## Examples
+
+```bash
+# Explicit instance ID
+codika get instance 019d312f-517c-726e-83ac-b678f2ad6afc
+
+# From a use case folder (dev instance)
+codika get instance --path ./my-use-case
+
+# Production instance from project.json
+codika get instance --environment prod
+
+# JSON output for scripting
+codika get instance --environment prod --json
+
+# With a custom project file
+codika get instance --project-file project-client-a.json --environment prod
+```
+
+## Output
+
+### Human-readable (default)
+
+```
+✓ Process Instance
+
+  Instance ID:    019d312f-517c-726e-83ac-b678f2ad6afc
+  Process ID:     11fe8iPQ4pBlskVIknz4
+  Environment:    prod
+  Status:         deployed (active)
+  Version:        1.50
+  Title:          Creafid Receipt Processor
+
+  Deployment Parameters:
+    TO_EMAILS: [] (empty)
+    CC_EMAILS: [] (empty)
+
+  Workflows:
+    - http-process-receipt (n8n: NGC6dwX7WL1F29DI)
+    - http-get-receipts (n8n: XE4RRqOIaJF1m8Fu)
+    - http-manage-clients (n8n: o1bvAUtugGH9PgRr)
+```
+
+### JSON output (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "processInstanceId": "019d312f-517c-726e-83ac-b678f2ad6afc",
+    "processId": "11fe8iPQ4pBlskVIknz4",
+    "environment": "prod",
+    "isActive": true,
+    "archived": false,
+    "currentVersion": "1.50",
+    "title": "Creafid Receipt Processor",
+    "organizationId": "xwk9CcT440Vupa8soIhY",
+    "installedAt": "2026-03-27T10:00:00.000Z",
+    "lastExecutedAt": "2026-03-31T14:30:00.000Z",
+    "deployment": {
+      "deploymentInstanceId": "abc123",
+      "deploymentStatus": "deployed",
+      "deploymentParameters": {
+        "TO_EMAILS": [],
+        "CC_EMAILS": []
+      },
+      "deploymentInputSchema": [],
+      "workflows": [
+        {
+          "workflowId": "http-process-receipt",
+          "n8nWorkflowId": "NGC6dwX7WL1F29DI",
+          "workflowName": "Process Receipt (HTTP)"
+        }
+      ]
+    }
+  },
+  "requestId": "019d312f-..."
+}
+```
+
+## Status values
+
+| Status | Meaning |
+|--------|---------|
+| `deployed (active)` | Workflows are deployed and active |
+| `deployed (paused)` | Workflows are deployed but paused |
+| `deploying` | Deployment is in progress |
+| `pending` | Awaiting first deployment |
+| `failed` | Deployment failed |
+| `archived` | Instance has been archived |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error or instance not found |
+| `2` | CLI validation error (missing instance ID, missing API key) |

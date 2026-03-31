@@ -42,6 +42,7 @@ The `codika` CLI (`npm install -g codika`) is the primary interface for all oper
 | [Trigger Workflow](/operations/trigger-workflow) | `trigger <workflowId>` | Execute a deployed workflow via HTTP |
 | [Fetch Use Case](/operations/fetch-use-case) | `get use-case <projectId>` | Download a deployed use case from the platform |
 | [Get Execution](/operations/get-execution) | `get execution <executionId>` | Debug executions with node-level details |
+| [Get Instance](/operations/get-instance) | `get instance [instanceId]` | Inspect a live instance — parameters, status, version, workflows |
 | [List Executions](/operations/list-executions) | `list executions <instanceId>` | List recent executions for a process instance |
 | [Get Skills](/operations/get-skills) | `get skills [instanceId]` | Download agent skill documents from a deployed process |
 | [Manage Integrations](/operations/manage-integrations) | `integration set/list/delete` | Configure API keys and credentials for organizations |
@@ -144,7 +145,8 @@ An agent or human orchestrating a full deployment uses operations in this order:
 9. list-executions      → Review recent execution history
 10. publish-use-case    → Publish to production when ready
 11. redeploy-use-case   → Update parameters without new version
-12. manage-integrations → Configure required API keys/credentials
+12. get-instance        → Inspect live instance (parameters, status, version)
+13. manage-integrations → Configure required API keys/credentials
 ```
 
 ## Command hierarchy
@@ -178,6 +180,7 @@ codika
   ├── get
   │   ├── use-case <projectId>   # Fetch deployed use case
   │   ├── execution <executionId> # Fetch execution details
+  │   ├── instance [instanceId]  # Inspect live instance details
   │   └── skills [instanceId]    # Fetch agent skill documents
   ├── list
   │   └── executions <instanceId> # List recent executions
