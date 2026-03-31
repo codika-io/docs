@@ -135,7 +135,9 @@
               "operations/fetch-use-case",
               "operations/get-execution",
               "operations/get-instance",
+              "operations/instance-activate",
               "operations/list-executions",
+              "operations/list-instances",
               "operations/get-skills",
               "operations/manage-integrations",
               "operations/status"

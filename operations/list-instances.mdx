@@ -1,0 +1,96 @@
+---
+title: "List Instances"
+description: "List all process instances for an organization with filtering by environment, status, and archival state"
+---
+
+## When to use
+
+- See all deployed process instances across an organization at a glance
+- Check instance status across environments (dev and prod)
+- Audit what is currently running in an organization
+- Find an instance ID to pass to `get instance` or `instance activate/deactivate`
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- API key with `instances:read` scope
+
+## Command
+
+```bash
+codika list instances [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--environment <env>` | Filter by environment (`dev` or `prod`) | All environments |
+| `--archived` | Include archived instances | Off |
+| `--limit <n>` | Number of instances to return | `50` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | JSON output | — |
+
+## Behavior
+
+1. Fetches all process instances for the authenticated organization
+2. Returns lightweight summaries with status, environment, and version info
+3. Sorted by last execution time, most recent first
+
+## Examples
+
+```bash
+# List all instances
+codika list instances
+
+# Filter by environment
+codika list instances --environment prod
+
+# Include archived instances
+codika list instances --archived
+
+# Limit results
+codika list instances --limit 10
+
+# JSON output for scripting
+codika list instances --json
+
+# Combine filters
+codika list instances --environment dev --limit 5 --json
+```
+
+## Output
+
+```
+● Process Instances (org: My Organization)
+
+  Title                    Env    Status       Version   Last Executed
+  ──────────────────────── ────── ──────────── ───────── ───────────────────
+  Email Automation         prod   ✓ active     v2.1.0    2026-03-30 14:30:00
+  Email Automation         dev    ○ inactive   v2.2.0    2026-03-30 10:15:00
+  Weekly Report            prod   ✓ active     v1.0.0    2026-03-29 08:00:00
+  Data Ingestion Pipeline  dev    ✗ failed     v1.3.0    2026-03-28 16:45:00
+
+  Showing 4 instances
+```
+
+Each row shows the instance title, environment, status with icon, template version, and last execution timestamp. Instances with no executions show `—` in the Last Executed column.
+
+Note: Zero instances is not an error — the CLI prints "No instances found." and exits with code 0.
+
+## Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika login` |
+| 403 | Missing scope | Create key with `instances:read` scope |
+| 403 | No access | Organization mismatch — check active profile |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error |

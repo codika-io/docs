@@ -1,0 +1,153 @@
+---
+title: "Activate / Deactivate Instance"
+description: "Activate or deactivate a deployed process instance to control whether its workflows are running"
+---
+
+## When to use
+
+- Pause all workflows in an instance during maintenance or debugging
+- Resume workflows after maintenance is complete
+- Toggle between dev and prod environments (activating prod may auto-deactivate dev)
+- Temporarily disable a workflow without undeploying it
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- A deployed process instance (`devProcessInstanceId` or `prodProcessInstanceId` in `project.json`)
+- API key with `instances:manage` scope
+
+## Commands
+
+```bash
+codika instance activate [processInstanceId] [options]
+codika instance deactivate [processInstanceId] [options]
+```
+
+## Arguments
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `[processInstanceId]` | No | Process instance ID. If omitted, resolved from `project.json` |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--path <path>` | Path to use case folder with `project.json` | Current directory |
+| `--project-file <path>` | Path to custom project file | `project.json` |
+| `--environment <env>` | Target environment (`dev` or `prod`) | `dev` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | JSON output | — |
+
+## Process instance ID resolution
+
+The CLI resolves which process instance to target using this priority:
+
+1. Positional argument `[processInstanceId]` (highest priority)
+2. `project.json` field based on `--environment`:
+   - `dev` → `devProcessInstanceId`
+   - `prod` → `prodProcessInstanceId`
+
+If neither is found, the command exits with an error.
+
+## Auto-toggle behavior
+
+<Info>
+**Environment auto-toggle.** Activating a prod instance may automatically deactivate the corresponding dev instance for the same process, and vice versa. This prevents both environments from running simultaneously and consuming duplicate resources. The CLI reports when an auto-toggle occurs.
+</Info>
+
+## Examples
+
+```bash
+# Activate prod instance by ID
+codika instance activate pi_prod_789
+
+# Deactivate dev instance by ID
+codika instance deactivate pi_dev_456
+
+# Activate from use case folder (reads project.json)
+codika instance activate --environment prod
+
+# Deactivate from use case folder
+codika instance deactivate --environment dev
+
+# Custom project file
+codika instance activate --project-file project-client.json --environment prod
+
+# JSON output for automation
+codika instance activate pi_prod_789 --json
+```
+
+## Output
+
+**Activate:**
+
+```
+✓ Instance activated
+
+  Instance:    pi_prod_789
+  Environment: prod
+  Status:      active
+  Workflows:   3 activated
+```
+
+**Deactivate:**
+
+```
+✓ Instance deactivated
+
+  Instance:    pi_dev_456
+  Environment: dev
+  Status:      inactive
+  Workflows:   3 deactivated
+```
+
+**With auto-toggle:**
+
+```
+✓ Instance activated
+
+  Instance:    pi_prod_789
+  Environment: prod
+  Status:      active
+  Workflows:   3 activated
+
+  ⚠ Auto-deactivated dev instance pi_dev_456
+```
+
+JSON output (`--json`):
+
+```json
+{
+  "success": true,
+  "processInstanceId": "pi_prod_789",
+  "environment": "prod",
+  "status": "active",
+  "workflowsAffected": 3,
+  "autoToggled": {
+    "processInstanceId": "pi_dev_456",
+    "environment": "dev",
+    "status": "inactive"
+  }
+}
+```
+
+## Error reference
+
+| HTTP | Error | Fix |
+|------|-------|-----|
+| 401 | Invalid API key | Re-login with `codika login` |
+| 403 | Missing scope | Create key with `instances:manage` scope |
+| 404 | Instance not found | Check instance ID in `project.json` or pass as positional argument |
+| 409 | Instance already in target state | Instance is already active/inactive — no action needed |
+| 400 | Instance in failed state | Cannot activate a failed instance — fix with `codika redeploy` first |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | State change successful |
+| `1` | API error |
+| `2` | CLI validation error |

@@ -43,7 +43,9 @@ The `codika` CLI (`npm install -g codika`) is the primary interface for all oper
 | [Fetch Use Case](/operations/fetch-use-case) | `get use-case <projectId>` | Download a deployed use case from the platform |
 | [Get Execution](/operations/get-execution) | `get execution <executionId>` | Debug executions with node-level details |
 | [Get Instance](/operations/get-instance) | `get instance [instanceId]` | Inspect a live instance — parameters, status, version, workflows |
+| [Activate / Deactivate Instance](/operations/instance-activate) | `instance activate/deactivate [instanceId]` | Activate or deactivate a process instance |
 | [List Executions](/operations/list-executions) | `list executions <instanceId>` | List recent executions for a process instance |
+| [List Instances](/operations/list-instances) | `list instances` | List all process instances for an organization |
 | [Get Skills](/operations/get-skills) | `get skills [instanceId]` | Download agent skill documents from a deployed process |
 | [Manage Integrations](/operations/manage-integrations) | `integration set/list/delete` | Configure API keys and credentials for organizations |
 | [Status](/operations/status) | `status [path]` | Check identity, context, and deployment readiness |
@@ -146,7 +148,9 @@ An agent or human orchestrating a full deployment uses operations in this order:
 10. publish-use-case    → Publish to production when ready
 11. redeploy-use-case   → Update parameters without new version
 12. get-instance        → Inspect live instance (parameters, status, version)
-13. manage-integrations → Configure required API keys/credentials
+13. instance activate   → Activate or deactivate instances
+14. list instances      → List all process instances for the org
+15. manage-integrations → Configure required API keys/credentials
 ```
 
 ## Command hierarchy
@@ -182,8 +186,12 @@ codika
   │   ├── execution <executionId> # Fetch execution details
   │   ├── instance [instanceId]  # Inspect live instance details
   │   └── skills [instanceId]    # Fetch agent skill documents
+  ├── instance
+  │   ├── activate [instanceId]   # Activate a process instance
+  │   └── deactivate [instanceId] # Deactivate a process instance
   ├── list
-  │   └── executions <instanceId> # List recent executions
+  │   ├── executions <instanceId> # List recent executions
+  │   └── instances               # List all process instances
   ├── project
   │   └── create                 # Create a new project
   └── completion [shell]         # Generate shell completions
