@@ -27,8 +27,10 @@ codika organization create [options]
 | `--name <name>` | Yes | Organization name (2-100 characters) | — |
 | `--description <desc>` | No | Organization description | — |
 | `--size <size>` | No | Organization size | — |
-| `--n8n-base-url <url>` | No | Self-hosted n8n instance URL (admin only) | Platform default |
-| `--n8n-api-key <key>` | No | Self-hosted n8n API key (admin only) | Platform default |
+| `--logo <path>` | No | Path to a logo image file (JPEG, PNG, or WebP, max 5MB). Uploaded to platform storage. | — |
+| `--n8n-base-url <url>` | No | Self-hosted n8n instance URL | Platform default |
+| `--n8n-api-key <key>` | No | Self-hosted n8n API key | Platform default |
+| `--store-credential-copy` | No | Store encrypted credential backup in Codika (only with self-hosted n8n) | `false` |
 | `--api-url <url>` | No | Override API URL | — |
 | `--api-key <key>` | No | Override API key | — |
 | `--profile <name>` | No | Use a specific profile instead of the active one | — |
@@ -40,10 +42,11 @@ codika organization create [options]
 
 ## Behavior
 
-1. Calls the Codika platform API to create the organization
-2. The authenticated user becomes the organization owner
-3. Initializes free plan credits and n8n secrets
-4. If self-hosted n8n flags are provided, validates the credentials before creating
+1. If `--logo` is provided, reads the file, base64-encodes it, and sends it to the API for upload to platform storage
+2. Calls the Codika platform API to create the organization
+3. The authenticated user becomes the organization owner
+4. Initializes free plan credits and n8n secrets
+5. If self-hosted n8n flags are provided, validates the credentials before creating
 
 ## Examples
 
@@ -57,11 +60,23 @@ codika organization create \
   --description "Main workspace for Acme team" \
   --size "11-50"
 
-# With self-hosted n8n (admin only)
+# With a logo
+codika organization create \
+  --name "Acme Corp" \
+  --logo ./acme-logo.png
+
+# With self-hosted n8n
 codika organization create \
   --name "Enterprise Client" \
   --n8n-base-url "https://n8n.enterprise.com" \
   --n8n-api-key "n8n_api_xxxxx"
+
+# With self-hosted n8n and credential backup
+codika organization create \
+  --name "Enterprise Client" \
+  --n8n-base-url "https://n8n.enterprise.com" \
+  --n8n-api-key "n8n_api_xxxxx" \
+  --store-credential-copy
 
 # JSON output for scripting
 codika organization create --name "Test Org" --json
