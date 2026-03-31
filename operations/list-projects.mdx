@@ -1,0 +1,102 @@
+---
+title: "List Projects"
+description: "List projects in an organization with optional filtering by archive status"
+---
+
+## When to use
+
+- Browse all projects in the authenticated organization
+- Check project status and deployment state
+- Find a project ID for subsequent commands like `get project`
+- List archived projects for cleanup
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- API key with `projects:read` scope
+
+## Command
+
+```bash
+codika list projects [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--archived` | Show archived projects instead of active ones | `false` |
+| `--limit <n>` | Number of results (max: 100) | `50` |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | Output as JSON | — |
+
+## Examples
+
+```bash
+# List active projects
+codika list projects
+
+# List archived projects
+codika list projects --archived
+
+# Limit results
+codika list projects --limit 10
+
+# JSON output for scripting
+codika list projects --json
+```
+
+## Output
+
+### Human-readable (default)
+
+```
+● Projects (xwk9CcT440...)
+
+  Name                              Status         Published  Created
+  ────────────────────────────────── ────────────── ────────── ──────────
+  Creafid Receipt Processor          ● in_progress  yes        2026-03-27
+  Growth Analytics                   ○ draft        no         2026-03-25
+
+  Showing 2 projects
+```
+
+### JSON output (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "id": "wIkjqoLC88...",
+        "name": "Creafid Receipt Processor",
+        "description": "Processes receipts via HTTP upload",
+        "status": "in_progress",
+        "hasPublishedProcess": true,
+        "createdBy": "user123",
+        "createdAt": "2026-03-27T10:00:00.000Z",
+        "archived": false
+      }
+    ],
+    "count": 1,
+    "organizationId": "xwk9CcT440Vupa8soIhY"
+  },
+  "requestId": "019d312f-..."
+}
+```
+
+## Access control
+
+- **Admin keys** and **org admins/owners** see all projects in the organization
+- **Regular members** see only projects they created
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error |
+| `2` | CLI validation error (missing API key) |

@@ -108,7 +108,8 @@
               "operations/authentication",
               "operations/create-project",
               "operations/create-organization",
-              "operations/create-organization-key"
+              "operations/create-organization-key",
+              "operations/update-organization-key"
             ]
           },
           {
@@ -135,9 +136,11 @@
               "operations/fetch-use-case",
               "operations/get-execution",
               "operations/get-instance",
+              "operations/get-project",
               "operations/instance-activate",
               "operations/list-executions",
               "operations/list-instances",
+              "operations/list-projects",
               "operations/get-skills",
               "operations/manage-integrations",
               "operations/status"

@@ -1,0 +1,109 @@
+---
+title: "Get Project"
+description: "Fetch project details — status, deployment version, stages, and process info"
+---
+
+## When to use
+
+- Inspect project details including deployment version and status
+- Check if a project has a published process
+- View the current stage information
+- Verify project configuration before deploying
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- API key with `projects:read` scope
+- A valid project ID (from `list projects` or `project create`)
+
+## Command
+
+```bash
+codika get project <projectId> [options]
+```
+
+## Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `<projectId>` | Project ID (required) |
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | Output as JSON | — |
+
+## Examples
+
+```bash
+# Get project details
+codika get project wIkjqoLC88abc123
+
+# JSON output
+codika get project wIkjqoLC88abc123 --json
+```
+
+## Output
+
+### Human-readable (default)
+
+```
+✓ Project
+
+  Project ID:   wIkjqoLC88abc123
+  Name:         Creafid Receipt Processor
+  Status:       in_progress
+  Published:    yes
+  Process ID:   11fe8iPQ4pBlskVIknz4
+  Deployment:   v1.50 (2026-03-31)
+  Stages:       2 (current: 2)
+  Created:      2026-03-27
+```
+
+### JSON output (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "wIkjqoLC88abc123",
+    "name": "Creafid Receipt Processor",
+    "description": "Processes receipts via HTTP upload",
+    "status": "in_progress",
+    "hasPublishedProcess": true,
+    "processId": "11fe8iPQ4pBlskVIknz4",
+    "currentDeployment": {
+      "version": "1.50",
+      "deployedAt": "2026-03-31T10:00:00.000Z"
+    },
+    "createdBy": "user123",
+    "createdAt": "2026-03-27T10:00:00.000Z",
+    "archived": false,
+    "stageCount": 2,
+    "currentStage": 2
+  },
+  "requestId": "019d312f-..."
+}
+```
+
+## Access control
+
+- **Admin keys** (`cka_`): can access any project in any organization
+- **Org owners/admins**: can access all projects in their organization
+- **Regular members**: can only access projects they created (`createdBy` matches their user ID)
+
+<Note>
+The response does not expose sensitive internal fields like `roles`, `stages` configuration, or `documentTags`. Only summary data is returned.
+</Note>
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error or project not found |
+| `2` | CLI validation error (missing project ID, missing API key) |

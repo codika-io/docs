@@ -17,6 +17,9 @@ The `codika` CLI (`npm install -g codika`) is the primary interface for all oper
 |-----------|------------|--------------|
 | [Authentication](/operations/authentication) | `login`, `whoami`, `use`, `logout`, `config` | Install CLI, authenticate, manage profiles, switch organizations |
 | [Create Project](/operations/create-project) | `project create` | Create a platform project and link it to a use case folder |
+| [Create Organization](/operations/create-organization) | `organization create` | Create a new organization |
+| [Create Organization Key](/operations/create-organization-key) | `organization create-key` | Create an API key for an organization |
+| [Update Organization Key](/operations/update-organization-key) | `organization update-key` | Update scopes, name, or description of an API key |
 
 ### Build
 
@@ -46,6 +49,8 @@ The `codika` CLI (`npm install -g codika`) is the primary interface for all oper
 | [Activate / Deactivate Instance](/operations/instance-activate) | `instance activate/deactivate [instanceId]` | Activate or deactivate a process instance |
 | [List Executions](/operations/list-executions) | `list executions <instanceId>` | List recent executions for a process instance |
 | [List Instances](/operations/list-instances) | `list instances` | List all process instances for an organization |
+| [List Projects](/operations/list-projects) | `list projects` | List all projects for an organization |
+| [Get Project](/operations/get-project) | `get project <projectId>` | Inspect project details — status, deployment, stages |
 | [Get Skills](/operations/get-skills) | `get skills [instanceId]` | Download agent skill documents from a deployed process |
 | [Manage Integrations](/operations/manage-integrations) | `integration set/list/delete` | Configure API keys and credentials for organizations |
 | [Status](/operations/status) | `status [path]` | Check identity, context, and deployment readiness |
@@ -185,14 +190,20 @@ codika
   │   ├── use-case <projectId>   # Fetch deployed use case
   │   ├── execution <executionId> # Fetch execution details
   │   ├── instance [instanceId]  # Inspect live instance details
+  │   ├── project <projectId>    # Inspect project details
   │   └── skills [instanceId]    # Fetch agent skill documents
   ├── instance
   │   ├── activate [instanceId]   # Activate a process instance
   │   └── deactivate [instanceId] # Deactivate a process instance
   ├── list
   │   ├── executions <instanceId> # List recent executions
-  │   └── instances               # List all process instances
+  │   ├── instances               # List all process instances
+  │   └── projects                # List all projects
   ├── project
   │   └── create                 # Create a new project
+  ├── organization
+  │   ├── create                 # Create a new organization
+  │   ├── create-key             # Create an organization API key
+  │   └── update-key             # Update an organization API key
   └── completion [shell]         # Generate shell completions
 ```

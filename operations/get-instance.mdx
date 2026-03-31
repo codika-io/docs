@@ -51,6 +51,7 @@ codika get instance [processInstanceId] [options]
 | `--path <path>` | Path to use case folder with `project.json` | Current directory |
 | `--project-file <path>` | Path to custom project file (e.g., `project-client-a.json`) | `project.json` |
 | `--environment <env>` | Environment: `dev` or `prod` | `dev` |
+| `--workflows` | Show expanded workflow details (triggers, activation status, cost) | — |
 | `--api-url <url>` | Override API URL | — |
 | `--api-key <key>` | Override API key | — |
 | `--profile <name>` | Use a specific profile instead of the active one | — |
@@ -83,6 +84,9 @@ codika get instance --environment prod --json
 
 # With a custom project file
 codika get instance --project-file project-client-a.json --environment prod
+
+# Expanded workflow details (triggers, activation, cost)
+codika get instance --workflows
 ```
 
 ## Output
@@ -108,6 +112,56 @@ codika get instance --project-file project-client-a.json --environment prod
     - http-get-receipts (n8n: XE4RRqOIaJF1m8Fu)
     - http-manage-clients (n8n: o1bvAUtugGH9PgRr)
 ```
+
+### With `--workflows` flag
+
+```
+✓ Process Instance
+
+  Instance ID:    019d312f-517c-726e-83ac-b678f2ad6afc
+  ...
+
+  Workflows:
+    http-process-receipt
+      n8n ID:     NGC6dwX7WL1F29DI
+      Active:     yes
+      Triggers:   http (POST)
+      Cost:       0.02 credits
+
+    scheduled-report
+      n8n ID:     XE4RRqOIaJF1m8Fu
+      Active:     yes
+      Triggers:   schedule (0 6 * * *)
+```
+
+### JSON output with `--workflows` (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "processInstanceId": "019d444d-...",
+    "deployment": {
+      "workflows": [
+        {
+          "workflowId": "competitor-news-monitoring",
+          "n8nWorkflowId": "pE5dKk7zbLQ6hdLg",
+          "workflowName": "Competitor News Monitoring",
+          "n8nWorkflowIsActive": true,
+          "triggers": [
+            { "type": "http", "method": "POST" },
+            { "type": "schedule", "cronExpression": "0 8 * * *", "timezone": "Europe/Brussels" }
+          ],
+          "cost": 25,
+          "integrationUids": ["tavily"]
+        }
+      ]
+    }
+  }
+}
+```
+
+Without `--workflows`, each workflow only contains `workflowId`, `n8nWorkflowId`, and `workflowName` (backward compatible).
 
 ### JSON output (`--json`)
 

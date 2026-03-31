@@ -1,0 +1,112 @@
+---
+title: "Update Organization Key"
+description: "Update the scopes, name, or description of an existing organization API key"
+---
+
+## When to use
+
+- Change the scopes of an existing API key (e.g., add `projects:read` scope)
+- Rename a key for better identification
+- Update the description of a key
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- API key with `api-keys:manage` scope
+- Caller must be an admin or owner in the organization
+- The key ID of the key to update (from the platform dashboard or `create-key` output)
+
+## Command
+
+```bash
+codika organization update-key [options]
+```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--key-id <id>` | Key ID to update (required) | — |
+| `--scopes <scopes>` | New comma-separated scopes (replaces existing) | — |
+| `--name <name>` | New key name | — |
+| `--description <desc>` | New key description | — |
+| `--api-url <url>` | Override API URL | — |
+| `--api-key <key>` | Override API key | — |
+| `--profile <name>` | Use a specific profile instead of the active one | — |
+| `--json` | Output as JSON | — |
+
+<Info>
+At least one of `--scopes`, `--name`, or `--description` must be provided.
+When `--scopes` is provided, it **replaces** the existing scopes entirely.
+</Info>
+
+## Available scopes
+
+| Scope | Description |
+|-------|-------------|
+| `deploy:use-case` | Deploy use cases, upload documents, and read metadata |
+| `deploy:data-ingestion` | Deploy data ingestion configurations |
+| `projects:create` | Create new projects via API |
+| `projects:read` | List and inspect project details |
+| `workflows:trigger` | Trigger workflows and poll execution status |
+| `executions:read` | List and read execution details |
+| `instances:read` | Read process instance details |
+| `instances:manage` | Activate, deactivate, and manage instances |
+| `skills:read` | Download agent skill documents |
+| `integrations:manage` | Create, delete, and list integrations |
+| `api-keys:manage` | Create and manage organization API keys |
+
+## Examples
+
+```bash
+# Update scopes
+codika organization update-key --key-id abc123 --scopes deploy:use-case,instances:read,projects:read
+
+# Rename a key
+codika organization update-key --key-id abc123 --name "Production Deploy Key"
+
+# Update description
+codika organization update-key --key-id abc123 --description "Used by CI/CD pipeline"
+
+# Multiple fields at once
+codika organization update-key --key-id abc123 --name "Full Access" --scopes deploy:use-case,instances:read,instances:manage
+
+# JSON output
+codika organization update-key --key-id abc123 --scopes deploy:use-case --json
+```
+
+## Output
+
+### Human-readable (default)
+
+```
+✓ API key updated
+
+  Key ID:       abc123
+  Name:         Production Deploy Key
+  Scopes:       deploy:use-case, instances:read, projects:read
+```
+
+### JSON output (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "keyId": "abc123",
+    "name": "Production Deploy Key",
+    "description": "Used by CI/CD pipeline",
+    "scopes": ["deploy:use-case", "instances:read", "projects:read"],
+    "updatedAt": "2026-03-31T14:00:00.000Z"
+  },
+  "requestId": "019d312f-..."
+}
+```
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | API error (key not found, insufficient permissions, invalid scopes) |
+| `2` | CLI validation error (missing key ID, missing API key) |
