@@ -35,12 +35,17 @@ codika organization create-key [options]
 | `--profile <name>` | No | Use a specific profile instead of the active one | — |
 | `--json` | No | JSON output | — |
 
+### Available scopes
+
+`deploy:use-case`, `deploy:data-ingestion`, `projects:create`, `workflows:trigger`, `executions:read`, `skills:read`, `integrations:manage`, `api-keys:manage`
+
 ## Behavior
 
 1. Validates that the authenticated key has the `api-keys:manage` scope
-2. Verifies the user is a member or owner of the target organization
+2. Verifies the user is an admin or owner of the target organization
 3. Creates a new organization key (`cko_`) with the specified scopes
-4. Returns the raw key once — it cannot be retrieved again after creation
+4. Saves the new key as a profile and sets it as active
+5. Returns the raw key once — it cannot be retrieved again after creation
 
 ## Examples
 
@@ -49,13 +54,13 @@ codika organization create-key [options]
 codika organization create-key \
   --organization-id "xwk9CcT440Vupa8soIhY" \
   --name "CI Deploy Key" \
-  --scopes "deploy,trigger"
+  --scopes "deploy:use-case,workflows:trigger"
 
 # With description and expiry
 codika organization create-key \
   --organization-id "xwk9CcT440Vupa8soIhY" \
   --name "Agent Key" \
-  --scopes "deploy,trigger,integrations:manage" \
+  --scopes "deploy:use-case,workflows:trigger,integrations:manage" \
   --description "Key for autonomous agent deployments" \
   --expires-in-days 90
 
@@ -63,20 +68,26 @@ codika organization create-key \
 codika organization create-key \
   --organization-id "xwk9CcT440Vupa8soIhY" \
   --name "Script Key" \
-  --scopes "deploy,trigger" \
+  --scopes "deploy:use-case,workflows:trigger" \
   --json
 ```
 
 ## Output
 
 ```
-✓ Organization Key Created Successfully
+✓ Organization API Key Created Successfully
 
-  Key:          cko_xxxxxxxxxxxxxxxxxxxx (shown once — save it now)
-  Key Prefix:   cko_xxxxxxxx
-  Name:         CI Deploy Key
-  Scopes:       deploy, trigger
-  Request ID:   req-789
+⚠ Save the API key below — it will not be shown again.
+
+  API Key:     cko_xxxxxxxxxxxxxxxxxxxx
+  Key Prefix:  cko_xxxxxxxx
+  Key ID:      abc123-def456
+  Name:        CI Deploy Key
+  Scopes:      deploy:use-case, workflows:trigger
+  Created:     3/30/2026
+  Request ID:  req-789
+
+  Saved as profile "org-api-key-ci-deploy-key" (now active)
 ```
 
 <Warning>
