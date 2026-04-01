@@ -160,6 +160,7 @@
             "group": "Guides",
             "pages": [
               "dashboard/authentication",
+              "dashboard/webhook-signatures",
               "dashboard/triggering-workflows",
               "dashboard/environments",
               "dashboard/patterns"

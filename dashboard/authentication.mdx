@@ -1,21 +1,23 @@
 ---
 title: "API Keys & Authentication"
-description: "Two API key types for different use cases — instance keys for apps, org keys for CLI and agents"
+description: "Three ways to authenticate — API keys for dashboards and CLI, webhook signatures for external platforms"
 ---
 
-## Two key types
+## Authentication methods
 
-Codika has two types of API keys that serve different purposes:
+Codika supports three authentication methods on its public API:
 
-| | Instance Key (`ck_`) | Organization Key (`cko_`) |
-|---|---|---|
-| **Created by** | Auto-generated per process instance | You create in the Codika dashboard |
-| **Scope** | One specific process instance | Any instance in the organization |
-| **Permissions** | Trigger workflows + poll status | Configurable (deploy, trigger, skills, etc.) |
-| **Best for** | Custom dashboards, apps | CLI, agents, CI/CD |
-| **Header** | `X-API-Key` | `X-Process-Manager-Key` |
+| | Instance Key (`ck_`) | Organization Key (`cko_`) | Webhook Signature (HMAC) |
+|---|---|---|---|
+| **Created by** | Auto-generated per process instance | You create in the Codika dashboard | External platform (Resend, Stripe, etc.) |
+| **Scope** | One specific process instance | Any instance in the organization | One specific workflow endpoint |
+| **Best for** | Custom dashboards, apps | CLI, agents, CI/CD | External platforms that sign outbound webhooks |
+| **Header** | `X-API-Key` | `X-Process-Manager-Key` | `webhook-signature` + `webhook-id` + `webhook-timestamp` |
+| **Secret on the wire** | Yes | Yes | No (only a signature) |
 
 **For custom dashboards, use instance keys (`ck_`).** They're auto-generated, scoped to exactly one process instance, and require no setup beyond copying the key.
+
+**For external platforms that sign webhooks** (Resend, Stripe, GitHub, Clerk), use [webhook signature verification](/dashboard/webhook-signatures). The external platform creates the signing secret — you just paste it into Codika.
 
 ## Where to find your instance API key
 

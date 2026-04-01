@@ -12,7 +12,7 @@ Your app uses two Codika public API endpoints:
 | `triggerWebhookPublic/{processInstanceId}/{workflowId}` | POST | Trigger a workflow |
 | `getExecutionStatusPublic/{processInstanceId}/{executionId}` | GET | Poll execution status |
 
-Both require the `X-API-Key` header with your instance API key.
+Both require authentication — either an `X-API-Key` header or [webhook signature headers](/dashboard/webhook-signatures).
 
 ## Step 1: Trigger a workflow
 
@@ -33,6 +33,10 @@ Body:
 ```
 
 The `payload` fields must match the workflow's input schema (defined in `config.ts`).
+
+<Tip>
+If your platform signs outbound webhooks (like Resend, Stripe, or any Standard Webhooks-compatible system), you can use **HMAC signature verification** instead of API keys. See [Webhook Signature Verification](/dashboard/webhook-signatures).
+</Tip>
 
 ### Response
 

@@ -1,0 +1,151 @@
+---
+title: "Webhook Signature Verification"
+description: "Authenticate requests using HMAC-SHA256 signatures — the standard used by Resend, Stripe, and other webhook platforms"
+---
+
+## When to use this
+
+If the system calling your Codika endpoint **signs outbound webhooks automatically** (like Resend, Stripe, GitHub, Clerk, or any Svix-based platform), use webhook signature verification instead of API keys.
+
+| | API Key (`X-API-Key`) | Webhook Signature (HMAC) |
+|---|---|---|
+| **Best for** | Your own dashboards, curl, Postman, Zapier | External platforms that sign webhooks |
+| **Setup** | Copy key, paste in header | Register URL in platform, paste signing secret in Codika |
+| **Secret on the wire** | Yes (key sent in every request) | No (only a signature derived from the secret) |
+| **Replay protection** | No | Yes (5-minute timestamp window) |
+| **Body tamper detection** | No | Yes (body is part of the signed payload) |
+
+## How it works
+
+Codika follows the [Standard Webhooks](https://www.standardwebhooks.com/) specification (used by Resend, Clerk, Dub, and others).
+
+When the external platform sends a request to your Codika endpoint, it includes three headers:
+
+| Header | Purpose | Example |
+|--------|---------|---------|
+| `webhook-id` | Unique message identifier | `msg_2xK9a8B...` |
+| `webhook-timestamp` | Unix timestamp (seconds) | `1711987200` |
+| `webhook-signature` | HMAC-SHA256 signature | `v1,K7gNU3sdo+OL0...` |
+
+The signature is computed as:
+
+```
+HMAC-SHA256(
+  key: base64_decode(signing_secret),
+  message: "{webhook-id}.{webhook-timestamp}.{request_body}"
+)
+```
+
+Codika verifies the signature and rejects the request if:
+- The signature doesn't match (tampered body or wrong secret)
+- The timestamp is older than 5 minutes (replay attack)
+- No signing secret is configured for that endpoint
+
+## Setup
+
+### Step 1: Get your webhook URL
+
+Open the **API Access** sheet from your process instance card (click the key icon). Each HTTP endpoint shows its public URL:
+
+```
+https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/{processInstanceId}/{workflowId}
+```
+
+Copy this URL.
+
+### Step 2: Register the URL in your external platform
+
+Paste the Codika webhook URL in your platform's webhook configuration. When you save, the platform generates a **signing secret** (typically prefixed `whsec_`).
+
+### Step 3: Paste the signing secret into Codika
+
+Back in Codika's API Access sheet, find the endpoint you registered and paste the signing secret in the "Signing Secrets" section. Optionally add a label (e.g., "Resend production").
+
+That's it. The external platform will now sign every request, and Codika will verify it automatically.
+
+## Sending signed requests manually
+
+If you're building your own webhook delivery system, here's how to sign requests:
+
+### TypeScript / Node.js
+
+```typescript
+import crypto from 'crypto';
+
+async function sendSignedWebhook(
+  url: string,
+  signingSecret: string,
+  payload: object
+) {
+  const body = JSON.stringify(payload);
+  const msgId = `msg_${crypto.randomUUID().split('-')[0]}`;
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+
+  // Strip whsec_ prefix and base64-decode the secret
+  const secretBase64 = signingSecret.replace('whsec_', '');
+  const secretKey = Buffer.from(secretBase64, 'base64');
+
+  // Sign: HMAC-SHA256("{msg_id}.{timestamp}.{body}")
+  const signature = crypto
+    .createHmac('sha256', secretKey)
+    .update(`${msgId}.${timestamp}.${body}`)
+    .digest('base64');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'webhook-id': msgId,
+      'webhook-timestamp': timestamp,
+      'webhook-signature': `v1,${signature}`
+    },
+    body
+  });
+
+  return response.json();
+}
+```
+
+### cURL
+
+```bash
+TIMESTAMP=$(date +%s)
+BODY='{"event":"invoice.paid","data":{"id":"inv_42"}}'
+MSG_ID="msg_test123"
+SECRET_B64="your_base64_secret_here"  # The part after whsec_
+
+SIGNATURE=$(echo -n "${MSG_ID}.${TIMESTAMP}.${BODY}" \
+  | openssl dgst -sha256 -hmac "$(echo ${SECRET_B64} | base64 -d)" -binary \
+  | base64)
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "webhook-id: ${MSG_ID}" \
+  -H "webhook-timestamp: ${TIMESTAMP}" \
+  -H "webhook-signature: v1,${SIGNATURE}" \
+  https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/{processInstanceId}/{workflowId} \
+  -d "${BODY}"
+```
+
+## Payload format
+
+When using webhook signatures, the request body is passed through **as-is** to the workflow. There's no need for the `{"payload": {...}}` wrapper used with API key authentication — Codika handles both formats.
+
+## Multiple secrets per endpoint
+
+Each endpoint can have multiple signing secrets. This is useful for:
+
+- **Secret rotation**: Add the new secret, update the external platform, then remove the old one. Both secrets are valid during the transition.
+- **Multiple sources**: Different systems can send to the same endpoint, each with their own signing secret.
+
+Codika checks all stored secrets for a given endpoint and accepts the request if any one matches.
+
+## Mixing auth methods
+
+API key and webhook signature authentication coexist on the same endpoint. Codika checks for webhook signature headers first. If they're not present, it falls back to API key authentication. You can use either method — or different methods for different callers — on the same endpoint.
+
+## Security advantages
+
+- **The secret never travels on the wire.** Only a signature (derived from the secret) is sent. Even if someone intercepts the request, they can't extract the secret.
+- **Replay protection.** Requests older than 5 minutes are rejected, preventing captured requests from being replayed later.
+- **Tamper detection.** The request body is part of the signed message. Any modification to the body invalidates the signature.
