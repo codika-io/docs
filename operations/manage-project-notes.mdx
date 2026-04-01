@@ -1,0 +1,208 @@
+---
+title: "Manage Project Notes"
+description: "Create, update, and read versioned project documents that persist across sessions"
+---
+
+## When to use
+
+- Persist context about a project across sessions (briefs, known issues, changelogs)
+- Read what a previous session documented about a project
+- Track changes over time with full version history
+
+## How it differs from metadata documents
+
+**Metadata documents** are deployment snapshots — frozen copies of config.ts and workflow JSON archived when you deploy. They cannot be updated after deployment.
+
+**Project notes** are living knowledge — updated any time, independently versioned, meant to accumulate context over the project's lifetime. Multiple agents can read and write the same project's documents across sessions.
+
+## Prerequisites
+
+- `codika` CLI installed and authenticated
+- A project ID
+
+## Commands
+
+### Upsert a document
+
+Create a new document type or update an existing one. First call creates v0.0.0, subsequent calls increment the patch version.
+
+```bash
+codika notes upsert <projectId> --type <type> --summary <summary> [options]
+```
+
+### List documents
+
+```bash
+codika notes list <projectId> [--type <type>] [options]
+```
+
+### Get a document
+
+```bash
+codika notes get <projectId> --type <type> [options]
+```
+
+## Options
+
+### Upsert options
+
+| Flag | Description |
+|------|-------------|
+| `--type <type>` | **(Required)** Document type ID (lowercase with hyphens) |
+| `--summary <summary>` | **(Required)** What changed in this version |
+| `--title <title>` | Document title (defaults to type ID) |
+| `--content <content>` | Markdown content |
+| `--file <path>` | Read content from a file instead of `--content` |
+
+Content can also be piped via stdin: `echo "..." | codika notes upsert <projectId> --type <type> --summary "..."`
+| `--agent-id <id>` | Agent identifier for tracking |
+| `--major-change` | Bump minor version instead of patch |
+| `--api-key <key>` | API key override |
+| `--json` | JSON output |
+
+### Get options
+
+| Flag | Description |
+|------|-------------|
+| `--type <type>` | **(Required)** Document type ID |
+| `--version <version>` | Get a specific version (e.g. `0.1.0`) |
+| `--history` | Show all versions |
+| `--api-key <key>` | API key override |
+| `--json` | JSON output |
+
+## What happens on upsert
+
+1. If no document of that type exists for the project, creates version `0.0.0`
+2. If a current version exists, increments patch (`0.0.0` -> `0.0.1`)
+3. Marks the previous version as `superseded` (immutable, still queryable)
+4. Updates the version history
+
+## Versioning
+
+- **Patch** (default): `0.0.0` -> `0.0.1` -> `0.0.2`
+- **Minor** (`--major-change`): `0.0.5` -> `0.1.0`
+- Previous versions are never deleted — full history is preserved
+
+## Examples
+
+**Record a project brief:**
+
+```bash
+codika notes upsert proj-abc123 \
+  --type brief \
+  --title "Project Brief" \
+  --content "This project automates invoice processing for SMBs..." \
+  --summary "Initial brief"
+```
+
+**Update from a file:**
+
+```bash
+codika notes upsert proj-abc123 \
+  --type known-issues \
+  --file ./notes/known-issues.md \
+  --summary "Added timeout issue"
+```
+
+**List all documents:**
+
+```bash
+codika notes list proj-abc123
+```
+
+**Read a document:**
+
+```bash
+codika notes get proj-abc123 --type brief
+```
+
+**View version history:**
+
+```bash
+codika notes get proj-abc123 --type known-issues --history
+```
+
+## Output
+
+**Upsert success:**
+
+```
+Created brief -> v0.0.0
+  Document ID: 019...
+  Project:     proj-abc123
+```
+
+**List:**
+
+```
+Project notes for project proj-abc123:
+
+  brief  v0.0.0  "Project Brief"
+    Initial brief  (45 words)
+  known-issues  v0.0.3  "Known Issues"
+    Added timeout issue  (120 words)
+
+2 document(s)
+```
+
+## Suggested document types
+
+These are conventions, not enforced — use any lowercase-hyphenated name:
+
+| Type | Purpose |
+|------|---------|
+| `brief` | What the project does, who it's for, key decisions |
+| `known-issues` | Bugs, edge cases, gotchas discovered during development |
+| `changelog` | What changed and why across deployments |
+| `debugging-log` | Diagnostic trail for ongoing issues |
+| `deployment-notes` | Current deployment state and configuration |
+| `architecture` | Key architectural decisions and rationale |
+
+## Agent workflow patterns
+
+### Start of session: read existing context
+
+```bash
+codika notes list $PROJECT_ID
+codika notes get $PROJECT_ID --type brief
+codika notes get $PROJECT_ID --type known-issues
+```
+
+### After building/deploying: record what you did
+
+```bash
+codika notes upsert $PROJECT_ID --type changelog \
+  --content "v2: Added retry logic, increased timeout to 60s" \
+  --summary "v2 deployment" --agent-id "use-case-builder"
+```
+
+### After debugging: document the fix
+
+```bash
+codika notes upsert $PROJECT_ID --type debugging-log \
+  --content "Timeout on large PDFs. Root cause: token limit. Fix: chunking." \
+  --summary "Fixed PDF timeout"
+```
+
+### Diagnosing issues: check history
+
+```bash
+codika notes get $PROJECT_ID --type changelog --history
+```
+
+## Error handling
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "API key is required" | Not authenticated | Run `codika login` |
+| "Project not found" | Invalid project ID | Verify with `codika get project <id>` |
+| "documentTypeId must be lowercase" | Invalid type format | Use lowercase with hyphens |
+| "content is required" | Missing content | Provide `--content` or `--file` |
+| "content must be less than 500,000 characters" | Content too large | Split into multiple documents |
+
+## Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Failure |
