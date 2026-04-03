@@ -47,7 +47,7 @@ codika deploy use-case <path> [options]
 | `--patch` | Patch version bump | Default |
 | `--minor` | Minor version bump | — |
 | `--major` | Major version bump | — |
-| `--version <X.Y>` | Explicit API version | — |
+| `--target-version <X.Y>` | Explicit API version | — |
 | `--additional-file <abs:rel>` | Add extra file (repeatable) | — |
 | `--json` | JSON output | — |
 | `--profile <name>` | Use a specific profile instead of the active one | — |
@@ -60,7 +60,7 @@ codika deploy use-case <path> [options]
 | `--patch` (default) | 1.0.0 → 1.0.1 | `minor_bump` |
 | `--minor` | 1.0.1 → 1.1.0 | `minor_bump` |
 | `--major` | 1.1.0 → 2.0.0 | `major_bump` |
-| `--version 3.0` | Unchanged | `explicit` (version 3.0) |
+| `--target-version 3.0` | Unchanged | `explicit` (version 3.0) |
 
 ## What happens on deploy
 
@@ -162,7 +162,7 @@ codika deploy use-case ./email-automation --minor
 codika deploy use-case ./email-automation --major
 
 # Explicit API version
-codika deploy use-case ./email-automation --version 2.0
+codika deploy use-case ./email-automation --target-version 2.0
 
 # Dry-run preview
 codika deploy use-case ./email-automation --dry-run

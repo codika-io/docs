@@ -41,7 +41,7 @@ codika get use-case <projectId> [outputPath] [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--version <X.Y>` | Fetch specific version | Latest |
+| `--target-version <X.Y>` | Fetch specific version | Latest |
 | `--with-data-ingestion` | Include data ingestion workflow | `true` |
 | `--no-data-ingestion` | Exclude data ingestion workflow | — |
 | `--di-version <version>` | Data ingestion version in `X.Y` format | Latest |
@@ -50,10 +50,6 @@ codika get use-case <projectId> [outputPath] [options]
 | `--api-key <key>` | Override API key | — |
 | `--profile <name>` | Use a specific profile instead of the active one | — |
 | `--json` | JSON output | — |
-
-<Note>
-The global CLI version flag is `-V` / `--cli-version`. The `--version` flag on this subcommand specifies the **use case version** to fetch.
-</Note>
 
 ## Behavior
 
@@ -77,7 +73,7 @@ codika get use-case abc123
 codika get use-case abc123 ./my-download
 
 # Download a specific version
-codika get use-case abc123 --version 1.2
+codika get use-case abc123 --target-version 1.2
 
 # Download without data ingestion
 codika get use-case abc123 --no-data-ingestion
