@@ -17,7 +17,7 @@ Both require authentication — either an `X-API-Key` header or [webhook signatu
 ## Step 1: Trigger a workflow
 
 ```
-POST https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/{processInstanceId}/{workflowId}
+POST https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}
 
 Headers:
   Content-Type: application/json
@@ -59,7 +59,7 @@ If the use case has agent skills, each skill's `workflowTemplateId` field tells 
 ## Step 2: Poll for results
 
 ```
-GET https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic/{processInstanceId}/{executionId}
+GET https://api.codika.io/getexecutionstatuspublic/{processInstanceId}/{executionId}
 
 Headers:
   X-API-Key: ck_your_instance_key
@@ -102,8 +102,8 @@ interface ExecutionResult<T> {
   error?: string;
 }
 
-const TRIGGER_BASE = 'https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic';
-const STATUS_BASE = 'https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic';
+const TRIGGER_BASE = 'https://api.codika.io/triggerwebhookpublic';
+const STATUS_BASE = 'https://api.codika.io/getexecutionstatuspublic';
 
 /**
  * Trigger a workflow and return the execution ID.

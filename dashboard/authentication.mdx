@@ -48,7 +48,7 @@ Browser → Your API route (server-side, has API key) → Codika Public API
 import { json } from '@sveltejs/kit';
 import { CODIKA_API_KEY, PROCESS_INSTANCE_ID } from '$env/static/private';
 
-const TRIGGER_URL = `https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/${PROCESS_INSTANCE_ID}`;
+const TRIGGER_URL = `https://api.codika.io/triggerwebhookpublic/${PROCESS_INSTANCE_ID}`;
 
 export async function POST({ request }) {
   const { workflowId, payload } = await request.json();
@@ -75,7 +75,7 @@ import { NextResponse } from 'next/server';
 
 const CODIKA_API_KEY = process.env.CODIKA_API_KEY!;
 const PROCESS_INSTANCE_ID = process.env.PROCESS_INSTANCE_ID!;
-const TRIGGER_URL = `https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic/${PROCESS_INSTANCE_ID}`;
+const TRIGGER_URL = `https://api.codika.io/triggerwebhookpublic/${PROCESS_INSTANCE_ID}`;
 
 export async function POST(request: Request) {
   const { workflowId, payload } = await request.json();
@@ -104,8 +104,8 @@ CODIKA_API_KEY=ck_your_instance_api_key_here
 PROCESS_INSTANCE_ID=your_process_instance_id_here
 
 # Base URLs (same for all instances)
-CODIKA_TRIGGER_BASE_URL=https://europe-west1-codika-app.cloudfunctions.net/triggerWebhookPublic
-CODIKA_STATUS_BASE_URL=https://europe-west1-codika-app.cloudfunctions.net/getExecutionStatusPublic
+CODIKA_TRIGGER_BASE_URL=https://api.codika.io/triggerwebhookpublic
+CODIKA_STATUS_BASE_URL=https://api.codika.io/getexecutionstatuspublic
 ```
 
 ## Key regeneration

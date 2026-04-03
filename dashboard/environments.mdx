@@ -39,12 +39,12 @@ function getCodikaConfig(mode: AppMode): CodikaConfig {
     ? process.env.DEV_CODIKA_API_KEY
     : process.env.PROD_CODIKA_API_KEY;
 
-  const baseUrl = 'https://europe-west1-codika-app.cloudfunctions.net';
+  const baseUrl = 'https://api.codika.io';
 
   return {
     apiKey: apiKey!,
-    triggerBaseUrl: `${baseUrl}/triggerWebhookPublic/${instanceId}`,
-    statusBaseUrl: `${baseUrl}/getExecutionStatusPublic/${instanceId}`
+    triggerBaseUrl: `${baseUrl}/triggerwebhookpublic/${instanceId}`,
+    statusBaseUrl: `${baseUrl}/getexecutionstatuspublic/${instanceId}`
   };
 }
 ```
