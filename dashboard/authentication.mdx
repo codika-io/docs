@@ -1,23 +1,25 @@
 ---
 title: "API Keys & Authentication"
-description: "Three ways to authenticate — API keys for dashboards and CLI, webhook signatures for external platforms"
+description: "Four ways to authenticate — API keys for dashboards and CLI, webhook signatures for external platforms, query parameters for headless services"
 ---
 
 ## Authentication methods
 
-Codika supports three authentication methods on its public API:
+Codika supports four authentication methods on its public API:
 
-| | Instance Key (`ck_`) | Organization Key (`cko_`) | Webhook Signature (HMAC) |
-|---|---|---|---|
-| **Created by** | Auto-generated per process instance | You create in the Codika dashboard | External platform (Resend, Stripe, etc.) |
-| **Scope** | One specific process instance | Any instance in the organization | One specific workflow endpoint |
-| **Best for** | Custom dashboards, apps | CLI, agents, CI/CD | External platforms that sign outbound webhooks |
-| **Header** | `X-API-Key` | `X-Process-Manager-Key` | `webhook-signature` + `webhook-id` + `webhook-timestamp` |
-| **Secret on the wire** | Yes | Yes | No (only a signature) |
+| | Instance Key (`ck_`) | Organization Key (`cko_`) | Webhook Signature (HMAC) | URL Query Param |
+|---|---|---|---|---|
+| **Created by** | Auto-generated per process instance | You create in the Codika dashboard | External platform (Resend, Stripe, etc.) | Same `ck_` instance key |
+| **Scope** | One specific process instance | Any instance in the organization | One specific workflow endpoint | One specific process instance |
+| **Best for** | Custom dashboards, apps | CLI, agents, CI/CD | External platforms that sign outbound webhooks | Platforms that can't set custom headers |
+| **Passed via** | `X-API-Key` header | `X-Process-Manager-Key` header | `webhook-signature` + `webhook-id` + `webhook-timestamp` headers | `?api_key=` in URL |
+| **Secret on the wire** | Yes | Yes | No (only a signature) | Yes (encrypted by HTTPS) |
 
 **For custom dashboards, use instance keys (`ck_`).** They're auto-generated, scoped to exactly one process instance, and require no setup beyond copying the key.
 
 **For external platforms that sign webhooks** (Resend, Stripe, GitHub, Clerk), use [webhook signature verification](/dashboard/webhook-signatures). The external platform creates the signing secret — you just paste it into Codika.
+
+**For platforms that can't set custom headers** (GCP Pub/Sub, IoT devices, simple webhook senders), use [URL query parameter authentication](#url-query-parameter-authentication).
 
 ## Where to find your instance API key
 
@@ -121,3 +123,27 @@ Use `cko_` organization keys when your app needs to:
 - Operate across the organization
 
 For most custom dashboards that serve one use case, `ck_` instance keys are simpler and more secure (narrower scope).
+
+## URL query parameter authentication
+
+Some platforms (GCP Pub/Sub, IoT devices, simple webhook senders) can only configure a URL — they can't set custom HTTP headers. For these, pass your instance API key as a query parameter:
+
+```
+POST https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}?api_key=ck_your_key
+```
+
+This uses the same `ck_` instance key and the same validation — just a different delivery method.
+
+<Warning>
+**Prefer headers when possible.** Query parameters can appear in server access logs and monitoring dashboards. Use this method only when the calling platform doesn't support custom headers. HTTPS encrypts the full URL in transit, so the key is protected on the wire.
+</Warning>
+
+### When to use query parameter auth
+
+| Platform | Can set headers? | Recommended auth |
+|----------|-----------------|-----------------|
+| Your own dashboard/app | Yes | `X-API-Key` header |
+| Resend, Stripe, GitHub | Yes (HMAC) | Webhook signatures |
+| GCP Pub/Sub push | No | Query parameter |
+| Simple IoT webhooks | No | Query parameter |
+| Zapier, Make | Yes | `X-API-Key` header |

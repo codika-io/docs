@@ -142,7 +142,14 @@ Codika checks all stored secrets for a given endpoint and accepts the request if
 
 ## Mixing auth methods
 
-API key and webhook signature authentication coexist on the same endpoint. Codika checks for webhook signature headers first. If they're not present, it falls back to API key authentication. You can use either method — or different methods for different callers — on the same endpoint.
+All authentication methods coexist on the same endpoint. Codika checks in order:
+
+1. **Webhook signature headers** (HMAC) — if `webhook-signature`, `webhook-id`, and `webhook-timestamp` headers are present
+2. **API key in headers** — `X-API-Key` or `Authorization: Bearer`
+3. **API key in query parameter** — `?api_key=` in the URL
+4. **Organization key** — `X-Process-Manager-Key` header
+
+The first match wins. You can use different methods for different callers on the same endpoint.
 
 ## Security advantages
 

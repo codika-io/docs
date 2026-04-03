@@ -184,6 +184,15 @@ Your API route handles:
 - API key injection (adds the X-API-Key header)
 - Response filtering (only return what the client needs)
 
+### Query parameter security
+
+When using `?api_key=` query parameter authentication:
+
+- **HTTPS encrypts the full URL** including query parameters — the key is protected in transit
+- **Server logs may record query strings** — ensure your log retention and access controls are appropriate
+- **Use instance keys (`ck_`)**, not organization keys — instance keys have the narrowest scope
+- **Rotate keys** if you suspect exposure — regenerate from the Codika dashboard
+
 ### Validate input before triggering
 
 Don't pass raw user input to the workflow. Validate and sanitize on your server before calling the trigger endpoint:
