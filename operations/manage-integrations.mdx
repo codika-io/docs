@@ -82,11 +82,30 @@ codika integration set anthropic \
   --secrets '{"ANTHROPIC_API_KEY":"sk-ant-xxx"}' \
   --json
 
+# Custom integration — schema auto-extracted from config.ts
+codika integration set cstm_acme_crm \
+  --secret API_KEY=acme_sk_xxx \
+  --path ./my-use-case \
+  --json
+
+# Custom integration — explicit schema file (fallback)
+codika integration set cstm_acme_crm \
+  --secret API_KEY=acme_sk_xxx \
+  --custom-schema-file ./schema.json \
+  --process-instance-id abc123
+
 # Force overwrite
 codika integration set openai \
   --secret OPENAI_API_KEY=sk-new-key \
   --force
 ```
+
+### Custom integrations (cstm_*)
+
+Custom integrations require a schema defining their fields and n8n credential mapping. The CLI resolves this schema automatically:
+
+1. **Auto-extraction (recommended):** When `--path` points to a use case folder (or you run from one), the CLI reads `config.ts` and extracts the matching schema from the `customIntegrations` array. No separate file needed.
+2. **Explicit file:** Pass `--custom-schema-file` with a JSON file containing the `CustomIntegrationSchema`.
 
 ### OAuth integrations
 
@@ -206,6 +225,10 @@ codika deploy use-case ./my-use-case --json
 codika integration set openai --secrets '{"OPENAI_API_KEY":"sk-xxx"}' --json
 codika integration set supabase \
   --secrets '{"SUPABASE_HOST":"...","SUPABASE_SERVICE_ROLE_KEY":"..."}' \
+  --path ./my-use-case --json
+# Custom integrations — schema auto-extracted from config.ts
+codika integration set cstm_acme_crm \
+  --secrets '{"API_KEY":"acme_sk_xxx"}' \
   --path ./my-use-case --json
 codika redeploy --path ./my-use-case --force --json
 ```
