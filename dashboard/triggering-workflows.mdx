@@ -9,15 +9,15 @@ Your app uses two Codika public API endpoints:
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `triggerWebhookPublic/{processInstanceId}/{workflowId}` | POST | Trigger a workflow |
-| `getExecutionStatusPublic/{processInstanceId}/{executionId}` | GET | Poll execution status |
+| `webhook/{processInstanceId}/{workflowId}` | POST | Trigger a workflow |
+| `status/{processInstanceId}/{executionId}` | GET | Poll execution status |
 
 Both require authentication — an `X-API-Key` header, [webhook signature headers](/dashboard/webhook-signatures), or a [query parameter](/dashboard/authentication#url-query-parameter-authentication).
 
 ## Step 1: Trigger a workflow
 
 ```
-POST https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}
+POST https://api.codika.io/webhook/{processInstanceId}/{workflowId}
 
 Headers:
   Content-Type: application/json
@@ -39,7 +39,7 @@ The `payload` fields must match the workflow's input schema (defined in `config.
 For platforms that can't set custom headers (e.g., GCP Pub/Sub push subscriptions):
 
 ```
-POST https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}?api_key=ck_your_key
+POST https://api.codika.io/webhook/{processInstanceId}/{workflowId}?api_key=ck_your_key
 
 Headers:
   Content-Type: application/json
@@ -77,7 +77,7 @@ If the use case has agent skills, each skill's `workflowTemplateId` field tells 
 ## Step 2: Poll for results
 
 ```
-GET https://api.codika.io/getexecutionstatuspublic/{processInstanceId}/{executionId}
+GET https://api.codika.io/status/{processInstanceId}/{executionId}
 
 Headers:
   X-API-Key: ck_your_instance_key
@@ -120,8 +120,8 @@ interface ExecutionResult<T> {
   error?: string;
 }
 
-const TRIGGER_BASE = 'https://api.codika.io/triggerwebhookpublic';
-const STATUS_BASE = 'https://api.codika.io/getexecutionstatuspublic';
+const TRIGGER_BASE = 'https://api.codika.io/webhook';
+const STATUS_BASE = 'https://api.codika.io/status';
 
 /**
  * Trigger a workflow and return the execution ID.

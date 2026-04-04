@@ -48,7 +48,7 @@ Codika verifies the signature and rejects the request if:
 Open the **API Access** sheet from your process instance card (click the key icon). Each HTTP endpoint shows its public URL:
 
 ```
-https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}
+https://api.codika.io/webhook/{processInstanceId}/{workflowId}
 ```
 
 Copy this URL.
@@ -123,7 +123,7 @@ curl -X POST \
   -H "webhook-id: ${MSG_ID}" \
   -H "webhook-timestamp: ${TIMESTAMP}" \
   -H "webhook-signature: v1,${SIGNATURE}" \
-  https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId} \
+  https://api.codika.io/webhook/{processInstanceId}/{workflowId} \
   -d "${BODY}"
 ```
 

@@ -50,7 +50,7 @@ Browser → Your API route (server-side, has API key) → Codika Public API
 import { json } from '@sveltejs/kit';
 import { CODIKA_API_KEY, PROCESS_INSTANCE_ID } from '$env/static/private';
 
-const TRIGGER_URL = `https://api.codika.io/triggerwebhookpublic/${PROCESS_INSTANCE_ID}`;
+const TRIGGER_URL = `https://api.codika.io/webhook/${PROCESS_INSTANCE_ID}`;
 
 export async function POST({ request }) {
   const { workflowId, payload } = await request.json();
@@ -77,7 +77,7 @@ import { NextResponse } from 'next/server';
 
 const CODIKA_API_KEY = process.env.CODIKA_API_KEY!;
 const PROCESS_INSTANCE_ID = process.env.PROCESS_INSTANCE_ID!;
-const TRIGGER_URL = `https://api.codika.io/triggerwebhookpublic/${PROCESS_INSTANCE_ID}`;
+const TRIGGER_URL = `https://api.codika.io/webhook/${PROCESS_INSTANCE_ID}`;
 
 export async function POST(request: Request) {
   const { workflowId, payload } = await request.json();
@@ -106,8 +106,8 @@ CODIKA_API_KEY=ck_your_instance_api_key_here
 PROCESS_INSTANCE_ID=your_process_instance_id_here
 
 # Base URLs (same for all instances)
-CODIKA_TRIGGER_BASE_URL=https://api.codika.io/triggerwebhookpublic
-CODIKA_STATUS_BASE_URL=https://api.codika.io/getexecutionstatuspublic
+CODIKA_TRIGGER_BASE_URL=https://api.codika.io/webhook
+CODIKA_STATUS_BASE_URL=https://api.codika.io/status
 ```
 
 ## Key regeneration
@@ -129,7 +129,7 @@ For most custom dashboards that serve one use case, `ck_` instance keys are simp
 Some platforms (GCP Pub/Sub, IoT devices, simple webhook senders) can only configure a URL — they can't set custom HTTP headers. For these, pass your instance API key as a query parameter:
 
 ```
-POST https://api.codika.io/triggerwebhookpublic/{processInstanceId}/{workflowId}?api_key=ck_your_key
+POST https://api.codika.io/webhook/{processInstanceId}/{workflowId}?api_key=ck_your_key
 ```
 
 This uses the same `ck_` instance key and the same validation — just a different delivery method.

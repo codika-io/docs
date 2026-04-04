@@ -43,8 +43,8 @@ function getCodikaConfig(mode: AppMode): CodikaConfig {
 
   return {
     apiKey: apiKey!,
-    triggerBaseUrl: `${baseUrl}/triggerwebhookpublic/${instanceId}`,
-    statusBaseUrl: `${baseUrl}/getexecutionstatuspublic/${instanceId}`
+    triggerBaseUrl: `${baseUrl}/webhook/${instanceId}`,
+    statusBaseUrl: `${baseUrl}/status/${instanceId}`
   };
 }
 ```
