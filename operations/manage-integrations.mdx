@@ -22,6 +22,7 @@ description: "Configure, list, and delete integrations (API keys, credentials) f
 | `set` | Create or update an integration |
 | `list` | List integrations and their status |
 | `delete` | Delete an integration |
+| `schema` | Fetch n8n credential schema for a credential type |
 
 ---
 
@@ -195,6 +196,64 @@ codika integration delete openai --confirm
 codika integration delete supabase \
   --confirm \
   --process-instance-id abc123
+```
+
+---
+
+## `codika integration schema`
+
+Fetches the n8n credential schema for a given credential type. Use this to discover which fields are required when creating a custom integration with any n8n credential type.
+
+```bash
+codika integration schema <credentialType> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `credentialType` | n8n credential type (e.g., `twilioApi`, `openAiApi`, `httpHeaderAuth`) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--profile <name>` | CLI profile to use | Active profile |
+| `--api-key <key>` | Override API key | — |
+| `--json` | Output raw JSON schema | `false` |
+
+### Examples
+
+```bash
+# See what fields twilioApi needs
+codika integration schema twilioApi
+
+# Output:
+#   Credential type: twilioApi
+#   Properties:
+#     authType: string [authToken, apiKey]
+#     accountSid: string
+#     authToken: string
+#     allowedDomains: string
+#   Conditional rules:
+#     if authType = authToken then require: authToken
+#     if authType = apiKey then require: apiKeySid, apiKeySecret
+
+# Raw JSON (for automation)
+codika integration schema openAiApi --json
+```
+
+### Use with custom integrations
+
+When you need a custom integration that maps to a specific n8n credential type (e.g., `twilioApi` instead of `httpHeaderAuth`), use `schema` to discover the required fields, then define your `n8nCredentialMapping` accordingly:
+
+```bash
+# 1. Check what fields n8n needs
+codika integration schema twilioApi
+
+# 2. Define custom integration in config.ts with those fields
+# n8nCredentialType: 'twilioApi'
+# n8nCredentialMapping: { ACCOUNT_SID: 'accountSid', AUTH_TOKEN: 'authToken', ... }
 ```
 
 ---
