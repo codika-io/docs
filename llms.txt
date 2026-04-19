@@ -47,6 +47,7 @@ When helping users build Codika use cases:
 
 - [Operations Overview](https://docs.codika.io/operations/overview): All operations, command hierarchy, resolution chains (API key, base URL, project ID, org-aware profile selection), global options, exit codes, typical workflow
 - [Authentication](https://docs.codika.io/operations/authentication): Install CLI, login, whoami, use (switch profile, `--json` for machine-readable profile list with organizationId), logout, config set/show/clear — multi-profile management
+- [CLI OTP Auth](https://docs.codika.io/operations/cli-auth): Agent-facing OTP-based signup/login — `codika auth signup-request` / `signup-complete` / `login-request` / `login-complete`. Creates a fresh user + organization + `cko_` key from the terminal with only a 6-digit code from the inbox. No browser. Handles multi-org users via `MULTIPLE_ORGANIZATIONS` error + `--organization-id`.
 - [Create Project](https://docs.codika.io/operations/create-project): Create platform projects with --path to write project.json for org-aware deployment
 - [Initialize Use Case](https://docs.codika.io/operations/init-use-case): Scaffold new use case with config.ts, 3 template workflows, 2 agent skills, version.json, optional project creation, shared workspace detection
 - [Verify Use Case](https://docs.codika.io/operations/verify-use-case): Validate use cases and workflows — 4 layers (flowlint, Codika rules, workflow scripts, use-case scripts), --fix, --strict, --rules filtering

@@ -33,6 +33,7 @@ Complete reference for every platform operation — authentication, scaffolding,
 |------|---------------|---------------|
 | `operations/overview.mdx` | — | All operations, resolution chains, global options, typical workflow |
 | `operations/authentication.mdx` | `login`, `whoami`, `use`, `logout`, `config` | CLI install, authentication, profile management |
+| `operations/cli-auth.mdx` | `auth signup-request`, `auth signup-complete`, `auth login-request`, `auth login-complete` | OTP-based CLI signup/login — an agent with email access can self-provision a `cko_` API key from the terminal in two commands. No browser. |
 | `operations/create-project.mdx` | `project create` | Platform project creation with org-aware metadata |
 | `operations/init-use-case.mdx` | `init <path>` | Scaffold use case with template workflows and agent skills |
 | `operations/verify-use-case.mdx` | `verify use-case`, `verify workflow` | Validation rules (4 layers), --fix, --strict, --rules filtering |
@@ -65,6 +66,7 @@ For building custom frontends on top of deployed workflows.
 
 | If you need to... | Go to |
 |-------------------|-------|
+| Provision a Codika account + `cko_` API key from the terminal with OTP | `operations/cli-auth.mdx` |
 | Understand what Codika is | `index.mdx` |
 | Understand why Codika exists | `why-codika/overview.mdx` |
 | Compare Codika to alternatives (Zapier, Make, raw n8n) | `why-codika/vs-n8n.mdx` |
