@@ -1,19 +1,19 @@
 ---
 title: "Codika and AI Agents"
-description: "How Codika works with Claude Code and other AI agents — not either/or, but better together"
+description: "How Codika works with coding agents (Claude Code, Cursor, …) — not either/or, but better together"
 ---
 
 ## The question people ask
 
-"Why use Codika when you have Claude Code?"
+"Why use Codika when my coding agent can already write n8n workflows?"
 
-The answer is simple: **you use both**. Claude Code writes the code. Codika provides the infrastructure to deploy, test, maintain, and iterate on it.
+The answer is simple: **you use both**. The agent writes the code. Codika provides the infrastructure to deploy, test, maintain, and iterate on it.
 
-The real question is: "What tool do you give Claude Code to make it effective at building and managing automations?"
+The real question is: "What tool do you give your agent to make it effective at building and managing automations?"
 
-Without Codika, Claude Code can create n8n workflow JSON files and use the n8n MCP server to deploy them. But it has no deployment pipeline, no validation rules, no credential management, no version control, no multi-tenancy, no execution debugging, and no way to fix failures based on business context.
+Without Codika, a coding agent (Claude Code, Cursor, …) can create n8n workflow JSON files and use the n8n MCP server to deploy them. But it has no deployment pipeline, no validation rules, no credential management, no version control, no multi-tenancy, no execution debugging, and no way to fix failures based on business context.
 
-With Codika, Claude Code gets a complete toolkit:
+With Codika, the agent gets a complete toolkit — installable in one command (`npx plugins add codika-io/plugin`):
 
 | Capability | What the agent uses |
 |---|---|
@@ -26,7 +26,7 @@ With Codika, Claude Code gets a complete toolkit:
 | Status checking | `codika status` — is this use case ready to deploy? |
 | Skill discovery | `codika get skills` — understand what endpoints are available |
 
-This isn't "Codika or Claude Code." It's "Claude Code + the Codika tool."
+This isn't "Codika or your coding agent." It's "your coding agent + the Codika tool."
 
 ## The agent development loop
 
@@ -211,7 +211,7 @@ POST /trigger/{processInstanceId}/{workflowId}
 | dueDate | string | ISO 8601 date |
 ```
 
-Agents download skills via `codika get skills` and have a complete, up-to-date understanding of available actions. The skills format follows the [Claude Agent Skills specification](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), making them natively compatible with Claude-based agents.
+Agents download skills via `codika get skills` and have a complete, up-to-date understanding of available actions. The skills format follows the open [Agent Skills specification](https://agentskills.io/specification), making them natively compatible with any compliant agent host (Claude Code, Cursor, …).
 
 The deployment pipeline ensures skills stay in sync with workflows. When you redeploy a use case, the skills are repackaged with the deployment. An agent that re-downloads skills always gets the current version.
 

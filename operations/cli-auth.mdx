@@ -1,0 +1,240 @@
+---
+title: "CLI OTP Auth"
+description: "Create a Codika account and mint a cko_ API key from the terminal using a 6-digit OTP. No browser required."
+---
+
+## When to use
+
+- An AI agent (or a user in a fresh terminal) needs a working Codika `cko_` API key and can receive email — but can't open a browser, run OAuth, or visit the dashboard.
+- The user wants to sign up for Codika and start deploying workflows in a single shell session.
+- A CI/CD job needs a short-lived key scoped to one organization, minted without leaving the terminal.
+
+The classic dashboard-paste path (`codika login --api-key cko_…`) still works — see [authentication](./authentication). This page documents the alternative: OTP-based self-provisioning.
+
+## How it works
+
+Two commands per flow. The backend sends a 6-digit code to the email; the CLI sends the code back; the backend mints a `cko_` key and returns the raw key exactly once. The CLI saves it as a new profile in `~/.config/codika/config.json` and activates it.
+
+```
+┌──────────────┐    signup-request    ┌────────────┐    email (6-digit code)    ┌────────┐
+│ codika auth  │ ───────────────────► │  Codika    │ ──────────────────────────►│  User  │
+│ signup-request│                      │  backend   │                            │        │
+└──────────────┘                      └────────────┘                            └────────┘
+                                              ▲                                       │
+                                              │   signup-complete (email + code)      │
+                                              └───────────────────────────────────────┘
+                                                       ┌────────────────┐
+                                                       │ cko_ saved in  │
+                                                       │ ~/.config/cod… │
+                                                       └────────────────┘
+```
+
+OTP security constants:
+
+| Constant | Value |
+|---|---|
+| Code length | 6 digits |
+| TTL | 10 minutes |
+| Failed-attempt lockout | 5 attempts → code deleted |
+| Min resend interval | 30 seconds |
+| Per-email cap | 20 requests / hour |
+| Per-IP cap | 60 requests / hour |
+
+---
+
+## codika auth signup-request
+
+Request an OTP for a brand-new signup.
+
+```bash
+codika auth signup-request --email <email> [--json]
+```
+
+### Options
+
+| Option | Description |
+|---|---|
+| `--email <email>` (required) | Email address to register |
+| `--base-url <url>` | Codika API base URL override (default: production) |
+| `--api-url <url>` | Full URL to the `cliRequestSignupOtp` endpoint (overrides `--base-url`) |
+| `--json` | Emit JSON output |
+
+### Response (`--json`)
+
+```json
+{ "success": true, "data": { "email": "you@example.com", "expiresInSeconds": 600 } }
+```
+
+### Errors
+
+| Code | Status | Meaning | Next action |
+|---|---|---|---|
+| `EMAIL_REQUIRED` / `EMAIL_INVALID` | 400 | Missing or malformed email | Fix the flag |
+| `USER_ALREADY_HAS_ORGANIZATION` | 409 | Email already owns an org | Switch to `login-request` |
+| `OTP_RESEND_COOLDOWN` | 429 | Request spam (within 30s) | Wait `details.retryInSeconds` |
+| `EMAIL_RATE_LIMITED` | 429 | 20+ requests/hour from this email | Wait and retry |
+| `IP_RATE_LIMITED` | 429 | 60+ requests/hour from this IP | Wait and retry |
+| `INTERNAL` | 500 | Backend hiccup | Retry in a few seconds |
+
+---
+
+## codika auth signup-complete
+
+Verify the OTP and, in one atomic flow, create the Firebase Auth user, create the organization (with n8n error workflow + webhook auth credential seeded), and mint a `cko_` API key with the 10 default scopes.
+
+```bash
+codika auth signup-complete --email <email> --code <code> [options]
+```
+
+### Options
+
+| Option | Description |
+|---|---|
+| `--email <email>` (required) | Email that received the OTP |
+| `--code <code>` (required) | 6-digit code from the email |
+| `--company <name>` | Organization name (default: "My Organization") |
+| `--description <text>` | Optional organization description |
+| `--key-name <name>` | Label for the minted API key (default: "CLI default key") |
+| `--key-expires-in <days>` | 1–365; omit for no expiry |
+| `--name <name>` | Local profile name (auto-derived from org name if omitted) |
+| `--base-url <url>` / `--api-url <url>` | URL overrides |
+| `--json` | Emit JSON output |
+
+### Response (`--json`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "profileName": "my-organization",
+    "organizationId": "org_...",
+    "organizationName": "My Organization",
+    "isNewUser": true,
+    "apiKey": {
+      "keyId": "019d...",
+      "keyPrefix": "cko_aB12",
+      "name": "CLI default key",
+      "scopes": [
+        "deploy:use-case","projects:create","workflows:trigger",
+        "executions:read","instances:read","instances:manage",
+        "skills:read","integrations:manage","api-keys:manage","projects:read"
+      ],
+      "createdAt": "2026-..."
+    }
+  }
+}
+```
+
+The raw key is saved to `~/.config/codika/config.json` and does **not** appear in the JSON output (other than masked) after save. It is only available inside the CLI's profile.
+
+### Errors
+
+| Code | Status | Meaning | Next action |
+|---|---|---|---|
+| `OTP_INVALID` | 400 | Wrong code (`details.attemptsRemaining`) | Re-read email, retry |
+| `OTP_NOT_FOUND` | 404 | No pending code for this email | Re-run `signup-request` |
+| `OTP_EXPIRED` | 410 | Code older than 10 minutes | Re-run `signup-request` |
+| `OTP_ALREADY_USED` | 409 | Code already consumed | Re-run `signup-request` |
+| `OTP_PURPOSE_MISMATCH` | 409 | Crossed signup/login codes | Re-run the matching request |
+| `OTP_LOCKED_OUT` | 429 | 5+ failed attempts | Re-run `signup-request` |
+| `USER_ALREADY_HAS_ORGANIZATION` | 409 | Raced with another signup | Switch to `login-*` |
+| `COMPANY_NAME_TOO_LONG` | 400 | `--company` > 100 chars | Shorten |
+| `INVALID_EXPIRES_IN_DAYS` | 400 | `--key-expires-in` outside 1–365 | Fix or omit |
+| `ORGANIZATION_CREATION_FAILED` | 400–500 | Backend rejected org creation | Surface `message`, retry |
+| `INTERNAL` | 500 | Backend hiccup | Retry |
+
+---
+
+## codika auth login-request
+
+Same shape as `signup-request`, but for existing accounts.
+
+```bash
+codika auth login-request --email <email> [--json]
+```
+
+### Errors specific to login
+
+| Code | Status | Meaning | Next action |
+|---|---|---|---|
+| `USER_NOT_FOUND` | 404 | No account for this email | Switch to `signup-request` |
+| `USER_HAS_NO_ORGANIZATION` | 409 | Account exists but no org | Switch to `signup-request` |
+
+---
+
+## codika auth login-complete
+
+Verify the OTP and mint a fresh `cko_` key for one of the user's organizations.
+
+```bash
+codika auth login-complete --email <email> --code <code> \
+  [--organization-id <id>] [--key-name <name>] [--key-expires-in <days>] \
+  [--name <name>] [--base-url <url>] [--api-url <url>] [--json]
+```
+
+Each `login-complete` mints a **new** key. Previous keys remain valid until revoked from the dashboard.
+
+### Multi-org handling
+
+Codika users can belong to multiple organizations. If the user has more than one and `--organization-id` is not provided, the backend returns:
+
+```json
+{
+  "success": false,
+  "status": 409,
+  "error": {
+    "code": "MULTIPLE_ORGANIZATIONS",
+    "message": "Account belongs to multiple organizations. Specify which one to mint a key for.",
+    "nextAction": "Re-run `login-complete` with `--organization-id <id>` for the target org.",
+    "details": {
+      "organizations": [
+        { "id": "org_abc", "name": "Acme" },
+        { "id": "org_def", "name": "Beta Corp" }
+      ]
+    }
+  }
+}
+```
+
+The agent should surface the list, let the user pick, then re-run with `--organization-id <id>`.
+
+### Other login-specific errors
+
+| Code | Status | Meaning | Next action |
+|---|---|---|---|
+| `ORGANIZATION_NOT_MEMBER` | 403 | `--organization-id` doesn't match any of the user's orgs | Pick from `details.organizations` |
+| `MAX_API_KEYS_REACHED` | 429 | Org already has 20 active keys | Revoke one from the dashboard, retry |
+| `USER_HAS_NO_ORGANIZATION` | 409 | All orgs were deleted between request and complete | Run `signup-request` |
+
+---
+
+## Agent recipe — optimistic signup, fallback to login
+
+```
+1. codika auth signup-request --email $E --json
+   - success            → prompt user for OTP, go to step 2
+   - USER_ALREADY_HAS_ORGANIZATION → go to step 4 (login)
+   - any other error    → surface + abort
+
+2. codika auth signup-complete --email $E --code $C --json
+   - success            → done
+   - USER_ALREADY_HAS_ORGANIZATION → go to step 4 (login)
+   - OTP_* recoverable  → reprompt or re-request
+
+3. --- unreached in the optimistic path ---
+
+4. codika auth login-request --email $E --json
+   - success            → prompt user for OTP, go to step 5
+   - USER_NOT_FOUND | USER_HAS_NO_ORGANIZATION → go to step 1 (signup)
+
+5. codika auth login-complete --email $E --code $C --json
+   - success                     → done
+   - MULTIPLE_ORGANIZATIONS      → show details.organizations, get user pick, re-run with --organization-id
+   - ORGANIZATION_NOT_MEMBER     → same
+```
+
+## See also
+
+- [Authentication](./authentication) — profile management, dashboard-paste flow, resolution priority
+- [Create Organization](./create-organization) — standalone org creation via personal/admin key
+- [Create Organization Key](./create-organization-key) — adding additional API keys to an existing org

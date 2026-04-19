@@ -3,12 +3,15 @@ title: "Authentication"
 description: "Install the codika CLI, authenticate with API keys, manage multiple profiles, and switch between organizations"
 ---
 
+> **Agents / terminal-only setups:** if you have email access but no browser, use the [CLI OTP auth flow](./cli-auth) — two commands per signup or login, and a `cko_` key lands in `~/.config/codika/config.json` automatically. This page covers dashboard-paste login and profile management.
+
 ## When to use
 
-- First-time environment setup
+- First-time environment setup (with a key already minted from the dashboard)
 - When deploy or project commands fail with "API key is required"
 - To check current identity or switch between organizations
 - When the user needs to authenticate with a different org
+- For OTP-based self-provisioning from an AI agent, see [CLI OTP auth](./cli-auth) first
 
 ## Prerequisites
 

@@ -6,7 +6,7 @@ Codika is a multi-tenant SaaS platform that turns n8n workflows into deployable,
 
 Codika creates software used by both humans and AI agents. Every HTTP endpoint is a stable API that agents can discover via **agent skills** and call via `codika trigger` — without ever touching credentials. The platform handles authentication, so agents never get OAuth tokens or API keys.
 
-The CLI tool is `codika`, installed via `npm install -g codika`.
+The CLI tool is `codika`, installed via `npm install -g codika`. A companion agent plugin (`codika-io/plugin`) wraps the CLI as 25 `/codika:*` skills + 4 builder agents for any Open-Plugin-compatible coding agent (Claude Code, Cursor, …) — install with `npx plugins add codika-io/plugin`. See `guides/claude-code-plugin.mdx`.
 
 ## How to navigate this documentation
 
@@ -70,6 +70,7 @@ For building custom frontends on top of deployed workflows.
 | Compare Codika to alternatives (Zapier, Make, raw n8n) | `why-codika/vs-n8n.mdx` |
 | Understand how agents use Codika | `why-codika/with-agents.mdx` |
 | Install the CLI and deploy something fast | `quickstart.mdx` |
+| Install the agent plugin (Claude Code, Cursor, …) | `guides/claude-code-plugin.mdx` — run `npx plugins add codika-io/plugin` |
 | Know how a use case folder is structured | `concepts/use-cases.mdx` |
 | Understand the process lifecycle | `concepts/processes.mdx` |
 | Learn the mandatory workflow pattern | `concepts/workflows.mdx` |
@@ -117,7 +118,7 @@ For building custom frontends on top of deployed workflows.
 | Codika nodes | Custom n8n nodes: Init, Submit Result, Report Error, Upload File |
 | Trigger | How a workflow starts: HTTP, schedule, service event, or sub-workflow |
 | Deployment parameter | Value configured at install time, injected via INSTPARM placeholder |
-| Agent skill | A Claude-compatible `SKILL.md` file describing how to interact with a deployed workflow endpoint |
+| Agent skill | An [Agent Skills spec](https://agentskills.io/specification)-compatible `SKILL.md` file describing how agents should interact with a deployed workflow endpoint |
 | Builder System | The 4 autonomous agents (`codika:use-case-builder`, `codika:use-case-modifier`, `codika:n8n-workflow-builder`, `codika:use-case-tester`) inside the `codika` plugin — they create, modify, and test Codika use cases |
 | Infrastructure layer | Codika's role between n8n (execution engine) and business needs — handles deployment, credential isolation, versioning, monitoring |
 | Self-healing workflows | Automated diagnosis and repair of failed workflows using business context (PRD/BRD) that raw n8n lacks |

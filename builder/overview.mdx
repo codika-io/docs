@@ -5,7 +5,7 @@ description: "Autonomous AI agents that create, modify, and test Codika use case
 
 ## What is the Builder System?
 
-The Builder System is a [Claude Code marketplace](https://github.com/anthropics/claude-code) plugin that gives AI agents the ability to autonomously design, build, modify, and test Codika use cases. Instead of manually writing `config.ts` files and n8n workflow JSON, you describe what you need in plain language and the agents handle the rest.
+The Builder System ships inside the [`codika-io/plugin`](https://github.com/codika-io/plugin) agent plugin — an [Open Plugin v1](https://github.com/vercel-labs/open-plugin-spec)-conformant repo installable into any compatible coding agent (Claude Code, Cursor, …) with `npx plugins add codika-io/plugin`. It gives the agent the ability to autonomously design, build, modify, and test Codika use cases. Instead of manually writing `config.ts` files and n8n workflow JSON, you describe what you need in plain language and the agents handle the rest.
 
 The system reads the same platform documentation you do, designs the architecture, creates all files, validates them, deploys to the platform, and iteratively fixes any issues — all without requiring you to understand n8n internals or Codika patterns.
 
