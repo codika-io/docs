@@ -50,18 +50,18 @@ Before using the Builder System:
 
 1. **Install the codika CLI** — `npm install -g codika`
 2. **Authenticate** — `codika login`
-3. **Install both plugins** — follow the [Claude Code Plugin guide](/guides/claude-code-plugin) to add the marketplace and install the `codika` and `use-case-builder` plugins
+3. **Install the codika plugin** — follow the [Codika Agent Plugin guide](/guides/claude-code-plugin) to install via `npx plugins add codika-io/plugin`
 
 ## Architecture
 
-The Builder System is composed of two marketplace plugins that work together:
+The Builder System ships inside a single agent plugin (`codika-io/plugin`):
 
-| Plugin | What it provides |
-|--------|-----------------|
-| **codika** | 14 CLI skills — deploy, verify, trigger, fetch, manage integrations, and more |
-| **use-case-builder** | 4 builder agents + the discover-codika-guides skill |
+| Component | What it provides |
+|---|---|
+| **Skills** (`/codika:*`) | 25 CLI skills — deploy, verify, trigger, fetch, manage integrations, discover platform docs, and more |
+| **Agents** (Task `subagent_type: "codika:*"`) | 4 builder agents — design, modify, build-workflow, test |
 
-The builder agents use the `codika` plugin's skills for all platform operations. For example, `use-case-tester` calls `codika:deploy-use-case` to deploy, `codika:trigger-workflow` to test, and `codika:get-execution` to inspect results.
+The builder agents call the plugin's own skills for all platform operations. For example, `codika:use-case-tester` calls `codika:deploy-use-case` to deploy, `codika:trigger-workflow` to test, and `codika:get-execution` to inspect results.
 
 ## Next steps
 

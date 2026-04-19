@@ -118,7 +118,7 @@ For building custom frontends on top of deployed workflows.
 | Trigger | How a workflow starts: HTTP, schedule, service event, or sub-workflow |
 | Deployment parameter | Value configured at install time, injected via INSTPARM placeholder |
 | Agent skill | A Claude-compatible `SKILL.md` file describing how to interact with a deployed workflow endpoint |
-| Builder System | Marketplace plugin with 4 AI agents that autonomously create, modify, and test Codika use cases |
+| Builder System | The 4 autonomous agents (`codika:use-case-builder`, `codika:use-case-modifier`, `codika:n8n-workflow-builder`, `codika:use-case-tester`) inside the `codika` plugin — they create, modify, and test Codika use cases |
 | Infrastructure layer | Codika's role between n8n (execution engine) and business needs — handles deployment, credential isolation, versioning, monitoring |
 | Self-healing workflows | Automated diagnosis and repair of failed workflows using business context (PRD/BRD) that raw n8n lacks |
 | Custom action APIs | Purpose-built APIs on top of existing tools — agents trigger specific actions, not raw infrastructure |

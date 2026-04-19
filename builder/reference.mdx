@@ -5,44 +5,44 @@ description: "Plugin structure, bundled documentation catalog, agent invocation 
 
 ## Plugin structure
 
-The Builder System is distributed as two marketplace plugins:
-
-### use-case-builder plugin
-
-```
-use-case-builder/
-├── plugin.json
-├── agents/
-│   ├── use-case-builder.md      # Architect — creates new use cases
-│   ├── use-case-modifier.md     # Surgeon — modifies existing use cases
-│   ├── n8n-workflow-builder.md  # Craftsperson — builds workflow JSON
-│   └── use-case-tester.md       # QA — deploy-trigger-fix loops
-└── skills/
-    └── discover-codika-guides/
-        ├── discover-codika-guides.md   # Skill definition
-        └── references/                 # Bundled platform documentation
-```
-
-### codika plugin (dependency)
+The Builder System ships inside a single [Open Plugin v1](https://github.com/vercel-labs/open-plugin-spec) repo at [`codika-io/plugin`](https://github.com/codika-io/plugin). One plugin, 25 skills, 4 agents:
 
 ```
 codika/
-├── plugin.json
-└── skills/
-    ├── setup-codika/             # Install and authenticate CLI
-    ├── create-project/           # Create platform projects
-    ├── init-use-case/            # Scaffold new use cases
-    ├── verify-use-case/          # Validate use cases
-    ├── deploy-use-case/          # Deploy to platform
-    ├── deploy-data-ingestion/    # Deploy RAG pipelines
-    ├── deploy-documents/         # Upload documentation
-    ├── publish-use-case/         # Promote to production
-    ├── redeploy-use-case/        # Update parameters
-    ├── trigger-workflow/         # Execute workflows
-    ├── fetch-use-case/           # Download deployed use cases
-    ├── get-execution/            # Debug execution traces
-    ├── list-executions/          # List recent executions
-    └── manage-integrations/      # Configure credentials
+├── .plugin/plugin.json               # Vendor-neutral manifest (Open Plugin v1)
+├── .claude-plugin/plugin.json        # Claude Code preferred manifest
+├── skills/                           # 25 skills, namespaced `/codika:*`
+│   ├── setup-codika/                 # Install and authenticate CLI
+│   ├── create-organization/          # Create organizations
+│   ├── create-organization-key/      # Create org API keys
+│   ├── update-organization-key/      # Update org API keys
+│   ├── create-project/               # Create projects
+│   ├── list-projects/                # List projects
+│   ├── get-project/                  # Fetch project details
+│   ├── init-use-case/                # Scaffold new use cases
+│   ├── verify-use-case/              # Validate use cases
+│   ├── deploy-use-case/              # Deploy to platform
+│   ├── redeploy-use-case/            # Redeploy with new params
+│   ├── publish-use-case/             # Promote to production
+│   ├── fetch-use-case/               # Download deployed use cases
+│   ├── deploy-documents/             # Upload stage documents
+│   ├── deploy-data-ingestion/        # Deploy RAG pipelines
+│   ├── trigger-workflow/             # Trigger workflows
+│   ├── get-execution/                # Debug execution traces
+│   ├── list-executions/              # List recent executions
+│   ├── list-instances/               # List process instances
+│   ├── get-instance/                 # Fetch instance details
+│   ├── instance-activate/            # Activate/deactivate instances
+│   ├── manage-integrations/          # Configure credentials
+│   ├── manage-notes/                 # Manage project notes
+│   ├── get-skills/                   # List platform skills
+│   └── discover-codika-guides/       # Locate bundled platform docs
+│       └── references/               # Bundled platform documentation
+└── agents/                           # 4 agents, Task `subagent_type: "codika:*"`
+    ├── use-case-builder.md           # Architect — creates new use cases
+    ├── use-case-modifier.md          # Surgeon — modifies existing use cases
+    ├── n8n-workflow-builder.md       # Craftsperson — builds workflow JSON
+    └── use-case-tester.md            # QA — deploy-trigger-fix loops
 ```
 
 ## Bundled documentation catalog
@@ -95,16 +95,16 @@ The `discover-codika-guides` skill ships with the complete platform documentatio
 
 ## Agent-to-skill dependency map
 
-Each agent uses a specific set of skills from the `codika` plugin:
+Each agent uses a specific set of skills from the same `codika` plugin (all skills and agents are colocated):
 
 | Agent | Skills used |
-|-------|-----------|
-| **use-case-builder** | `init-use-case`, `verify-use-case` |
-| **use-case-modifier** | `verify-use-case` |
-| **n8n-workflow-builder** | _(none — outputs JSON directly)_ |
-| **use-case-tester** | `deploy-use-case`, `trigger-workflow`, `list-executions`, `get-execution`, `verify-use-case` |
+|---|---|
+| **codika:use-case-builder** | `codika:init-use-case`, `codika:verify-use-case` |
+| **codika:use-case-modifier** | `codika:verify-use-case` |
+| **codika:n8n-workflow-builder** | _(none — outputs JSON directly)_ |
+| **codika:use-case-tester** | `codika:deploy-use-case`, `codika:trigger-workflow`, `codika:list-executions`, `codika:get-execution`, `codika:verify-use-case` |
 
-All agents use the `discover-codika-guides` skill from the `use-case-builder` plugin.
+All agents read platform documentation via `codika:discover-codika-guides` before starting work.
 
 ## Troubleshooting
 
