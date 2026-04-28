@@ -127,7 +127,7 @@
               "operations/deploy-data-ingestion",
               "operations/deploy-documents",
               "operations/publish-use-case",
-              "operations/redeploy-use-case"
+              "operations/rerun-deployment"
             ]
           },
           {

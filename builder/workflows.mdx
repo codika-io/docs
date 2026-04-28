@@ -72,7 +72,7 @@ Test the invoice-processor use case and fix any issues.
 1. The `use-case-tester` verifies and deploys the use case
 2. It triggers each HTTP workflow with test data constructed from `inputSchema`
 3. On success, it verifies outputs match `outputSchema`
-4. On failure, it fetches the execution trace, diagnoses the error, fixes the workflow, and redeploys
+4. On failure, it fetches the execution trace, diagnoses the error, fixes the workflow, and deploys again
 5. It repeats up to 5 times until all workflows pass
 
 ## The full build-test cycle

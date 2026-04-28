@@ -36,7 +36,7 @@ The `codika` CLI (`npm install -g codika`) is the primary interface for all oper
 | [Deploy Data Ingestion](/operations/deploy-data-ingestion) | `deploy process-data-ingestion <path>` | Deploy RAG/embedding pipeline configuration |
 | [Deploy Documents](/operations/deploy-documents) | `deploy documents <path>` | Upload stage documentation to the platform |
 | [Publish Use Case](/operations/publish-use-case) | `publish <templateId>` | Promote a deployment from dev to production |
-| [Redeploy Use Case](/operations/redeploy-use-case) | `redeploy` | Update parameters on an existing instance without a new version |
+| [Rerun Deployment](/operations/rerun-deployment) | `rerun deployment` | Update parameters on an existing instance without a new version |
 
 ### Operate
 
@@ -151,7 +151,7 @@ An agent or human orchestrating a full deployment uses operations in this order:
 8. get-execution        → Debug if needed
 9. list-executions      → Review recent execution history
 10. publish-use-case    → Publish to production when ready
-11. redeploy-use-case   → Update parameters without new version
+11. rerun-deployment    → Update parameters without new version
 12. get-instance        → Inspect live instance (parameters, status, version)
 13. instance activate   → Activate or deactivate instances
 14. list instances      → List all process instances for the org

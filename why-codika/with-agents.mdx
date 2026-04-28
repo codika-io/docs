@@ -39,7 +39,7 @@ Building automations with agents follows a natural loop:
 4. Agent validates                 → codika verify use-case (catches issues early)
 5. Agent deploys                   → codika deploy use-case (one command)
 6. Agent tests                     → codika trigger + codika get execution
-7. Agent fixes issues              → edit workflow → verify → redeploy
+7. Agent fixes issues              → edit workflow → verify → deploy again
 8. Repeat until it works
 ```
 
@@ -105,7 +105,7 @@ As you add more agents and more capabilities, the custom action API model scales
 - **Adding a new action** means building a new use case and publishing it. Existing agents don't change.
 - **Revoking access** means disabling the process instance. One API key gone, all actions removed.
 - **Auditing** means checking execution logs — every action is tracked with structured metadata.
-- **Updating logic** means redeploying the use case. All agents get the update automatically.
+- **Updating logic** means deploying a new version of the use case. All agents get the update automatically.
 
 Compare this to the alternative: managing API keys for 10 services across 5 agents, each with different permissions, different rotation schedules, and different audit trails. It doesn't scale.
 
@@ -159,7 +159,7 @@ Or for a different error:
 3. Check `config.ts` — integration declared as `anthropic` with scope `flexcred`
 4. Check organization integration — not configured
 5. Check Codika fallback — fallback key exists
-6. Resolution: the org integration ID is mismatched — fix the `integrationUid` in `config.ts`, redeploy
+6. Resolution: the org integration ID is mismatched — fix the `integrationUid` in `config.ts`, deploy again with `codika deploy use-case`
 
 This diagnostic capability is only possible because Codika maintains the full context of what you're building. Raw n8n has none of this context — it just runs workflows.
 
@@ -213,7 +213,7 @@ POST /trigger/{processInstanceId}/{workflowId}
 
 Agents download skills via `codika get skills` and have a complete, up-to-date understanding of available actions. The skills format follows the open [Agent Skills specification](https://agentskills.io/specification), making them natively compatible with any compliant agent host (Claude Code, Cursor, …).
 
-The deployment pipeline ensures skills stay in sync with workflows. When you redeploy a use case, the skills are repackaged with the deployment. An agent that re-downloads skills always gets the current version.
+The deployment pipeline ensures skills stay in sync with workflows. When you deploy a new version of a use case, the skills are repackaged with the deployment. An agent that re-downloads skills always gets the current version.
 
 ## The infrastructure agents need
 
@@ -226,7 +226,7 @@ The deployment pipeline ensures skills stay in sync with workflows. When you red
 | Manage credentials | Handle OAuth tokens directly | Placeholders resolved at deploy time |
 | Version and rollback | Manual file management | Semantic versioning built-in |
 | Discover available actions | Read n8n API docs | Agent skills (SKILL.md) |
-| Iterate and fix | Start from scratch | Edit → verify → redeploy cycle |
+| Iterate and fix | Start from scratch | Edit → verify → deploy cycle |
 | Fix failures automatically | Can't (no business context) | Self-healing with PRD/BRD context |
 | Limit agent scope | Give raw API keys (full access) | Custom action APIs (least privilege) |
 

@@ -113,7 +113,7 @@ Tests and debugs use cases through automated deploy-trigger-inspect-fix loops.
 4. **Inspects results** — on success, verifies output matches `outputSchema`. On failure, fetches the node-by-node execution trace with `codika get execution --deep --slim`.
 5. **Diagnoses failures** — maps error patterns to root causes using a built-in diagnostic table covering 10+ common failure types.
 6. **Fixes issues** — edits workflow JSON or config.ts directly. For complex rewrites, delegates to `n8n-workflow-builder`.
-7. **Re-validates and redeploys** — runs verify before each redeployment.
+7. **Re-validates and deploys** — runs verify before each deploy.
 8. **Repeats** — up to 5 iterations. If still failing, escalates with a clear diagnosis of what's wrong and what was tried.
 
 **Testing order:**

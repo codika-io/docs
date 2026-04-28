@@ -85,9 +85,9 @@ By default, both dev and prod instances run simultaneously after publishing. Use
 
 Use `codika list executions <instanceId>` to view recent executions for either environment — pass the dev or prod instance ID.
 
-### Redeploying without versioning
+### Rerunning a deployment without versioning
 
-Sometimes you need to change deployment parameters (e.g., company name, language, timezone) without creating a new template version. The `codika redeploy` command handles this:
+Sometimes you need to change deployment parameters (e.g., company name, language, timezone) without creating a new template version. The `codika rerun deployment` command handles this:
 
 - **Parameters are merged** — you only pass what changed; existing parameters keep their values
 - **No new template** — the instance continues running the same template version
@@ -98,16 +98,16 @@ This is useful after publishing to production when you need to adjust configurat
 
 ```bash
 # Change a parameter on the dev instance
-codika redeploy --param LANGUAGE=fr
+codika rerun deployment --param LANGUAGE=fr
 
 # Retry a failed deployment
-codika redeploy --environment dev
+codika rerun deployment --environment dev
 
 # Update prod parameters
-codika redeploy --environment prod --param COMPANY_NAME="New Corp" --force
+codika rerun deployment --environment prod --param COMPANY_NAME="New Corp" --force
 ```
 
-See the [`codika redeploy` reference](/operations/redeploy-use-case) for full details.
+See the [`codika rerun deployment` reference](/operations/rerun-deployment) for full details.
 
 ## Deployment instance
 

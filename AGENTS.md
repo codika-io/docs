@@ -41,7 +41,7 @@ Complete reference for every platform operation — authentication, scaffolding,
 | `operations/deploy-data-ingestion.mdx` | `deploy process-data-ingestion <path>` | RAG/embedding pipeline with independent versioning |
 | `operations/deploy-documents.mdx` | `deploy documents <path>` | Stage markdown documentation upload |
 | `operations/publish-use-case.mdx` | `publish <templateId>` | Promote dev to production, visibility, sharing, dev/prod toggle |
-| `operations/redeploy-use-case.mdx` | `redeploy` | Update parameters without new version, force flag, parameter merge |
+| `operations/rerun-deployment.mdx` | `rerun deployment` | Update parameters without new version, force flag, parameter merge |
 | `operations/trigger-workflow.mdx` | `trigger <workflowId>` | Execute workflows with payload, poll for results, heredoc stdin |
 | `operations/fetch-use-case.mdx` | `get use-case <projectId>` | Download deployed use cases, list mode, version selection |
 | `operations/get-execution.mdx` | `get execution <executionId>` | Debug with --deep (recursive sub-workflows) and --slim (clean output) |

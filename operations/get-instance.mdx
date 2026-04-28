@@ -22,14 +22,14 @@ description: "Fetch process instance details — deployment parameters, status, 
 # 1. Deploy a use case
 codika deploy use-case .
 
-# 2. Redeploy with parameters
-codika redeploy --param TO_EMAILS='["ops@acme.com"]'
+# 2. Rerun the deployment with parameters
+codika rerun deployment --param TO_EMAILS='["ops@acme.com"]'
 
 # 3. Verify the parameters are set correctly
 codika get instance --environment prod
 
-# 4. If wrong, redeploy with corrected parameters
-codika redeploy --environment prod --param TO_EMAILS='["correct@acme.com"]'
+# 4. If wrong, rerun the deployment with corrected parameters
+codika rerun deployment --environment prod --param TO_EMAILS='["correct@acme.com"]'
 ```
 
 ## Command
