@@ -170,7 +170,7 @@ codika trigger http-direct-messaging --payload-file input.json --poll
 |-------|-------|-----|
 | `Process instance ID is required` | No ID found | Provide ID or ensure project.json has `devProcessInstanceId` |
 | `API key is required` | No API key found | Run `codika login` or set `CODIKA_API_KEY` |
-| `No skills found` | Process has no skills deployed | Add `skills/` folder to use case and redeploy |
+| `No skills found` | Process has no skills deployed | Add `skills/` folder to use case and run `codika deploy use-case` |
 | `401 Unauthorized` | Invalid API key | Run `codika login` to refresh credentials |
 
 ## Exit codes
